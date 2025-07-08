@@ -38,6 +38,11 @@ private:
 	// タイトルスプライト
 	uint32_t titleSpriteHandle_ = 0;
 	KamataEngine::Sprite* titleSprite_ = nullptr;
+	float titleAlpha_ = 0.0f;
+
+	// タイトルUIスプライト
+	uint32_t titleUISpriteHandle_ = 0;
+	KamataEngine::Sprite* titleUISprite = nullptr;
 
 	// 終了フラグ
 	bool finished_ = false;
