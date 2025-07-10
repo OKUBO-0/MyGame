@@ -1,6 +1,12 @@
 #pragma once
-#include "KamataEngine.h"
 #include "IScene.h"
+
+#include "../SkyDome.h"
+#include "../Player.h"
+
+#include "../Fade.h"
+
+#include <KamataEngine.h>
 
 class GameScene : public IScene
 {
@@ -30,6 +36,16 @@ private:
 
 	// カメラ
 	KamataEngine::Camera camera_;
+
+	// 天球
+	SkyDome* skyDome_ = nullptr;
+
+	// プレイヤー
+	Player* player_ = nullptr;
+
+	// フェード
+	Fade fade_;
+	bool fadeOutStarted_ = false;
 
 	// 終了フラグ
 	bool finished_ = false;

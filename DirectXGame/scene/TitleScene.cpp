@@ -8,7 +8,9 @@ TitleScene::TitleScene() {
 
 // デストラクタ
 TitleScene::~TitleScene() {
+	delete backgroundSprite_;
 	delete titleSprite_;
+	delete titleUISprite;
 }
 
 void TitleScene::Initialize() {
@@ -37,11 +39,24 @@ void TitleScene::Initialize() {
 	titleUISprite = Sprite::Create(titleUISpriteHandle_, { 0.0f, 0.0f });
 	titleUISprite->SetSize(Vector2(1280, 720));
 	titleUISprite->SetColor({ 1, 1, 1, 0 });
+
+	// フェードの初期化
+	fade_.Initialize();
+	fadeOutStarted_ = false;
 }
 
 void TitleScene::Update() {
+	// フェードの更新
+	fade_.Update();
+
 	// シーン終了
-	if (input_->TriggerKey(DIK_SPACE)) {
+	if (input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::Stay) {
+		fade_.StartFadeOut();
+		fadeOutStarted_ = true;
+	}
+
+	// フェードアウト完了でシーン終了
+	if (fadeOutStarted_ && fade_.IsFinished()) {
 		finished_ = true;
 	}
 
@@ -100,6 +115,9 @@ void TitleScene::Draw() {
 
 	// hitEnterスプライト
 	titleUISprite->Draw();
+
+	// フェードの描画
+	fade_.Draw();
 
 	// スプライト描画後処理
 	Sprite::PostDraw();

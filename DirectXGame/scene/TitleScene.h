@@ -1,6 +1,9 @@
 #pragma once
-#include "KamataEngine.h"
 #include "IScene.h"
+
+#include "../Fade.h"
+
+#include <KamataEngine.h>
 
 class TitleScene : public IScene
 {
@@ -43,6 +46,10 @@ private:
 	// タイトルUIスプライト
 	uint32_t titleUISpriteHandle_ = 0;
 	KamataEngine::Sprite* titleUISprite = nullptr;
+
+	// フェード
+	Fade fade_;
+	bool fadeOutStarted_ = false;
 
 	// 終了フラグ
 	bool finished_ = false;
