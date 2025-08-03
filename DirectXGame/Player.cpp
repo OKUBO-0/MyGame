@@ -36,16 +36,16 @@ void Player::Update() {
 	const float rotateLerpFactor = 0.1f;
 
 	if (input_->PushKey(DIK_W)) {
-		move.z += 1.0f;
+		move.z += speed_;
 	}
 	if (input_->PushKey(DIK_S)) {
-		move.z -= 1.0f;
+		move.z -= speed_;
 	}
 	if (input_->PushKey(DIK_A)) {
-		move.x -= 1.0f;
+		move.x -= speed_;
 	}
 	if (input_->PushKey(DIK_D)) {
-		move.x += 1.0f;
+		move.x += speed_;
 	}
 
 	if (move.x != 0.0f || move.z != 0.0f) {

@@ -10,7 +10,7 @@ TitleScene::TitleScene() {
 TitleScene::~TitleScene() {
 	delete backgroundSprite_;
 	delete titleSprite_;
-	delete titleUISprite;
+	delete titleUISprite_;
 }
 
 void TitleScene::Initialize() {
@@ -36,9 +36,9 @@ void TitleScene::Initialize() {
 
 	// タイトルUIスプライトの初期化
 	titleUISpriteHandle_ = TextureManager::Load("title/titleUI.png");
-	titleUISprite = Sprite::Create(titleUISpriteHandle_, { 0.0f, 0.0f });
-	titleUISprite->SetSize(Vector2(1280, 720));
-	titleUISprite->SetColor({ 1, 1, 1, 0 });
+	titleUISprite_ = Sprite::Create(titleUISpriteHandle_, { 0.0f, 0.0f });
+	titleUISprite_->SetSize(Vector2(1280, 720));
+	titleUISprite_->SetColor({ 1, 1, 1, 0 });
 
 	// フェードの初期化
 	fade_.Initialize();
@@ -76,7 +76,7 @@ void TitleScene::Update() {
 		// sin波で0〜1の値を作る（0.5〜1.0に変換）
 		float alpha = 0.5f + 0.5f * sinf(timer * 3.1415f * 2.0f);
 		// hitEnter点滅
-		titleUISprite->SetColor({ 1.0f, 1.0f, 1.0f, alpha });
+		titleUISprite_->SetColor({ 1.0f, 1.0f, 1.0f, alpha });
 	}
 }
 
@@ -88,7 +88,7 @@ void TitleScene::Draw() {
 	// 背景スプライト描画前処理
 	Sprite::PreDraw(dxCommon->GetCommandList());
 
-	// タイトルスプライトの描画
+	// 背景スプライトの描画
 	backgroundSprite_->Draw();
 
 	// スプライト描画後処理
@@ -113,8 +113,8 @@ void TitleScene::Draw() {
 	// タイトルスプライトの描画
 	titleSprite_->Draw();
 
-	// hitEnterスプライト
-	titleUISprite->Draw();
+	// タイトルUIスプライト
+	titleUISprite_->Draw();
 
 	// フェードの描画
 	fade_.Draw();

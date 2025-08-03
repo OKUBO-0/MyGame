@@ -45,7 +45,7 @@ private:
 
 	// タイトルUIスプライト
 	uint32_t titleUISpriteHandle_ = 0;
-	KamataEngine::Sprite* titleUISprite = nullptr;
+	KamataEngine::Sprite* titleUISprite_ = nullptr;
 
 	// フェード
 	Fade fade_;
