@@ -9,6 +9,8 @@ GameScene::GameScene() {
 // デストラクタ
 GameScene::~GameScene() {
 	delete skyDome_;
+	delete player_;
+	delete enemy_;
 }
 
 void GameScene::Initialize() {
@@ -29,6 +31,10 @@ void GameScene::Initialize() {
 	// プレイヤーの初期化
 	player_ = new Player();
 	player_->Initialize();
+
+	// 敵の初期化
+	enemy_ = new Enemy();
+	enemy_->Initialize();
 
 	// フェードの初期化
 	fade_.Initialize();
@@ -52,6 +58,9 @@ void GameScene::Update() {
 
 	// プレイヤーの更新
 	player_->Update();
+
+	// 敵の更新
+	enemy_->Update();
 }
 
 void GameScene::Draw() {
@@ -78,6 +87,9 @@ void GameScene::Draw() {
 
 	// プレイヤーの描画
 	player_->Draw();
+
+	// 敵の描画
+	enemy_->Draw();
 
 	// 3Dモデル描画後処理
 	Model::PostDraw();

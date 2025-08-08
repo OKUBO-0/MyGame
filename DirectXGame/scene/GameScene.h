@@ -3,6 +3,7 @@
 
 #include "../SkyDome.h"
 #include "../Player.h"
+#include "../Enemy.h"
 
 #include "../Fade.h"
 
@@ -42,6 +43,9 @@ private:
 
 	// プレイヤー
 	Player* player_ = nullptr;
+
+	// 敵
+	Enemy* enemy_ = nullptr;
 
 	// フェード
 	Fade fade_;

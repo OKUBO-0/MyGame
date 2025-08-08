@@ -77,22 +77,22 @@ void Player::Update() {
 		worldTransform_.rotation_.y += delta * rotateLerpFactor;
 	}
 
-	// プレイヤーのワールド座標を取得
-	Vector3 playerPos = worldTransform_.translation_;
+	//// プレイヤーのワールド座標を取得
+	//Vector3 playerPos = worldTransform_.translation_;
 
-	// プレイヤーの背後にカメラを配置
-	Vector3 cameraOffset = { 0.0f, 10.0f, -30.0f };
-	Vector3 cameraPos = {
-		playerPos.x + cameraOffset.x,
-		playerPos.y + cameraOffset.y,
-		playerPos.z + cameraOffset.z
-	};
+	//// プレイヤーの背後にカメラを配置
+	//Vector3 cameraOffset = { 0.0f, 10.0f, -30.0f };
+	//Vector3 cameraPos = {
+	//	playerPos.x + cameraOffset.x,
+	//	playerPos.y + cameraOffset.y,
+	//	playerPos.z + cameraOffset.z
+	//};
 
-	// カメラの座標を更新
-	camera_.translation_ = cameraPos;
+	//// カメラの座標を更新
+	//camera_.translation_ = cameraPos;
 
-	// プレイヤーの位置を見るように回転（ビュー行列を作るときに見る点を決定する）
-	camera_.UpdateMatrix();  // translation_ や rotation_ に基づいて matView を再計算
+	//// プレイヤーの位置を見るように回転（ビュー行列を作るときに見る点を決定する）
+	//camera_.UpdateMatrix();  // translation_ や rotation_ に基づいて matView を再計算
 
 	// ワールドトランスフォームの更新
 	worldTransform_.UpdateMatrix();
