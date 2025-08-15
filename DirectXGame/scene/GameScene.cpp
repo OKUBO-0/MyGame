@@ -61,6 +61,11 @@ void GameScene::Update() {
 
 	// 敵の更新
 	enemy_->Update();
+
+	// プレイヤーと敵の衝突判定
+	if (CheckAABBCollision(player_->GetAABB(), enemy_->GetAABB())) {
+		finished_ = true;
+	}
 }
 
 void GameScene::Draw() {

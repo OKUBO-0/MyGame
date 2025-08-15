@@ -1,4 +1,5 @@
 #pragma once
+#include "Collider.h"
 
 #include <KamataEngine.h>
 
@@ -19,6 +20,8 @@ public:
 
     // 描画
     void Draw();
+
+    AABB GetAABB() const;
 
 private:
     // ワールドトランスフォーム

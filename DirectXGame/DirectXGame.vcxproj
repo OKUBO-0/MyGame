@@ -192,6 +192,7 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Collider.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="Fade.h" />
     <ClInclude Include="Player.h" />

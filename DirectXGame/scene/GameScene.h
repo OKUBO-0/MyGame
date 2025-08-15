@@ -7,6 +7,8 @@
 
 #include "../Fade.h"
 
+#include "../Collider.h"
+
 #include <KamataEngine.h>
 
 class GameScene : public IScene

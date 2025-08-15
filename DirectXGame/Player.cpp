@@ -24,7 +24,7 @@ void Player::Initialize() {
 
 	// ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
-	worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
+	worldTransform_.translation_ = { 10.0f, 0.0f, 0.0f };
 }
 
 // 更新
@@ -102,4 +102,14 @@ void Player::Update() {
 void Player::Draw() {
 	// モデルの描画
 	playerModel_->Draw(worldTransform_, camera_);
+}
+
+AABB Player::GetAABB() const {
+	// モデルの大きさに応じて調整（ここでは仮に±0.5）
+	float halfSize = 1.0f;
+	Vector3 pos = worldTransform_.translation_;
+	AABB box;
+	box.min = { pos.x - halfSize, pos.y - halfSize, pos.z - halfSize };
+	box.max = { pos.x + halfSize, pos.y + halfSize, pos.z + halfSize };
+	return box;
 }
