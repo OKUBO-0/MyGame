@@ -24,11 +24,17 @@ void Player::Initialize() {
 
 	// ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
-	worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
+	worldTransform_.translation_ = { 10.0f, 0.0f, 0.0f };
 }
 
 // 更新
 void Player::Update() {
+	if (!canMove_) {
+		// ワールド行列だけ更新して終了（回転も移動もしない）
+		worldTransform_.UpdateMatrix();
+		return;
+	}
+
 	// 入力による移動方向ベクトル
 	Vector3 move = { 0.0f, 0.0f, 0.0f };
 

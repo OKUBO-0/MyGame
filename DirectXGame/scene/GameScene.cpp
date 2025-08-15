@@ -39,6 +39,9 @@ void GameScene::Initialize() {
 	// フェードの初期化
 	fade_.Initialize();
 	fadeOutStarted_ = false;
+
+	// 当たり判定サイズ読み込み
+	CollisionManager::GetInstance()->LoadHitBoxCSV("csv/HitBoxData.csv");
 }
 
 void GameScene::Update() {
@@ -61,6 +64,20 @@ void GameScene::Update() {
 
 	// 敵の更新
 	enemy_->Update();
+
+	// 当たり判定
+	auto& playerHit = CollisionManager::GetInstance()->GetHitBoxData("Player");
+	auto& enemyHit = CollisionManager::GetInstance()->GetHitBoxData("Enemy");
+
+	if (CollisionManager::GetInstance()->CheckCollisionCircle(
+		player_->GetPosition(), playerHit.radius,
+		enemy_->GetPosition(), enemyHit.radius)) {
+		printf("プレイヤーと敵が衝突しました！\n");
+		player_->SetCanMove(false); // 移動禁止
+	}
+	else {
+		player_->SetCanMove(true);  // 衝突していなければ移動可能
+	}
 }
 
 void GameScene::Draw() {

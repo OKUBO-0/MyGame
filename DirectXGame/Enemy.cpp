@@ -18,10 +18,13 @@ void Enemy::Initialize() {
 
     // ワールドトランスフォーム初期化
     worldTransform_.Initialize();
-    worldTransform_.translation_ = { 0.0f, 0.0f, 5.0f };
+    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 }
 
 void Enemy::Update() {
+
+    // ワールドトランスフォームの更新
+    worldTransform_.UpdateMatrix();
 }
 
 void Enemy::Draw() {

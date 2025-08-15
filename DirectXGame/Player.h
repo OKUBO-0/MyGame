@@ -20,6 +20,9 @@ public:
 	// 描画
 	void Draw();
 
+	KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
+	void SetCanMove(bool canMove) { canMove_ = canMove; }
+
 private:
 	// 入力インスタンス
 	KamataEngine::Input* input_ = nullptr;
@@ -33,4 +36,6 @@ private:
 	KamataEngine::Model* playerModel_ = nullptr;
 
 	float speed_ = 0.3f;
+
+	bool canMove_ = true;
 };

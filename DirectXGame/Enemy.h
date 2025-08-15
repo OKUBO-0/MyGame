@@ -20,6 +20,8 @@ public:
     // 描画
     void Draw();
 
+    KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
+
 private:
     // ワールドトランスフォーム
     KamataEngine::WorldTransform worldTransform_;
