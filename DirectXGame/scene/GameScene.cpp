@@ -35,6 +35,7 @@ void GameScene::Initialize() {
 	// 敵の初期化
 	enemy_ = new Enemy();
 	enemy_->Initialize();
+	enemy_->SetPlayer(player_);
 
 	// フェードの初期化
 	fade_.Initialize();

@@ -20,6 +20,10 @@ public:
 	// 描画
 	void Draw();
 
+	KamataEngine::Vector3 GetWorldPosition() const {
+		return worldTransform_.translation_;
+	}
+
 private:
 	// 入力インスタンス
 	KamataEngine::Input* input_ = nullptr;

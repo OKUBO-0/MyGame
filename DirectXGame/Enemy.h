@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Player.h"
 #include <KamataEngine.h>
 
 class Enemy
@@ -20,6 +21,9 @@ public:
     // 描画
     void Draw();
 
+    // プレイヤーを設定する
+    void SetPlayer(Player* player) { player_ = player; }
+
 private:
     // ワールドトランスフォーム
     KamataEngine::WorldTransform worldTransform_;
@@ -29,4 +33,7 @@ private:
 
     // モデル
     KamataEngine::Model* enemyModel_ = nullptr;
+
+    // プレイヤー参照
+    Player* player_ = nullptr;
 };
