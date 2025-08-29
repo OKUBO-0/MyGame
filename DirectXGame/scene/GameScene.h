@@ -47,7 +47,6 @@ private:
 	Player* player_ = nullptr;
 
 	// 敵
-	//Enemy* enemy_ = nullptr;
 	EnemyManager enemyManager_;
 
 	// フェード
