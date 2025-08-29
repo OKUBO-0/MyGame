@@ -5,6 +5,8 @@
 #include "../Player.h"
 #include "../Enemy.h"
 
+#include "../EnemyManager.h"
+
 #include "../Fade.h"
 
 #include <KamataEngine.h>
@@ -45,7 +47,8 @@ private:
 	Player* player_ = nullptr;
 
 	// 敵
-	Enemy* enemy_ = nullptr;
+	//Enemy* enemy_ = nullptr;
+	EnemyManager enemyManager_;
 
 	// フェード
 	Fade fade_;

@@ -21,8 +21,15 @@ public:
     // 描画
     void Draw();
 
+    // 位置を設定する
+    void SetPosition(const KamataEngine::Vector3& pos) {
+        worldTransform_.translation_ = pos;
+    }
+
     // プレイヤーを設定する
-    void SetPlayer(Player* player) { player_ = player; }
+    void SetPlayer(Player* player) {
+        player_ = player;
+    }
 
 private:
     // ワールドトランスフォーム

@@ -10,7 +10,7 @@ GameScene::GameScene() {
 GameScene::~GameScene() {
 	delete skyDome_;
 	delete player_;
-	delete enemy_;
+	//delete enemy_;
 }
 
 void GameScene::Initialize() {
@@ -33,9 +33,12 @@ void GameScene::Initialize() {
 	player_->Initialize();
 
 	// 敵の初期化
-	enemy_ = new Enemy();
-	enemy_->Initialize();
-	enemy_->SetPlayer(player_);
+	//enemy_ = new Enemy();
+	//enemy_->Initialize();
+	//enemy_->SetPlayer(player_);
+
+	// EnemyManagerを初期化
+	enemyManager_.Initialize("Resources/EnemyPos.csv", player_);
 
 	// フェードの初期化
 	fade_.Initialize();
@@ -61,7 +64,8 @@ void GameScene::Update() {
 	player_->Update();
 
 	// 敵の更新
-	enemy_->Update();
+	//enemy_->Update();
+	enemyManager_.Update();
 }
 
 void GameScene::Draw() {
@@ -90,7 +94,8 @@ void GameScene::Draw() {
 	player_->Draw();
 
 	// 敵の描画
-	enemy_->Draw();
+	//enemy_->Draw();
+	enemyManager_.Draw();
 
 	// 3Dモデル描画後処理
 	Model::PostDraw();

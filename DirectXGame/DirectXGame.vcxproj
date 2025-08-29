@@ -107,6 +107,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="Fade.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="scene\SceneManager.cpp" />
@@ -193,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="Fade.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="scene\SceneManager.h" />

@@ -22,29 +22,29 @@ void Enemy::Initialize() {
 }
 
 void Enemy::Update() {
-    // プレイヤーが設定されている場合のみ向きを合わせる
     if (player_) {
-        // プレイヤーのワールド座標を取得
-        Vector3 playerPos = player_->GetWorldPosition();
+        // プレイヤー座標を取得
+        const auto& playerPos = player_->GetWorldPosition();
 
-        // 敵のワールド座標
-        Vector3 enemyPos = worldTransform_.translation_;
-
-        // プレイヤー方向ベクトルを計算
-        Vector3 toPlayer = {
-            playerPos.x - enemyPos.x,
-            0.0f, // Y軸回転だけしたいので高さ方向は無視
-            playerPos.z - enemyPos.z
+        // プレイヤー方向ベクトル
+        Vector3 dir = {
+            playerPos.x - worldTransform_.translation_.x,
+            0.0f,
+            playerPos.z - worldTransform_.translation_.z
         };
 
-        // 角度を求める（Z軸正方向を基準としたラジアン）
-        float targetAngle = std::atan2(toPlayer.x, toPlayer.z);
+        // 正規化
+        float len = std::sqrt(dir.x * dir.x + dir.z * dir.z);
+        if (len > 0.0f) {
+            dir.x /= len;
+            dir.z /= len;
+        }
 
-        // 敵のY回転をプレイヤー方向に合わせる
-        worldTransform_.rotation_.y = targetAngle;
+        // 敵の向きをプレイヤー方向へ
+        worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
     }
 
-    // ワールド行列更新
+    // 行列更新
     worldTransform_.UpdateMatrix();
 }
 
