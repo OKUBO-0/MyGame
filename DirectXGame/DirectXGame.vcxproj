@@ -109,6 +109,8 @@
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="Fade.cpp" />
+    <ClCompile Include="scene\ResultScene.cpp" />
+    <ClCompile Include="scene\IScene.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="scene\SceneManager.cpp" />
     <ClCompile Include="scene\GameScene.cpp" />
@@ -197,6 +199,7 @@
     <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="Fade.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="scene\ResultScene.h" />
     <ClInclude Include="scene\SceneManager.h" />
     <ClInclude Include="scene\IScene.h" />
     <ClInclude Include="scene\GameScene.h" />

@@ -1,106 +1,100 @@
 #include "GameScene.h"
-
 using namespace KamataEngine;
 
-// コンストラクタ
-GameScene::GameScene() {
-}
-
-// デストラクタ
+GameScene::GameScene() {}
 GameScene::~GameScene() {
-	delete skyDome_;
-	delete player_;
+    delete skyDome_;
+    delete player_;
+    delete pauseOverlay_;
+    delete pauseText_;
 }
 
 void GameScene::Initialize() {
-	// DirectXCommonインスタンスの取得
-	dxCommon_ = DirectXCommon::GetInstance();
-	// Inputインスタンスの取得
-	input_ = Input::GetInstance();
-	// Audioインスタンスの取得
-	audio_ = Audio::GetInstance();
+    dxCommon_ = DirectXCommon::GetInstance();
+    input_ = Input::GetInstance();
+    audio_ = Audio::GetInstance();
 
-	// カメラ
-	camera_.Initialize();
+    camera_.Initialize();
 
-	// 天球
-	skyDome_ = new SkyDome();
-	skyDome_->Initialize();
+    skyDome_ = new SkyDome();
+    skyDome_->Initialize();
 
-	// プレイヤーの初期化
-	player_ = new Player();
-	player_->Initialize();
+    player_ = new Player();
+    player_->Initialize();
 
-	// 敵の初期化
-	enemyManager_.Initialize("Resources/EnemyPos.csv", player_);
+    enemyManager_.Initialize("Resources/EnemyPos.csv", player_);
 
-	// フェードの初期化
-	fade_.Initialize();
-	fadeOutStarted_ = false;
+    fade_.Initialize();
+    fadeOutStarted_ = false;
+
+    // ポーズ画面用スプライト
+    uint32_t blackTex = TextureManager::Load("uvChecker.png");
+    pauseOverlay_ = Sprite::Create(blackTex, { 0,0 });
+    pauseOverlay_->SetSize({ 100,100 });
+    pauseOverlay_->SetColor({ 0,0,0,0.5f }); // 半透明
 }
 
 void GameScene::Update() {
-	// フェードの更新
-	fade_.Update();
+    fade_.Update();
 
-	// シーン終了
-	if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::Stay) {
-		fade_.StartFadeOut();
-		fadeOutStarted_ = true;
-	}
+    // ESCでポーズ切り替え
+    if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::Stay) {
+        paused_ = !paused_;
+    }
 
-	// フェードアウト完了でシーン終了
-	if (fadeOutStarted_ && fade_.IsFinished()) {
-		finished_ = true;
-	}
+    if (paused_) {
+        // ポーズ中の入力
+        if (input_->TriggerKey(DIK_1)) {
+            fade_.StartFadeOut();
+            fadeOutStarted_ = true;
+            SetSceneNo(SCENE::Title);
+        }
+        else if (input_->TriggerKey(DIK_2)) {
+            fade_.StartFadeOut();
+            fadeOutStarted_ = true;
+            SetSceneNo(SCENE::Result);
+        }
 
-	// プレイヤーの更新
-	player_->Update();
+        if (fadeOutStarted_ && fade_.IsFinished()) {
+            finished_ = true;
+        }
 
-	// 敵の更新
-	enemyManager_.Update();
+        return; // ポーズ中はゲーム更新停止
+    }
+
+    if (fadeOutStarted_ && fade_.IsFinished()) {
+        finished_ = true;
+    }
+
+    player_->Update();
+    enemyManager_.Update();
 }
 
 void GameScene::Draw() {
-	// DirectXCommon インスタンスの取得
-	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
-#pragma region 背景スプライト描画
-	// 背景スプライト描画前処理
-	Sprite::PreDraw(dxCommon->GetCommandList());
+    Sprite::PreDraw(dxCommon->GetCommandList());
+    Sprite::PostDraw();
 
-	// スプライト描画後処理
-	Sprite::PostDraw();
+    dxCommon_->ClearDepthBuffer();
 
-	// 深度バッファクリア
-	dxCommon_->ClearDepthBuffer();
-#pragma endregion
+    Model::PreDraw(dxCommon->GetCommandList());
+    skyDome_->Draw();
+    player_->Draw();
+    enemyManager_.Draw();
+    Model::PostDraw();
 
-#pragma region 3Dモデル描画
-	// 3Dモデル描画前処理
-	Model::PreDraw(dxCommon->GetCommandList());
+    // フェード
+    Sprite::PreDraw(dxCommon->GetCommandList());
+    fade_.Draw();
+    Sprite::PostDraw();
 
-	// 天球の描画
-	skyDome_->Draw();
-
-	// プレイヤーの描画
-	player_->Draw();
-
-	// 敵の描画
-	enemyManager_.Draw();
-
-	// 3Dモデル描画後処理
-	Model::PostDraw();
-#pragma endregion
-
-#pragma region 前景スプライト描画
-	// 背景スプライト描画前処理
-	Sprite::PreDraw(dxCommon->GetCommandList());
-
-	// フェードの描画
-	fade_.Draw();
-
-	// スプライト描画後処理
-	Sprite::PostDraw();
-#pragma endregion
+    // ポーズ表示
+    if (paused_) {
+        Sprite::PreDraw(dxCommon->GetCommandList());
+        pauseOverlay_->Draw();
+        Sprite::PostDraw();
+    }
 }
+
+void GameScene::Finalize() {}

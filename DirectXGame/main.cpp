@@ -1,6 +1,7 @@
 #include "scene/SceneManager.h"
 #include "scene/TitleScene.h"
 #include "scene/GameScene.h"
+#include "scene/ResultScene.h"
 
 #include <KamataEngine.h>
 #include <Windows.h>
@@ -16,14 +17,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// DirectXCommonのインスタンスを取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
+	// シーン
 	SceneManager sceneManager;
 
 	// シーン登録
-	sceneManager.RegisterScene(SceneName::Title, []() { return std::make_unique<TitleScene>(); });
-	sceneManager.RegisterScene(SceneName::Game, []() { return std::make_unique<GameScene>(); });
+	sceneManager.RegisterScene(SCENE::Title, []() { return std::make_unique<TitleScene>(); });
+	sceneManager.RegisterScene(SCENE::Game, []() { return std::make_unique<GameScene>(); });
+	sceneManager.RegisterScene(SCENE::Result, []() { return std::make_unique<ResultScene>(); });
 
 	// 初期シーンをタイトルに設定
-	sceneManager.ChangeScene(SceneName::Title);
+	sceneManager.ChangeScene(SCENE::Title);
 
 	// メインループ
 	while (true) {

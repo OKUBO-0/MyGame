@@ -1,58 +1,39 @@
 #pragma once
 #include "IScene.h"
-
-#include "../SkyDome.h"
 #include "../Player.h"
-#include "../Enemy.h"
-
 #include "../EnemyManager.h"
-
+#include "../SkyDome.h"
 #include "../Fade.h"
-
 #include <KamataEngine.h>
 
-class GameScene : public IScene
-{
+class GameScene : public IScene {
 public:
-	// コンストラクタ
-	GameScene();
+    GameScene();
+    ~GameScene();
 
-	// デストラクタ
-	~GameScene();
+    void Initialize() override;
+    void Update() override;
+    void Draw() override;
+    void Finalize() override;
 
-	// 初期化
-	void Initialize();
-
-	// 更新
-	void Update();
-
-	// 描画
-	void Draw();
-
-	// 終了フラグ
-	bool IsFinished() const { return finished_; }
+    bool IsFinished() const override { return finished_; }
 
 private:
-	KamataEngine::DirectXCommon* dxCommon_ = nullptr;
-	KamataEngine::Input* input_ = nullptr;
-	KamataEngine::Audio* audio_ = nullptr;
+    KamataEngine::DirectXCommon* dxCommon_ = nullptr;
+    KamataEngine::Input* input_ = nullptr;
+    KamataEngine::Audio* audio_ = nullptr;
 
-	// カメラ
-	KamataEngine::Camera camera_;
+    KamataEngine::Camera camera_;
+    SkyDome* skyDome_ = nullptr;
+    Player* player_ = nullptr;
+    EnemyManager enemyManager_;
 
-	// 天球
-	SkyDome* skyDome_ = nullptr;
+    Fade fade_;
+    bool fadeOutStarted_ = false;
+    bool finished_ = false;
 
-	// プレイヤー
-	Player* player_ = nullptr;
-
-	// 敵
-	EnemyManager enemyManager_;
-
-	// フェード
-	Fade fade_;
-	bool fadeOutStarted_ = false;
-
-	// 終了フラグ
-	bool finished_ = false;
+    // ポーズ用
+    bool paused_ = false;
+    KamataEngine::Sprite* pauseOverlay_ = nullptr; // 半透明背景
+    KamataEngine::Sprite* pauseText_ = nullptr;    // "Paused"文字
 };

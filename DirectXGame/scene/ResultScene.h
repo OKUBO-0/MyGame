@@ -3,10 +3,10 @@
 #include "../Fade.h"
 #include <KamataEngine.h>
 
-class TitleScene : public IScene {
+class ResultScene : public IScene {
 public:
-    TitleScene();
-    ~TitleScene();
+    ResultScene();
+    ~ResultScene();
 
     void Initialize() override;
     void Update() override;
@@ -21,8 +21,7 @@ private:
     KamataEngine::Audio* audio_ = nullptr;
 
     KamataEngine::Sprite* backgroundSprite_ = nullptr;
-    KamataEngine::Sprite* titleSprite_ = nullptr;
-    KamataEngine::Sprite* titleUISprite_ = nullptr;
+    KamataEngine::Sprite* resultSprite_ = nullptr;
 
     Fade fade_;
     bool fadeOutStarted_ = false;
