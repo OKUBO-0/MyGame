@@ -35,18 +35,9 @@ void Player::Update() {
 	// 追記：補間係数（0.1〜0.2程度が自然）
 	const float rotateLerpFactor = 0.1f;
 
-	if (input_->PushKey(DIK_W)) {
-		move.z += speed_;
-	}
-	if (input_->PushKey(DIK_S)) {
-		move.z -= speed_;
-	}
-	if (input_->PushKey(DIK_A)) {
-		move.x -= speed_;
-	}
-	if (input_->PushKey(DIK_D)) {
-		move.x += speed_;
-	}
+	// 移動入力を無効化（常に画面下中央に固定）
+	worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f }; // Zはカメラとの距離
+	worldTransform_.rotation_.y = 0.0f; // 向き固定
 
 	if (move.x != 0.0f || move.z != 0.0f) {
 		// 正規化

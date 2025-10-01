@@ -41,6 +41,9 @@ private:
     // モデル
     KamataEngine::Model* enemyModel_ = nullptr;
 
+    float speed_ = 0.1f;   // 移動速度
+    float stopZ_ = 10.0f; // 停止するZ座標
+
     // プレイヤー参照
     Player* player_ = nullptr;
 };

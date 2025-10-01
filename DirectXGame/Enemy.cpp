@@ -18,7 +18,7 @@ void Enemy::Initialize() {
 
     // ワールドトランスフォーム初期化
     worldTransform_.Initialize();
-    worldTransform_.translation_ = { 0.0f, 0.0f, 5.0f };
+    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 }
 
 void Enemy::Update() {
@@ -42,6 +42,14 @@ void Enemy::Update() {
 
         // 敵の向きをプレイヤー方向へ
         worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
+    }
+
+    // Z方向に下に進む
+    worldTransform_.translation_.z -= speed_;
+
+    // Zが stopZ_ より小さくなったらClamp
+    if (worldTransform_.translation_.z < stopZ_) {
+        worldTransform_.translation_.z = stopZ_;
     }
 
     // 行列更新
