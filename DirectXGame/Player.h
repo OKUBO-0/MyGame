@@ -1,40 +1,40 @@
 #pragma once
 
 #include <KamataEngine.h>
+#include <vector>
+#include "Bullet.h"
 
 class Player
 {
 public:
-	// コンストラクタ
-	Player();
+    Player();
+    ~Player();
 
-	// デストラクタ
-	~Player();
+    void Initialize();
+    void Update();
+    void Draw();
 
-	// 初期化
-	void Initialize();
-
-	// 更新
-	void Update();
-
-	// 描画
-	void Draw();
-
-	KamataEngine::Vector3 GetWorldPosition() const {
-		return worldTransform_.translation_;
-	}
+    KamataEngine::Vector3 GetWorldPosition() const {
+        return worldTransform_.translation_;
+    }
 
 private:
-	// 入力インスタンス
-	KamataEngine::Input* input_ = nullptr;
-	// ワールドトランスフォーム
-	KamataEngine::WorldTransform worldTransform_;
+    // 入力インスタンス
+    KamataEngine::Input* input_ = nullptr;
 
-	// カメラ
-	KamataEngine::Camera camera_;
+    // ワールドトランスフォーム
+    KamataEngine::WorldTransform worldTransform_;
 
-	// プレイヤーモデル
-	KamataEngine::Model* playerModel_ = nullptr;
+    // カメラ
+    KamataEngine::Camera camera_;
 
-	float speed_ = 0.3f;
+    // プレイヤーモデル
+    KamataEngine::Model* playerModel_ = nullptr;
+
+    float speed_ = 0.3f;
+
+    // 弾管理
+    std::vector<Bullet*> bullets_;
+    float bulletCooldown_ = 1.0f; // 1秒間隔
+    float bulletTimer_ = 0.0f;
 };

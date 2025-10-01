@@ -1,96 +1,58 @@
 #include "Player.h"
-
 using namespace KamataEngine;
 
-// コンストラクタ
-Player::Player() {
-}
+Player::Player() {}
 
-// デストラクタ
 Player::~Player() {
-	delete playerModel_;
+    delete playerModel_;
+    for (auto b : bullets_) {
+        delete b;
+    }
+    bullets_.clear();
 }
 
-// 初期化
 void Player::Initialize() {
-	// Inputインスタンスの取得
-	input_ = Input::GetInstance();
+    input_ = Input::GetInstance();
+    camera_.Initialize();
 
-	// カメラの初期化
-	camera_.Initialize();
+    playerModel_ = Model::CreateFromOBJ("octopus");
 
-	// プレイヤーモデルの読み込み
-	playerModel_ = Model::CreateFromOBJ("octopus");
-
-	// ワールドトランスフォームの初期化
-	worldTransform_.Initialize();
-	worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
+    worldTransform_.Initialize();
+    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 }
 
-// 更新
 void Player::Update() {
-	// 入力による移動方向ベクトル
-	Vector3 move = { 0.0f, 0.0f, 0.0f };
+    // プレイヤー位置固定（画面下中央）
+    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
+    worldTransform_.rotation_.y = 0.0f;
 
-	// 追記：補間係数（0.1〜0.2程度が自然）
-	const float rotateLerpFactor = 0.1f;
+    // 弾のクールタイム更新
+    bulletTimer_ += 0.016f; // 1フレーム=0.016秒想定（60FPS）
 
-	// 移動入力を無効化（常に画面下中央に固定）
-	worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f }; // Zはカメラとの距離
-	worldTransform_.rotation_.y = 0.0f; // 向き固定
+    if (bulletTimer_ >= bulletCooldown_) {
+        // 弾発射（正Z方向）
+        Vector3 dir = { 0.0f, 0.0f, 1.0f };
+        Bullet* bullet = new Bullet();
+        bullet->Initialize(worldTransform_.translation_, dir, 0.5f);
+        bullets_.push_back(bullet);
 
-	if (move.x != 0.0f || move.z != 0.0f) {
-		// 正規化
-		float length = std::sqrt(move.x * move.x + move.z * move.z);
-		move.x /= length;
-		move.z /= length;
+        bulletTimer_ = 0.0f;
+    }
 
-		// 移動
-		worldTransform_.translation_.x += move.x * speed_;
-		worldTransform_.translation_.z += move.z * speed_;
+    // 弾の更新
+    for (auto bullet : bullets_) {
+        bullet->Update();
+    }
 
-		// 目標角度（Z軸正方向を基準にしたラジアン）
-		float targetAngle = std::atan2(move.x, move.z);
-
-		// 現在角度
-		float currentAngle = worldTransform_.rotation_.y;
-
-		// ラジアンの差を -π ～ π に収める
-		float delta = targetAngle - currentAngle;
-		if (delta > 3.14159265f) {
-			delta -= 2.0f * 3.14159265f;
-		}
-		if (delta < -3.14159265f) {
-			delta += 2.0f * 3.14159265f;
-		}
-
-		// 線形補間（滑らかに回転）
-		worldTransform_.rotation_.y += delta * rotateLerpFactor;
-	}
-
-	//// プレイヤーのワールド座標を取得
-	//Vector3 playerPos = worldTransform_.translation_;
-
-	//// プレイヤーの背後にカメラを配置
-	//Vector3 cameraOffset = { 0.0f, 10.0f, -30.0f };
-	//Vector3 cameraPos = {
-	//	playerPos.x + cameraOffset.x,
-	//	playerPos.y + cameraOffset.y,
-	//	playerPos.z + cameraOffset.z
-	//};
-
-	//// カメラの座標を更新
-	//camera_.translation_ = cameraPos;
-
-	//// プレイヤーの位置を見るように回転（ビュー行列を作るときに見る点を決定する）
-	//camera_.UpdateMatrix();  // translation_ や rotation_ に基づいて matView を再計算
-
-	// ワールドトランスフォームの更新
-	worldTransform_.UpdateMatrix();
+    worldTransform_.UpdateMatrix();
 }
 
-// 描画
 void Player::Draw() {
-	// モデルの描画
-	playerModel_->Draw(worldTransform_, camera_);
+    // プレイヤー描画
+    playerModel_->Draw(worldTransform_, camera_);
+
+    // 弾描画
+    for (auto bullet : bullets_) {
+        bullet->Draw();
+    }
 }
