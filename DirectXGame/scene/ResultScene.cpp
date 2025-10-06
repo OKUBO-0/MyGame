@@ -27,7 +27,7 @@ void ResultScene::Initialize() {
 void ResultScene::Update() {
     fade_.Update();
 
-    if (input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::Stay) {
+    if (input_->TriggerKey(DIK_RETURN) && fade_.GetState() == Fade::State::Stay) {
         fade_.StartFadeOut();
         fadeOutStarted_ = true;
         SetSceneNo(SCENE::Title); // タイトルへ戻る

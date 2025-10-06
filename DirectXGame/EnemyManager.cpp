@@ -5,8 +5,7 @@
 
 using namespace KamataEngine;
 
-EnemyManager::EnemyManager() {
-}
+EnemyManager::EnemyManager() {}
 
 EnemyManager::~EnemyManager() {
     for (auto enemy : enemies_) {
@@ -19,9 +18,9 @@ void EnemyManager::Initialize(const std::string& csvPath, Player* player) {
     player_ = player;
 
     // CSVから敵座標を読み込み
-    auto enemyPositions = LoadEnemyPositionsFromCSV(csvPath);
+    const auto enemyPositions = LoadEnemyPositionsFromCSV(csvPath);
 
-    // 敵を配置
+    // 敵を生成・配置
     for (const auto& pos : enemyPositions) {
         Enemy* enemy = new Enemy();
         enemy->Initialize();
@@ -45,8 +44,8 @@ void EnemyManager::Draw() {
 
 std::vector<Vector3> EnemyManager::LoadEnemyPositionsFromCSV(const std::string& filePath) {
     std::vector<Vector3> positions;
-
     std::ifstream file(filePath);
+
     if (!file.is_open()) {
         OutputDebugStringA(("CSV読み込み失敗: " + filePath + "\n").c_str());
         return positions;
@@ -56,7 +55,7 @@ std::vector<Vector3> EnemyManager::LoadEnemyPositionsFromCSV(const std::string& 
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string value;
-        float x, y, z;
+        float x = 0.0f, y = 0.0f, z = 0.0f;
 
         std::getline(ss, value, ',');
         x = std::stof(value);
@@ -65,7 +64,7 @@ std::vector<Vector3> EnemyManager::LoadEnemyPositionsFromCSV(const std::string& 
         std::getline(ss, value, ',');
         z = std::stof(value);
 
-        positions.push_back({ x, y, z });
+        positions.emplace_back(x, y, z);
     }
 
     file.close();

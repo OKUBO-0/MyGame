@@ -2,12 +2,9 @@
 using namespace KamataEngine;
 
 Player::Player() {}
-
 Player::~Player() {
     delete playerModel_;
-    for (auto b : bullets_) {
-        delete b;
-    }
+    for (auto b : bullets_) delete b;
     bullets_.clear();
 }
 
@@ -22,11 +19,26 @@ void Player::Initialize() {
 }
 
 void Player::Update() {
+    // 固定位置・向き
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
     worldTransform_.rotation_.y = 0.0f;
 
     bulletTimer_ += 0.016f;
 
+    // 無敵時間と点滅処理
+    if (invincible_) {
+        invincibleTimer_ -= 0.016f;
+        if (invincibleTimer_ <= 0.0f) {
+            invincible_ = false;
+            visible_ = true;
+        }
+        else {
+            int blinkFrame = static_cast<int>(invincibleTimer_ * 10.0f);
+            visible_ = (blinkFrame % 2 == 0);
+        }
+    }
+
+    // 射程内の敵を探索
     Vector3 nearestDir = { 0.0f, 0.0f, 1.0f };
     float minDistSq = FLT_MAX;
     bool enemyInRange = false;
@@ -37,14 +49,12 @@ void Player::Update() {
 
             Vector3 ePos = enemy->GetPosition();
             Vector3 pPos = worldTransform_.translation_;
-
             float dx = ePos.x - pPos.x;
             float dz = ePos.z - pPos.z;
             float distSq = dx * dx + dz * dz;
 
             if (distSq <= range_ * range_) {
                 enemyInRange = true;
-
                 if (distSq < minDistSq) {
                     minDistSq = distSq;
                     nearestDir = { dx, 0.0f, dz };
@@ -53,6 +63,7 @@ void Player::Update() {
         }
     }
 
+    // 弾発射
     if (bulletTimer_ >= bulletCooldown_ && enemyInRange) {
         float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
         if (len > 0.0f) {
@@ -63,20 +74,40 @@ void Player::Update() {
         Bullet* bullet = new Bullet();
         bullet->Initialize(worldTransform_.translation_, nearestDir, 0.5f);
         bullets_.push_back(bullet);
-
         bulletTimer_ = 0.0f;
     }
 
-    for (auto bullet : bullets_) {
+    // 弾更新と破棄
+    for (auto it = bullets_.begin(); it != bullets_.end(); ) {
+        Bullet* bullet = *it;
         bullet->Update();
+        if (!bullet->IsActive()) {
+            delete bullet;
+            it = bullets_.erase(it);
+        }
+        else {
+            ++it;
+        }
     }
 
     worldTransform_.UpdateMatrix();
 }
 
 void Player::Draw() {
-    playerModel_->Draw(worldTransform_, camera_);
+    if (visible_) {
+        playerModel_->Draw(worldTransform_, camera_);
+    }
+
     for (auto bullet : bullets_) {
         bullet->Draw();
     }
+}
+
+void Player::TakeDamage() {
+    if (invincible_) return;
+
+    lifeStock_--;
+    invincible_ = true;
+    invincibleTimer_ = 1.0f;
+    visible_ = false;
 }

@@ -8,12 +8,15 @@ Bullet::~Bullet() {
 }
 
 void Bullet::Initialize(const Vector3& startPos, const Vector3& direction, float speed) {
+    // 初期化
     worldTransform_.Initialize();
     worldTransform_.translation_ = startPos;
+
     direction_ = direction;
     speed_ = speed;
+    power_ = 1;
     active_ = true;
-    power_ = 1; // ★追加
+
     model_ = Model::CreateFromOBJ("bullet");
     camera_.Initialize();
 }
@@ -26,9 +29,10 @@ void Bullet::Update() {
     worldTransform_.translation_.y += direction_.y * speed_;
     worldTransform_.translation_.z += direction_.z * speed_;
 
-    // 画面外に出たら非アクティブ化
-    if (worldTransform_.translation_.z > 50.0f || worldTransform_.translation_.z < -50.0f ||
-        worldTransform_.translation_.x > 50.0f || worldTransform_.translation_.x < -50.0f) {
+    // 範囲外で非アクティブ化
+    const float limit = 50.0f;
+    const Vector3& pos = worldTransform_.translation_;
+    if (pos.z > limit || pos.z < -limit || pos.x > limit || pos.x < -limit) {
         active_ = false;
     }
 
