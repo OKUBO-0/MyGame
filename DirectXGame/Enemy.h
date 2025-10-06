@@ -1,49 +1,32 @@
 #pragma once
-
 #include "Player.h"
 #include <KamataEngine.h>
 
-class Enemy
-{
+class Player;
+class Enemy {
 public:
-    // コンストラクタ
     Enemy();
-
-    // デストラクタ
     ~Enemy();
 
-    // 初期化
     void Initialize();
-
-    // 更新
     void Update();
-
-    // 描画
     void Draw();
 
-    // 位置を設定する
-    void SetPosition(const KamataEngine::Vector3& pos) {
-        worldTransform_.translation_ = pos;
-    }
+    void SetPosition(const KamataEngine::Vector3& pos) { worldTransform_.translation_ = pos; }
+    void SetPlayer(Player* player) { player_ = player; }
 
-    // プレイヤーを設定する
-    void SetPlayer(Player* player) {
-        player_ = player;
-    }
+    KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
+    void Deactivate() { active_ = false; }
+    bool IsActive() const { return active_; }
 
 private:
-    // ワールドトランスフォーム
     KamataEngine::WorldTransform worldTransform_;
-
-    // カメラ（描画用）
     KamataEngine::Camera camera_;
-
-    // モデル
     KamataEngine::Model* enemyModel_ = nullptr;
 
-    float speed_ = 0.1f;   // 移動速度
-    float stopZ_ = 10.0f; // 停止するZ座標
+    float speed_ = 0.05f;
+    float stopZ_ = 10.0f;
 
-    // プレイヤー参照
     Player* player_ = nullptr;
+    bool active_ = true;
 };

@@ -23,27 +23,25 @@ void GameScene::Initialize() {
     player_->Initialize();
 
     enemyManager_.Initialize("Resources/EnemyPos.csv", player_);
+    player_->SetEnemyManager(&enemyManager_); // ★追加
 
     fade_.Initialize();
     fadeOutStarted_ = false;
 
-    // ポーズ画面用スプライト
     uint32_t blackTex = TextureManager::Load("uvChecker.png");
     pauseOverlay_ = Sprite::Create(blackTex, { 0,0 });
     pauseOverlay_->SetSize({ 100,100 });
-    pauseOverlay_->SetColor({ 0,0,0,0.5f }); // 半透明
+    pauseOverlay_->SetColor({ 0,0,0,0.5f });
 }
 
 void GameScene::Update() {
     fade_.Update();
 
-    // ESCでポーズ切り替え
     if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::Stay) {
         paused_ = !paused_;
     }
 
     if (paused_) {
-        // ポーズ中の入力
         if (input_->TriggerKey(DIK_1)) {
             fade_.StartFadeOut();
             fadeOutStarted_ = true;
@@ -59,7 +57,7 @@ void GameScene::Update() {
             finished_ = true;
         }
 
-        return; // ポーズ中はゲーム更新停止
+        return;
     }
 
     if (fadeOutStarted_ && fade_.IsFinished()) {
@@ -68,6 +66,27 @@ void GameScene::Update() {
 
     player_->Update();
     enemyManager_.Update();
+
+    for (auto bullet : player_->GetBullets()) {
+        if (!bullet->IsActive()) continue;
+
+        for (auto enemy : enemyManager_.GetEnemies()) {
+            if (!enemy->IsActive()) continue;
+
+            KamataEngine::Vector3 bPos = bullet->GetPosition();
+            KamataEngine::Vector3 ePos = enemy->GetPosition();
+
+            float dx = bPos.x - ePos.x;
+            float dy = bPos.y - ePos.y;
+            float dz = bPos.z - ePos.z;
+            float distSq = dx * dx + dy * dy + dz * dz;
+
+            if (distSq < 0.5f * 0.5f) {
+                bullet->Deactivate();
+                enemy->Deactivate();
+            }
+        }
+    }
 }
 
 void GameScene::Draw() {

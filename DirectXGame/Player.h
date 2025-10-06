@@ -1,11 +1,11 @@
 #pragma once
-
 #include <KamataEngine.h>
 #include <vector>
 #include "Bullet.h"
+#include "EnemyManager.h"
 
-class Player
-{
+class EnemyManager;
+class Player {
 public:
     Player();
     ~Player();
@@ -18,23 +18,22 @@ public:
         return worldTransform_.translation_;
     }
 
+    const std::vector<Bullet*>& GetBullets() const { return bullets_; }
+    void SetEnemyManager(EnemyManager* manager) { enemyManager_ = manager; }
+
 private:
-    // 入力インスタンス
     KamataEngine::Input* input_ = nullptr;
-
-    // ワールドトランスフォーム
     KamataEngine::WorldTransform worldTransform_;
-
-    // カメラ
     KamataEngine::Camera camera_;
-
-    // プレイヤーモデル
     KamataEngine::Model* playerModel_ = nullptr;
 
     float speed_ = 0.3f;
 
-    // 弾管理
     std::vector<Bullet*> bullets_;
-    float bulletCooldown_ = 1.0f; // 1秒間隔
+    float bulletCooldown_ = 1.0f;
     float bulletTimer_ = 0.0f;
+
+    EnemyManager* enemyManager_ = nullptr;
+
+    float range_ = 30.0f; // 射程距離（任意の値）
 };

@@ -6,15 +6,13 @@ public:
     Bullet();
     ~Bullet();
 
-    // 弾の初期化
     void Initialize(const KamataEngine::Vector3& startPos, const KamataEngine::Vector3& direction, float speed = 0.5f);
-
-    // 更新・描画
     void Update();
     void Draw();
 
-    // 弾の状態
     bool IsActive() const { return active_; }
+    KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
+    void Deactivate() { active_ = false; }
 
 private:
     KamataEngine::WorldTransform worldTransform_;
