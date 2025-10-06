@@ -73,8 +73,8 @@ void GameScene::Update() {
         for (auto enemy : enemyManager_.GetEnemies()) {
             if (!enemy->IsActive()) continue;
 
-            KamataEngine::Vector3 bPos = bullet->GetPosition();
-            KamataEngine::Vector3 ePos = enemy->GetPosition();
+            Vector3 bPos = bullet->GetPosition();
+            Vector3 ePos = enemy->GetPosition();
 
             float dx = bPos.x - ePos.x;
             float dy = bPos.y - ePos.y;
@@ -82,8 +82,8 @@ void GameScene::Update() {
             float distSq = dx * dx + dy * dy + dz * dz;
 
             if (distSq < 0.5f * 0.5f) {
+                enemy->TakeDamage(bullet->GetPower());
                 bullet->Deactivate();
-                enemy->Deactivate();
             }
         }
     }

@@ -14,11 +14,14 @@ public:
     KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
     void Deactivate() { active_ = false; }
 
+    int GetPower() const { return power_; } // ★追加
+
 private:
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Model* model_ = nullptr;
     KamataEngine::Camera camera_;
     KamataEngine::Vector3 direction_;
     float speed_ = 0.5f;
+    int power_ = 1; // ★追加
     bool active_ = false;
 };

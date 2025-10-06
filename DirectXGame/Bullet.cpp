@@ -13,10 +13,8 @@ void Bullet::Initialize(const Vector3& startPos, const Vector3& direction, float
     direction_ = direction;
     speed_ = speed;
     active_ = true;
-
-    // モデル読み込み（仮に "bullet.obj"）
+    power_ = 1; // ★追加
     model_ = Model::CreateFromOBJ("bullet");
-
     camera_.Initialize();
 }
 

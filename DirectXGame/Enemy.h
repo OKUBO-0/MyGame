@@ -19,6 +19,8 @@ public:
     void Deactivate() { active_ = false; }
     bool IsActive() const { return active_; }
 
+    void TakeDamage(int damage); // ★追加
+
 private:
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Camera camera_;
@@ -27,6 +29,7 @@ private:
     float speed_ = 0.05f;
     float stopZ_ = 10.0f;
 
+    int hp_ = 3; // ★追加
     Player* player_ = nullptr;
     bool active_ = true;
 };
