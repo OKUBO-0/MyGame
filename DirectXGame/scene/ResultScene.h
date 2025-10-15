@@ -1,6 +1,6 @@
 #pragma once
 #include "IScene.h"
-#include "../Fade.h"
+#include "../2d/Fade.h"
 #include <KamataEngine.h>
 
 class ResultScene : public IScene {

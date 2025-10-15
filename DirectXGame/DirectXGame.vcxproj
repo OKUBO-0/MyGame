@@ -63,7 +63,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)2d;$(ProjectDir)3d;$(ProjectDir)enemy;$(ProjectDir)math;$(ProjectDir)player;$(ProjectDir)scene;$(ProjectDir)ui</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -86,7 +86,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)2d;$(ProjectDir)3d;$(ProjectDir)enemy;$(ProjectDir)math;$(ProjectDir)player;$(ProjectDir)scene;$(ProjectDir)ui</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>MinSpace</Optimization>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -106,20 +106,20 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Bullet.cpp" />
-    <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="EnemyManager.cpp" />
-    <ClCompile Include="Fade.cpp" />
+    <ClCompile Include="player\Bullet.cpp" />
+    <ClCompile Include="enemy\Enemy.cpp" />
+    <ClCompile Include="enemy\EnemyManager.cpp" />
+    <ClCompile Include="2d\Fade.cpp" />
     <ClCompile Include="scene\ResultScene.cpp" />
     <ClCompile Include="scene\IScene.cpp" />
-    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="player\Player.cpp" />
     <ClCompile Include="scene\SceneManager.cpp" />
     <ClCompile Include="scene\GameScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="scene\TitleScene.cpp" />
-    <ClCompile Include="SkyDome.cpp" />
-    <ClCompile Include="TitleUI.cpp" />
-    <ClCompile Include="WorldTransformEx.cpp" />
+    <ClCompile Include="3d\SkyDome.cpp" />
+    <ClCompile Include="ui\TitleUI.cpp" />
+    <ClCompile Include="math\WorldTransformEx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\TerrainPS.hlsl">
@@ -197,18 +197,18 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Bullet.h" />
-    <ClInclude Include="Enemy.h" />
-    <ClInclude Include="EnemyManager.h" />
-    <ClInclude Include="Fade.h" />
-    <ClInclude Include="Player.h" />
+    <ClInclude Include="player\Bullet.h" />
+    <ClInclude Include="enemy\Enemy.h" />
+    <ClInclude Include="enemy\EnemyManager.h" />
+    <ClInclude Include="2d\Fade.h" />
+    <ClInclude Include="player\Player.h" />
     <ClInclude Include="scene\ResultScene.h" />
     <ClInclude Include="scene\SceneManager.h" />
     <ClInclude Include="scene\IScene.h" />
     <ClInclude Include="scene\GameScene.h" />
     <ClInclude Include="scene\TitleScene.h" />
-    <ClInclude Include="SkyDome.h" />
-    <ClInclude Include="TitleUI.h" />
+    <ClInclude Include="3d\SkyDome.h" />
+    <ClInclude Include="ui\TitleUI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

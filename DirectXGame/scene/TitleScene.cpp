@@ -17,6 +17,7 @@ void TitleScene::Initialize() {
 
     // BGM読み込み
     titleBGMHandle_ = audio_->LoadWave("Sounds/title.wav");
+	selectSEHandle_ = audio_->LoadWave("Sounds/select.wav");
 
     // 背景スプライト
     uint32_t blackTex = TextureManager::Load("color/black.png");
@@ -86,6 +87,7 @@ void TitleScene::Update() {
 
     // 入力処理（Enterでゲーム開始）
     if (modelArrived_ && input_->TriggerKey(DIK_RETURN) && fade_.GetState() == Fade::State::Stay) {
+        selectSEHandle_ = audio_->PlayWave(selectSEHandle_, false, 1.0f);
         fade_.StartFadeOut();
         fadeOutStarted_ = true;
         SetSceneNo(SCENE::Game);

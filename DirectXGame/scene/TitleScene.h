@@ -1,8 +1,8 @@
 #pragma once
 
 #include "IScene.h"
-#include "../Fade.h"
-#include "../TitleUI.h"
+#include "../2d/Fade.h"
+#include "../ui/TitleUI.h"
 #include <KamataEngine.h>
 
 class TitleScene : public IScene {
@@ -36,6 +36,7 @@ private:
 
     // BGM
     uint32_t titleBGMHandle_ = 0;
+	uint32_t selectSEHandle_ = 0;
 
     // モデル演出（Z軸移動）
     bool modelArrived_ = false;

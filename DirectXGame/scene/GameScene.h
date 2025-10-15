@@ -1,10 +1,10 @@
 #pragma once
 
 #include "IScene.h"
-#include "../Player.h"
-#include "../EnemyManager.h"
-#include "../SkyDome.h"
-#include "../Fade.h"
+#include "../player/Player.h"
+#include "../enemy/EnemyManager.h"
+#include "../3d/SkyDome.h"
+#include "../2d/Fade.h"
 #include <KamataEngine.h>
 
 class GameScene : public IScene {
