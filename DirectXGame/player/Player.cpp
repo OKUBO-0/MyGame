@@ -19,9 +19,22 @@ void Player::Initialize() {
 }
 
 void Player::Update() {
-    // 固定位置・向き
-    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
-    worldTransform_.rotation_.y = 0.0f;
+    // 入力による移動
+    const float moveSpeed = 0.2f;
+    Vector3 move = { 0.0f, 0.0f, 0.0f };
+
+    if (input_->PushKey(DIK_W)) move.z += moveSpeed;
+    if (input_->PushKey(DIK_S)) move.z -= moveSpeed;
+    if (input_->PushKey(DIK_A)) move.x -= moveSpeed;
+    if (input_->PushKey(DIK_D)) move.x += moveSpeed;
+
+    worldTransform_.translation_.x += move.x;
+    worldTransform_.translation_.z += move.z;
+
+    // 向きは移動方向に合わせて回転（任意）
+    if (move.x != 0.0f || move.z != 0.0f) {
+        worldTransform_.rotation_.y = std::atan2(move.x, move.z);
+    }
 
     bulletTimer_ += 0.016f;
 
@@ -63,6 +76,19 @@ void Player::Update() {
         }
     }
 
+    // 回転処理（敵がいれば敵方向、いなければ移動方向）
+    if (enemyInRange) {
+        float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
+        if (len > 0.0f) {
+            nearestDir.x /= len;
+            nearestDir.z /= len;
+            worldTransform_.rotation_.y = std::atan2(nearestDir.x, nearestDir.z);
+        }
+    }
+    else if (move.x != 0.0f || move.z != 0.0f) {
+        worldTransform_.rotation_.y = std::atan2(move.x, move.z);
+    }
+
     // 弾発射
     if (bulletTimer_ >= bulletCooldown_ && enemyInRange) {
         float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
@@ -80,7 +106,7 @@ void Player::Update() {
     // 弾更新と破棄
     for (auto it = bullets_.begin(); it != bullets_.end(); ) {
         Bullet* bullet = *it;
-        bullet->Update();
+        bullet->Update(worldTransform_.translation_); // プレイヤー位置を渡す
         if (!bullet->IsActive()) {
             delete bullet;
             it = bullets_.erase(it);
@@ -89,6 +115,10 @@ void Player::Update() {
             ++it;
         }
     }
+
+    camera_.translation_.x = worldTransform_.translation_.x;
+    camera_.translation_.z = worldTransform_.translation_.z;
+    camera_.UpdateMatrix();
 
     worldTransform_.UpdateMatrix();
 }
@@ -99,7 +129,7 @@ void Player::Draw() {
     }
 
     for (auto bullet : bullets_) {
-        bullet->Draw();
+        bullet->Draw(&camera_);
     }
 }
 

@@ -26,6 +26,18 @@ private:
     KamataEngine::Audio* audio_ = nullptr;
     KamataEngine::Camera camera_;
 
+    enum class StartState {
+        Ready,
+        Go,
+        Play
+    };
+
+    StartState startState_ = StartState::Ready;
+    int startTimer_ = 0;
+
+    KamataEngine::Sprite* readyOverlay_ = nullptr;
+	KamataEngine::Sprite* goOverlay_ = nullptr;
+
     // ゲームオブジェクト
     SkyDome* skyDome_ = nullptr;
     Player* player_ = nullptr;
@@ -40,4 +52,8 @@ private:
     bool paused_ = false;
     KamataEngine::Sprite* pauseOverlay_ = nullptr; // 半透明背景
     KamataEngine::Sprite* pauseText_ = nullptr;    // "Paused"文字
+
+    // Wave制御
+    int currentWave_ = 1;
+    bool waveLoading_ = false;
 };

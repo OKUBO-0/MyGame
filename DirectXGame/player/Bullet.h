@@ -9,8 +9,8 @@ public:
 
     // 初期化と更新
     void Initialize(const KamataEngine::Vector3& startPos, const KamataEngine::Vector3& direction, float speed = 0.5f);
-    void Update();
-    void Draw();
+    void Update(const KamataEngine::Vector3& playerPos);
+    void Draw(KamataEngine::Camera* camera);
 
     // 状態取得・操作
     bool IsActive() const { return active_; }
@@ -23,7 +23,6 @@ private:
     // エンジン関連
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Model* model_ = nullptr;
-    KamataEngine::Camera camera_;
 
     // 弾の挙動
     KamataEngine::Vector3 direction_;

@@ -7,9 +7,6 @@ Enemy::~Enemy() {
 }
 
 void Enemy::Initialize() {
-    camera_.Initialize();
-    enemyModel_ = Model::CreateFromOBJ("octopus");
-
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 
@@ -17,10 +14,34 @@ void Enemy::Initialize() {
     active_ = true;
 }
 
+void Enemy::SetModelByType(int type) {
+    if (enemyModel_) {
+        delete enemyModel_;
+        enemyModel_ = nullptr;
+    }
+
+    switch (type) {
+    case 0:
+        enemyModel_ = Model::CreateFromOBJ("octopus");
+        break;
+    case 1:
+        enemyModel_ = Model::CreateFromOBJ("slime");
+        break;
+    case 2:
+        enemyModel_ = Model::CreateFromOBJ("golem");
+        break;
+    case 3:
+        enemyModel_ = Model::CreateFromOBJ("bat");
+        break;
+    default:
+        enemyModel_ = Model::CreateFromOBJ("octopus");
+        break;
+    }
+}
+
 void Enemy::Update() {
     if (!active_) return;
 
-    // プレイヤーの方向を向く
     if (player_) {
         const Vector3& playerPos = player_->GetWorldPosition();
         Vector3 dir = {
@@ -33,23 +54,19 @@ void Enemy::Update() {
         if (len > 0.0f) {
             dir.x /= len;
             dir.z /= len;
+
+            worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
+            worldTransform_.translation_.x += dir.x * speed_;
+            worldTransform_.translation_.z += dir.z * speed_;
         }
-
-        worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
-    }
-
-    // 前進（Z方向）
-    worldTransform_.translation_.z -= speed_;
-    if (worldTransform_.translation_.z < stopZ_) {
-        worldTransform_.translation_.z = stopZ_;
     }
 
     worldTransform_.UpdateMatrix();
 }
 
-void Enemy::Draw() {
-    if (!active_) return;
-    enemyModel_->Draw(worldTransform_, camera_);
+void Enemy::Draw(KamataEngine::Camera* camera) {
+    if (!active_ || !enemyModel_) return;
+    enemyModel_->Draw(worldTransform_, *camera);
 }
 
 void Enemy::TakeDamage(int damage) {

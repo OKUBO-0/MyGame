@@ -18,10 +18,9 @@ void Bullet::Initialize(const Vector3& startPos, const Vector3& direction, float
     active_ = true;
 
     model_ = Model::CreateFromOBJ("bullet");
-    camera_.Initialize();
 }
 
-void Bullet::Update() {
+void Bullet::Update(const Vector3& playerPos) {
     if (!active_) return;
 
     // 弾の移動
@@ -29,17 +28,22 @@ void Bullet::Update() {
     worldTransform_.translation_.y += direction_.y * speed_;
     worldTransform_.translation_.z += direction_.z * speed_;
 
-    // 範囲外で非アクティブ化
+    // プレイヤー中心の範囲外判定
     const float limit = 50.0f;
-    const Vector3& pos = worldTransform_.translation_;
-    if (pos.z > limit || pos.z < -limit || pos.x > limit || pos.x < -limit) {
+    Vector3 pos = worldTransform_.translation_;
+    float dx = pos.x - playerPos.x;
+    float dy = pos.y - playerPos.y;
+    float dz = pos.z - playerPos.z;
+    float distSq = dx * dx + dy * dy + dz * dz;
+
+    if (distSq > limit * limit) {
         active_ = false;
     }
 
     worldTransform_.UpdateMatrix();
 }
 
-void Bullet::Draw() {
-    if (!active_) return;
-    model_->Draw(worldTransform_, camera_);
+void Bullet::Draw(Camera* camera) {
+    if (!active_ || !model_) return;
+    model_->Draw(worldTransform_, *camera);
 }

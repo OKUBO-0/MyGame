@@ -1,7 +1,7 @@
 #include "EnemyManager.h"
 #include <fstream>
 #include <sstream>
-#include <KamataEngine.h>
+#include <cmath>
 
 using namespace KamataEngine;
 
@@ -16,57 +16,102 @@ EnemyManager::~EnemyManager() {
 
 void EnemyManager::Initialize(const std::string& csvPath, Player* player) {
     player_ = player;
-
-    // CSVから敵座標を読み込み
-    const auto enemyPositions = LoadEnemyPositionsFromCSV(csvPath);
-
-    // 敵を生成・配置
-    for (const auto& pos : enemyPositions) {
-        Enemy* enemy = new Enemy();
-        enemy->Initialize();
-        enemy->SetPlayer(player_);
-        enemy->SetPosition(pos);
-        enemies_.push_back(enemy);
-    }
+    SpawnEnemiesFromCSV(csvPath);
 }
 
-void EnemyManager::Update() {
-    for (auto enemy : enemies_) {
-        enemy->Update();
-    }
-}
-
-void EnemyManager::Draw() {
-    for (auto enemy : enemies_) {
-        enemy->Draw();
-    }
-}
-
-std::vector<Vector3> EnemyManager::LoadEnemyPositionsFromCSV(const std::string& filePath) {
-    std::vector<Vector3> positions;
+void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
     std::ifstream file(filePath);
-
     if (!file.is_open()) {
         OutputDebugStringA(("CSV読み込み失敗: " + filePath + "\n").c_str());
-        return positions;
+        return;
     }
 
     std::string line;
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string value;
-        float x = 0.0f, y = 0.0f, z = 0.0f;
+        int type = 0, count = 0;
+        float distance = 0.0f;
 
         std::getline(ss, value, ',');
-        x = std::stof(value);
+        type = std::stoi(value);
         std::getline(ss, value, ',');
-        y = std::stof(value);
+        distance = std::stof(value);
         std::getline(ss, value, ',');
-        z = std::stof(value);
+        count = std::stoi(value);
 
-        positions.emplace_back(x, y, z);
+        for (int i = 0; i < count; ++i) {
+            float angle = (2.0f * 3.14159265f * i) / count;
+            Vector3 pos = {
+                player_->GetWorldPosition().x + std::cos(angle) * distance,
+                0.0f,
+                player_->GetWorldPosition().z + std::sin(angle) * distance
+            };
+
+            Enemy* enemy = new Enemy();
+            enemy->Initialize();
+            enemy->SetPlayer(player_);
+            enemy->SetPosition(pos);
+            enemy->SetModelByType(type);
+            enemies_.push_back(enemy);
+        }
     }
 
     file.close();
-    return positions;
+}
+
+void EnemyManager::Update() {
+    // 敵の更新
+    for (auto enemy : enemies_) {
+        if (enemy->IsActive()) {
+            enemy->Update();
+        }
+    }
+
+    // 敵同士の衝突判定（簡易分離）
+    const float minDist = 2.0f;
+    const float pushStrength = 0.05f;
+
+    for (size_t i = 0; i < enemies_.size(); ++i) {
+        Enemy* a = enemies_[i];
+        if (!a->IsActive()) continue;
+
+        for (size_t j = i + 1; j < enemies_.size(); ++j) {
+            Enemy* b = enemies_[j];
+            if (!b->IsActive()) continue;
+
+            KamataEngine::Vector3 posA = a->GetPosition();
+            KamataEngine::Vector3 posB = b->GetPosition();
+
+            float dx = posB.x - posA.x;
+            float dz = posB.z - posA.z;
+            float distSq = dx * dx + dz * dz;
+
+            if (distSq < minDist * minDist && distSq > 0.0001f) {
+                float dist = std::sqrt(distSq);
+                float overlap = minDist - dist;
+
+                // 正規化ベクトル
+                float nx = dx / dist;
+                float nz = dz / dist;
+
+                // 押し返し
+                posA.x -= nx * overlap * pushStrength;
+                posA.z -= nz * overlap * pushStrength;
+                posB.x += nx * overlap * pushStrength;
+                posB.z += nz * overlap * pushStrength;
+
+                a->SetPosition(posA);
+                b->SetPosition(posB);
+            }
+        }
+    }
+}
+
+void EnemyManager::Draw(Camera* camera) {
+    for (auto enemy : enemies_) {
+        if (enemy->IsActive()) {
+            enemy->Draw(camera);
+        }
+    }
 }

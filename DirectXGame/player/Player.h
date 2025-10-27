@@ -19,6 +19,7 @@ public:
     // 状態取得
     KamataEngine::Vector3 GetWorldPosition() const { return worldTransform_.translation_; }
     const std::vector<Bullet*>& GetBullets() const { return bullets_; }
+    KamataEngine::Camera& GetCamera() { return camera_; }
 
     // 外部連携
     void SetEnemyManager(EnemyManager* manager) { enemyManager_ = manager; }
