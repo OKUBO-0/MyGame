@@ -29,6 +29,21 @@ public:
     bool IsInvincible() const { return invincible_; }
     bool IsDead() const { return lifeStock_ <= 0; }
 
+    // EXP・レベル管理
+    void AddEXP(int amount);
+    int GetEXP() const { return exp_; }
+    int GetLevel() const { return level_; }
+    int GetNextLevelEXP() const { return nextLevelExp_; }
+    bool IsLevelUpRequested() const { return levelUpRequested_; }
+    void ClearLevelUpRequest() { levelUpRequested_ = false; }
+
+    // アップグレード処理
+    void UpgradeBulletPower();
+    void UpgradeBulletCooldown();
+    void RecoverHP();
+
+    int GetBulletPower() const { return bulletPower_; }
+
 private:
     // エンジン関連
     KamataEngine::Input* input_ = nullptr;
@@ -41,13 +56,21 @@ private:
     float bulletCooldown_ = 1.0f;
     float bulletTimer_ = 0.0f;
     float range_ = 30.0f;
+    int bulletPower_ = 1; // 🔼 弾の攻撃力
 
     // 敵連携
     EnemyManager* enemyManager_ = nullptr;
 
     // HP・無敵管理
     int lifeStock_ = 3;
+    int maxLifeStock_ = 3;
     bool invincible_ = false;
     float invincibleTimer_ = 0.0f;
     bool visible_ = true;
+
+    // EXP・レベルアップ管理
+    int exp_ = 0;
+    int level_ = 1;
+    int nextLevelExp_ = 100;
+    bool levelUpRequested_ = false;
 };

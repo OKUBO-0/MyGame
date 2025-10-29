@@ -30,15 +30,14 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string value;
-        int type = 0, count = 0;
+        int type = 0, count = 0, hp = 3, exp = 0;
         float distance = 0.0f;
 
-        std::getline(ss, value, ',');
-        type = std::stoi(value);
-        std::getline(ss, value, ',');
-        distance = std::stof(value);
-        std::getline(ss, value, ',');
-        count = std::stoi(value);
+        std::getline(ss, value, ','); type = std::stoi(value);
+        std::getline(ss, value, ','); distance = std::stof(value);
+        std::getline(ss, value, ','); count = std::stoi(value);
+        std::getline(ss, value, ','); hp = std::stoi(value);
+        std::getline(ss, value, ','); exp = std::stoi(value);
 
         for (int i = 0; i < count; ++i) {
             float angle = (2.0f * 3.14159265f * i) / count;
@@ -49,6 +48,8 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
             };
 
             Enemy* enemy = new Enemy();
+            enemy->SetHP(hp);
+            enemy->SetEXP(exp);
             enemy->Initialize();
             enemy->SetPlayer(player_);
             enemy->SetPosition(pos);
@@ -69,8 +70,8 @@ void EnemyManager::Update() {
     }
 
     // 敵同士の衝突判定（簡易分離）
-    const float minDist = 2.0f;
-    const float pushStrength = 0.05f;
+    const float minDist = 3.0f;
+    const float pushStrength = 1.0f;
 
     for (size_t i = 0; i < enemies_.size(); ++i) {
         Enemy* a = enemies_[i];

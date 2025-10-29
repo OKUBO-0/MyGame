@@ -48,44 +48,96 @@ void GameScene::Initialize() {
     fadeOutStarted_ = false;
 
     // Pause UI
-    uint32_t blackTex = TextureManager::Load("uvChecker.png");
-    pauseOverlay_ = Sprite::Create(blackTex, { 0, 0 });
-    pauseOverlay_->SetSize({ 100, 100 });
-    pauseOverlay_->SetColor({ 0, 0, 0, 0.5f });
+    uint32_t pauseTex = TextureManager::Load("pause.png");
+    pauseOverlay_ = Sprite::Create(pauseTex, { 0, 0 });
+    pauseOverlay_->SetSize({ 1280, 720 });
+    pauseOverlay_->SetColor({ 1, 1, 1, 1 });
+
+    uint32_t deathTex = TextureManager::Load("death.png"); // 任意の画像
+    deathOverlay_ = Sprite::Create(deathTex, { 0, 0 });
+    deathOverlay_->SetSize({ 1280, 720 });
+    deathOverlay_->SetColor({ 1, 1, 1, 0.0f }); // 最初は透明
+
+    // レベルアップUI
+    uint32_t levelUpTex = TextureManager::Load("levelup.png");
+    levelUpOverlay_ = Sprite::Create(levelUpTex, { 0, 0 });
+    levelUpOverlay_->SetSize({ 1280, 720 });
+    levelUpOverlay_->SetColor({ 1, 1, 1, 1 });
 }
 
 void GameScene::Update() {
-	// フェード更新
     fade_.Update();
 
-    // ゲーム開始演出処理
+    // レベルアップ中はゲーム停止
+    if (levelUpActive_) {
+        if (input_->TriggerKey(DIK_1)) {
+            player_->UpgradeBulletPower();
+            levelUpActive_ = false;
+        }
+        else if (input_->TriggerKey(DIK_2)) {
+            player_->UpgradeBulletCooldown();
+            levelUpActive_ = false;
+        }
+        else if (input_->TriggerKey(DIK_3)) {
+            player_->RecoverHP();
+            levelUpActive_ = false;
+        }
+        return;
+    }
+
+    // レベルアップ要求検知
+    if (player_->IsLevelUpRequested()) {
+        levelUpActive_ = true;
+        player_->ClearLevelUpRequest();
+        return;
+    }
+
+    // 死亡演出中はゲーム停止
+    if (gameStopped_) {
+        if (deathFadeInStarted_ && !deathFadeInComplete_) {
+            deathAlpha_ += 0.02f;
+            if (deathAlpha_ >= 0.5f) {
+                deathAlpha_ = 0.5f;
+                deathFadeInComplete_ = true;
+            }
+            deathOverlay_->SetColor({ 1, 1, 1, deathAlpha_ });
+        }
+
+        if (deathFadeInComplete_ && input_->TriggerKey(DIK_SPACE)) {
+            fade_.StartFadeOut();
+            fadeOutStarted_ = true;
+            SetSceneNo(SCENE::Result);
+        }
+
+        if (fadeOutStarted_ && fade_.IsFinished()) {
+            finished_ = true;
+        }
+
+        return; // ゲームロジック停止
+    }
+
     if (startState_ != StartState::Play) {
         startTimer_++;
-
         switch (startState_) {
         case StartState::Ready:
-            if (startTimer_ > 60) {  // 1秒後にGOへ（60FPS前提）
+            if (startTimer_ > 60) {
                 startState_ = StartState::Go;
                 startTimer_ = 0;
             }
             break;
-
         case StartState::Go:
-            if (startTimer_ > 60) {  // さらに1秒後にプレイ開始
+            if (startTimer_ > 60) {
                 startState_ = StartState::Play;
             }
             break;
         }
-
-        return; // Ready/Go中は他の処理を止める
+        return;
     }
 
-    // ポーズ切り替え
     if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::Stay) {
         paused_ = !paused_;
     }
 
-    // ポーズ中の操作
     if (paused_) {
         if (input_->TriggerKey(DIK_1)) {
             fade_.StartFadeOut();
@@ -97,14 +149,12 @@ void GameScene::Update() {
             fadeOutStarted_ = true;
             SetSceneNo(SCENE::Result);
         }
-
         if (fadeOutStarted_ && fade_.IsFinished()) {
             finished_ = true;
         }
         return;
     }
 
-    // ゲーム更新
     player_->Update();
     enemyManager_.Update();
 
@@ -122,28 +172,39 @@ void GameScene::Update() {
             float dz = bPos.z - ePos.z;
             float distSq = dx * dx + dy * dy + dz * dz;
 
-            if (distSq < 0.25f) {
-                enemy->TakeDamage(bullet->GetPower());
+            if (distSq < 1.0f) {
+                enemy->TakeDamage(player_->GetBulletPower());
+
+                if (!enemy->IsActive()) {
+                    player_->AddEXP(enemy->GetEXP());
+                }
+
                 bullet->Deactivate();
             }
         }
     }
 
-    // プレイヤーと敵の接触判定（HP減少）
+    // プレイヤーと敵の接触判定
     for (auto enemy : enemyManager_.GetEnemies()) {
         if (!enemy->IsActive()) continue;
-
         Vector3 ePos = enemy->GetPosition();
         Vector3 pPos = player_->GetWorldPosition();
-
         float dx = ePos.x - pPos.x;
         float dz = ePos.z - pPos.z;
         float distSq = dx * dx + dz * dz;
-
-        if (distSq < 1.0f && !player_->IsInvincible()) {
-            player_->TakeDamage();              // HPを1減らす
-            // player_->StartInvincibility();  // 無敵時間を開始（必要なら）
-            // audio_->Play("damage.wav");     // ダメージSE（任意）
+        const float minDist = 3.0f;
+        const float pushStrength = 1.0f;
+        if (distSq < minDist * minDist && distSq > 0.0001f) {
+            float dist = std::sqrt(distSq);
+            float overlap = minDist - dist;
+            float nx = dx / dist;
+            float nz = dz / dist;
+            ePos.x += nx * overlap * pushStrength;
+            ePos.z += nz * overlap * pushStrength;
+            enemy->SetPosition(ePos);
+            if (!player_->IsInvincible()) {
+                player_->TakeDamage();
+            }
         }
     }
 
@@ -158,24 +219,27 @@ void GameScene::Update() {
 
     if (allEnemiesDefeated && !waveLoading_) {
         waveLoading_ = true;
-        currentWave_++;
 
+        // ✅ Wave10をクリアしたらResultSceneへ遷移
+        if (currentWave_ >= 2) {
+            fade_.StartFadeOut();
+            fadeOutStarted_ = true;
+            SetSceneNo(SCENE::Result);
+            return;
+        }
+
+        currentWave_++;
         std::string nextCSV = "Resources/csv/wave" + std::to_string(currentWave_) + ".csv";
         enemyManager_.Initialize(nextCSV, player_);
         player_->SetEnemyManager(&enemyManager_);
         waveLoading_ = false;
     }
 
-    // プレイヤー死亡 → Resultシーンへ
-    if (player_->IsDead() && fade_.GetState() == Fade::State::Stay) {
-        fade_.StartFadeOut();
-        fadeOutStarted_ = true;
-        SetSceneNo(SCENE::Result);
-    }
-
-    // フェード完了後にシーン終了
-    if (fadeOutStarted_ && fade_.IsFinished()) {
-        finished_ = true;
+    // プレイヤー死亡 → ゲーム停止＋演出開始
+    if (player_->IsDead() && !deathFadeInStarted_) {
+        deathFadeInStarted_ = true;
+        deathAlpha_ = 0.0f;
+        gameStopped_ = true;
     }
 }
 
@@ -192,18 +256,26 @@ void GameScene::Draw() {
     skyDome_->Draw();
     player_->Draw();
     enemyManager_.Draw(&player_->GetCamera());
+
     Model::PostDraw();
 
     // フェード描画
     Sprite::PreDraw(dxCommon->GetCommandList());
+
+    if (deathFadeInStarted_) {
+        deathOverlay_->Draw();
+    }
+
     if (startState_ == StartState::Ready) {
         readyOverlay_->Draw();
     }
     else if (startState_ == StartState::Go) {
         goOverlay_->Draw();
     }
-    fade_.Draw();
-    Sprite::PostDraw();
+
+    if (levelUpActive_) {
+        levelUpOverlay_->Draw(); // ✅ レベルアップ画面
+    }
 
     // ポーズ表示
     if (paused_) {
@@ -211,6 +283,11 @@ void GameScene::Draw() {
         pauseOverlay_->Draw();
         Sprite::PostDraw();
     }
+
+    fade_.Draw();
+
+
+    Sprite::PostDraw();
 }
 
 void GameScene::Finalize() {}

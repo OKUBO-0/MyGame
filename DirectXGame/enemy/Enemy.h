@@ -10,22 +10,24 @@ public:
     Enemy();
     ~Enemy();
 
-    // 基本操作
-    void Initialize();                 // モデル以外の初期化
+    void Initialize();                 
     void Update();
     void Draw(KamataEngine::Camera* camera);
 
-    // 外部連携
     void SetPosition(const KamataEngine::Vector3& pos) { worldTransform_.translation_ = pos; }
     void SetPlayer(Player* player) { player_ = player; }
-    void SetModelByType(int type);    // モデル切り替え
+    void SetModelByType(int type);
 
-    // 状態取得・操作
     KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
     bool IsActive() const { return active_; }
     void Deactivate() { active_ = false; }
 
+    void SetHP(int hp) { hp_ = hp; }
+    int GetHP() const { return hp_; }
     void TakeDamage(int damage);
+
+    void SetEXP(int exp) { exp_ = exp; }
+    int GetEXP() const { return exp_; }
 
 private:
     // エンジン関連
@@ -37,6 +39,7 @@ private:
 
     // 状態管理
     int hp_ = 3;
+    int exp_ = 0;
     bool active_ = true;
 
     // プレイヤー連携

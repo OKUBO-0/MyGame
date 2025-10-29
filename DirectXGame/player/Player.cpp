@@ -16,6 +16,12 @@ void Player::Initialize() {
 
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
+
+    level_ = 1;
+    nextLevelExp_ = 10;
+    bulletPower_ = 1;
+    bulletCooldown_ = 1.0f;
+    maxLifeStock_ = 3;
 }
 
 void Player::Update() {
@@ -31,7 +37,6 @@ void Player::Update() {
     worldTransform_.translation_.x += move.x;
     worldTransform_.translation_.z += move.z;
 
-    // 向きは移動方向に合わせて回転（任意）
     if (move.x != 0.0f || move.z != 0.0f) {
         worldTransform_.rotation_.y = std::atan2(move.x, move.z);
     }
@@ -76,7 +81,6 @@ void Player::Update() {
         }
     }
 
-    // 回転処理（敵がいれば敵方向、いなければ移動方向）
     if (enemyInRange) {
         float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
         if (len > 0.0f) {
@@ -98,7 +102,7 @@ void Player::Update() {
         }
 
         Bullet* bullet = new Bullet();
-        bullet->Initialize(worldTransform_.translation_, nearestDir, 0.5f);
+        bullet->Initialize(worldTransform_.translation_, nearestDir, static_cast<float>(bulletPower_)); // ✅ 攻撃力反映
         bullets_.push_back(bullet);
         bulletTimer_ = 0.0f;
     }
@@ -106,7 +110,7 @@ void Player::Update() {
     // 弾更新と破棄
     for (auto it = bullets_.begin(); it != bullets_.end(); ) {
         Bullet* bullet = *it;
-        bullet->Update(worldTransform_.translation_); // プレイヤー位置を渡す
+        bullet->Update(worldTransform_.translation_);
         if (!bullet->IsActive()) {
             delete bullet;
             it = bullets_.erase(it);
@@ -140,4 +144,30 @@ void Player::TakeDamage() {
     invincible_ = true;
     invincibleTimer_ = 1.0f;
     visible_ = false;
+}
+
+// ✅ レベルアップ処理
+void Player::AddEXP(int amount) {
+    exp_ += amount;
+    while (exp_ >= nextLevelExp_) {
+        exp_ -= nextLevelExp_;
+        level_++;
+        nextLevelExp_ = static_cast<int>(nextLevelExp_ * 1.5f);
+        levelUpRequested_ = true;
+    }
+}
+
+void Player::UpgradeBulletPower() {
+    bulletPower_ += 1;
+}
+
+void Player::UpgradeBulletCooldown() {
+    bulletCooldown_ -= 0.05f;
+}
+
+void Player::RecoverHP() {
+    lifeStock_ += 1;
+    if (lifeStock_ > maxLifeStock_) {
+        lifeStock_ = maxLifeStock_;
+    }
 }

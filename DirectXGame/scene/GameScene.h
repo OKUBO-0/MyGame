@@ -36,7 +36,7 @@ private:
     int startTimer_ = 0;
 
     KamataEngine::Sprite* readyOverlay_ = nullptr;
-	KamataEngine::Sprite* goOverlay_ = nullptr;
+    KamataEngine::Sprite* goOverlay_ = nullptr;
 
     // ゲームオブジェクト
     SkyDome* skyDome_ = nullptr;
@@ -50,10 +50,21 @@ private:
 
     // ポーズ表示
     bool paused_ = false;
-    KamataEngine::Sprite* pauseOverlay_ = nullptr; // 半透明背景
-    KamataEngine::Sprite* pauseText_ = nullptr;    // "Paused"文字
+    KamataEngine::Sprite* pauseOverlay_ = nullptr;
+    KamataEngine::Sprite* pauseText_ = nullptr;
 
     // Wave制御
     int currentWave_ = 1;
     bool waveLoading_ = false;
+
+    // 死亡演出
+    KamataEngine::Sprite* deathOverlay_ = nullptr;
+    float deathAlpha_ = 0.0f;
+    bool deathFadeInStarted_ = false;
+    bool deathFadeInComplete_ = false;
+    bool gameStopped_ = false;
+
+    // ✅ レベルアップ演出
+    bool levelUpActive_ = false;
+    KamataEngine::Sprite* levelUpOverlay_ = nullptr;
 };

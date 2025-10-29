@@ -17,7 +17,6 @@ public:
     void Deactivate() { active_ = false; }
 
     KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
-    int GetPower() const { return power_; }
 
 private:
     // エンジン関連
@@ -27,7 +26,6 @@ private:
     // 弾の挙動
     KamataEngine::Vector3 direction_;
     float speed_ = 0.5f;
-    int power_ = 1;
 
     // 状態管理
     bool active_ = false;

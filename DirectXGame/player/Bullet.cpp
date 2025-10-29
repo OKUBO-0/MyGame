@@ -14,7 +14,6 @@ void Bullet::Initialize(const Vector3& startPos, const Vector3& direction, float
 
     direction_ = direction;
     speed_ = speed;
-    power_ = 1;
     active_ = true;
 
     model_ = Model::CreateFromOBJ("bullet");

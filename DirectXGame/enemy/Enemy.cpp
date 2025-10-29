@@ -9,8 +9,6 @@ Enemy::~Enemy() {
 void Enemy::Initialize() {
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
-
-    hp_ = 3;
     active_ = true;
 }
 

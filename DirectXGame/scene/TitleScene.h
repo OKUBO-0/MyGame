@@ -40,8 +40,8 @@ private:
 
     // モデル演出（Z軸移動）
     bool modelArrived_ = false;
-    float modelTargetZ_ = 20.0f;
-    float modelStartZ_ = 50.0f;
+    float modelTargetZ_ = 0.0f;
+    float modelStartZ_ = 30.0f;
     float modelSpeed_ = -0.2f;
 
     // 回転演出

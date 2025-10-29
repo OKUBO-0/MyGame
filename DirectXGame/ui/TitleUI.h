@@ -13,7 +13,7 @@ public:
     float GetPositionZ() const;
 
     // --- 回転制御 ---
-    void AddRotationY(float angle);
+    void AddRotation(float angle);
 
 private:
     KamataEngine::WorldTransform worldTransform_;

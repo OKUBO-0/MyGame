@@ -14,7 +14,7 @@ void TitleUI::Initialize() {
     worldTransform_.scale_ = { 2.0f, 2.0f, 2.0f };
 
     // 初期回転をX=90°, Z=180°に設定（ラジアンではなく角度単位で扱う場合）
-    worldTransform_.rotation_ = { 100.0f, 0.0f, 0.0f }; // {X, Y, Z}
+    worldTransform_.rotation_ = { 0.0f, 0.0f, 0.0f }; // {X, Y, Z}
 
     camera_.Initialize();
 }
@@ -39,7 +39,8 @@ float TitleUI::GetPositionZ() const {
 }
 
 // --- Y軸回転追加 ---
-void TitleUI::AddRotationY(float angle) {
+void TitleUI::AddRotation(float angle) {
+    worldTransform_.rotation_.z += angle;
     worldTransform_.rotation_.y += angle;
     worldTransform_.UpdateMatrix();
 }

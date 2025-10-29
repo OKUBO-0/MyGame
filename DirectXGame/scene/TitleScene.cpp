@@ -75,7 +75,7 @@ void TitleScene::Update() {
 
     // モデル回転
     if (startRotate_) {
-        titleUI_->AddRotationY(0.02f);
+        titleUI_->AddRotation(0.02f);
     }
 
     // UI点滅
