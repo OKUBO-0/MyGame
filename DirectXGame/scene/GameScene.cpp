@@ -8,6 +8,7 @@ GameScene::~GameScene() {
     delete pauseOverlay_;
     delete pauseText_;
     delete expGauge_;
+	delete hpGauge_;
 }
 
 void GameScene::Initialize() {
@@ -68,6 +69,10 @@ void GameScene::Initialize() {
     // 経験値ゲージ生成
     expGauge_ = new ExpGauge();
     expGauge_->Initialize();
+
+    // HPゲージ生成
+	hpGauge_ = new HpGauge();
+	hpGauge_->Initialize();
 }
 
 void GameScene::Update() {
@@ -153,8 +158,13 @@ void GameScene::Update() {
         waveLoading_ = false;
     }
 
-    // プレイヤー死亡 → ゲーム停止＋演出開始
-    if (player_->IsDead() && !deathFadeInStarted_) {
+    if (hpGauge_) {
+        hpGauge_->SetHP(player_->GetHP(), player_->GetMaxHP());
+        hpGauge_->Update();
+    }
+
+    // プレイヤー死亡＋ゲージが0になったら演出開始
+    if (player_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
         deathFadeInStarted_ = true;
         deathAlpha_ = 0.0f;
         gameStopped_ = true;
@@ -312,6 +322,11 @@ void GameScene::Draw() {
     if (expGauge_) {
         expGauge_->Draw();
     }
+
+    // ✅ HPゲージ描画
+	if (hpGauge_ && !player_->IsDead()) {
+		hpGauge_->Draw();
+	}
 
     // ポーズ表示
     if (paused_) {

@@ -44,6 +44,9 @@ public:
 
     int GetBulletPower() const { return bulletPower_; }
 
+    int GetHP() const { return lifeStock_; }
+    int GetMaxHP() const { return maxLifeStock_; }
+
 private:
     // エンジン関連
     KamataEngine::Input* input_ = nullptr;

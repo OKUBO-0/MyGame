@@ -15,6 +15,9 @@ public:
     void SetEXP(int current, int max); // プレイヤーEXP連動
     void SetLevel(int level);          // レベル表示更新
 
+    // ExpGauge.h
+    bool IsFilled() const;
+
 private:
     uint32_t dummyTextureHandle_ = 0;
     uint32_t lvLabelHandle_ = 0;

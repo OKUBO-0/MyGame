@@ -88,3 +88,8 @@ void ExpGauge::Draw() {
 
     Sprite::PostDraw();
 }
+
+// ExpGauge.cpp
+bool ExpGauge::IsFilled() const {
+    return displayedExp_ >= maxExp_;
+}

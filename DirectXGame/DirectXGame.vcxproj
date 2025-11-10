@@ -106,6 +106,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ui\HpGauge.cpp" />
     <ClCompile Include="ui\ExpGauge.cpp" />
     <ClCompile Include="player\Bullet.cpp" />
     <ClCompile Include="enemy\Enemy.cpp" />
@@ -199,6 +200,7 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ui\HpGauge.h" />
     <ClInclude Include="ui\ExpGauge.h" />
     <ClInclude Include="player\Bullet.h" />
     <ClInclude Include="enemy\Enemy.h" />

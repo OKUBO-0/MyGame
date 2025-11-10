@@ -6,6 +6,7 @@
 #include "../3d/SkyDome.h"
 #include "../2d/Fade.h"
 #include "../ui/ExpGauge.h"
+#include "../ui/HpGauge.h"
 #include <KamataEngine.h>
 
 class GameScene : public IScene {
@@ -71,4 +72,10 @@ private:
 
     // 経験値ゲージ
     ExpGauge* expGauge_ = nullptr;
+
+    // HPゲージ
+	HpGauge* hpGauge_ = nullptr;
+
+    // GameScene.h（必要なら）
+    bool isGameOver_ = false;
 };
