@@ -18,7 +18,7 @@ void Player::Initialize() {
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 
     level_ = 1;
-    nextLevelExp_ = 10;
+    nextLevelExp_ = 100;
     bulletPower_ = 1;
     bulletCooldown_ = 1.0f;
     maxLifeStock_ = 3;
@@ -93,7 +93,6 @@ void Player::Update() {
         worldTransform_.rotation_.y = std::atan2(move.x, move.z);
     }
 
-    // 弾発射
     if (bulletTimer_ >= bulletCooldown_ && enemyInRange) {
         float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
         if (len > 0.0f) {
@@ -102,7 +101,8 @@ void Player::Update() {
         }
 
         Bullet* bullet = new Bullet();
-        bullet->Initialize(worldTransform_.translation_, nearestDir, static_cast<float>(bulletPower_)); // ✅ 攻撃力反映
+        bullet->Initialize(worldTransform_.translation_, nearestDir, 0.5f); // ✅ 弾速は固定
+        bullet->SetDamage(bulletPower_); // ✅ 攻撃力を設定
         bullets_.push_back(bullet);
         bulletTimer_ = 0.0f;
     }

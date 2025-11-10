@@ -71,6 +71,6 @@ private:
     // EXP・レベルアップ管理
     int exp_ = 0;
     int level_ = 1;
-    int nextLevelExp_ = 100;
+    int nextLevelExp_ = 1;
     bool levelUpRequested_ = false;
 };

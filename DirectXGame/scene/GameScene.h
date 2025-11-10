@@ -5,6 +5,7 @@
 #include "../enemy/EnemyManager.h"
 #include "../3d/SkyDome.h"
 #include "../2d/Fade.h"
+#include "../ui/ExpGauge.h"
 #include <KamataEngine.h>
 
 class GameScene : public IScene {
@@ -67,4 +68,7 @@ private:
     // ✅ レベルアップ演出
     bool levelUpActive_ = false;
     KamataEngine::Sprite* levelUpOverlay_ = nullptr;
+
+    // 経験値ゲージ
+    ExpGauge* expGauge_ = nullptr;
 };
