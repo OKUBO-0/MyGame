@@ -132,7 +132,7 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        const int MAX_WAVE = 10;
+        const int MAX_WAVE = 5;
 
         if (currentWave_ >= MAX_WAVE) {
             // ✅ Wave10終了 → ResultSceneへ
@@ -324,7 +324,7 @@ void GameScene::Draw() {
     }
 
     // ✅ HPゲージ描画
-	if (hpGauge_ && !player_->IsDead()) {
+	if (hpGauge_ && !player_->IsDead() && !levelUpActive_ && !paused_) {
 		hpGauge_->Draw();
 	}
 

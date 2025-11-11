@@ -20,16 +20,16 @@ void Enemy::SetModelByType(int type) {
 
     switch (type) {
     case 0:
-        enemyModel_ = Model::CreateFromOBJ("octopus");
+        enemyModel_ = Model::CreateFromOBJ("Enemy1");
         break;
     case 1:
-        enemyModel_ = Model::CreateFromOBJ("slime");
+        enemyModel_ = Model::CreateFromOBJ("Enemy2");
         break;
     case 2:
-        enemyModel_ = Model::CreateFromOBJ("golem");
+        enemyModel_ = Model::CreateFromOBJ("Enemy3");
         break;
     case 3:
-        enemyModel_ = Model::CreateFromOBJ("bat");
+        enemyModel_ = Model::CreateFromOBJ("Enemy4");
         break;
     default:
         enemyModel_ = Model::CreateFromOBJ("octopus");

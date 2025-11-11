@@ -18,7 +18,7 @@ void Player::Initialize() {
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 
     level_ = 1;
-    nextLevelExp_ = 100;
+    nextLevelExp_ = 50;
     bulletPower_ = 1;
     bulletCooldown_ = 1.0f;
     maxLifeStock_ = 3;

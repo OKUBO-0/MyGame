@@ -22,6 +22,7 @@ private:
 
     KamataEngine::Sprite* backgroundSprite_ = nullptr;
     KamataEngine::Sprite* resultSprite_ = nullptr;
+	KamataEngine::Sprite* resultUI_ = nullptr;
 
     Fade fade_;
     bool fadeOutStarted_ = false;
