@@ -27,8 +27,10 @@ private:
     KamataEngine::Sprite* backgroundSprite_ = nullptr;
     KamataEngine::Sprite* titleSprite_ = nullptr;
     KamataEngine::Sprite* titleUISprite_ = nullptr;
+	KamataEngine::Sprite* ruleSprite_ = nullptr;
     TitleUI* titleUI_ = nullptr;
 
+    bool showRule_ = false;
     // フェード・シーン制御
     Fade fade_;
     bool fadeOutStarted_ = false;

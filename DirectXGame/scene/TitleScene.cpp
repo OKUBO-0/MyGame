@@ -8,6 +8,7 @@ TitleScene::~TitleScene() {
     delete titleSprite_;
     delete titleUISprite_;
     delete titleUI_;
+	delete ruleSprite_;
 }
 
 void TitleScene::Initialize() {
@@ -35,6 +36,11 @@ void TitleScene::Initialize() {
     titleUISprite_ = Sprite::Create(titleUITex, { 0, 0 });
     titleUISprite_->SetSize({ 1280, 720 });
     titleUISprite_->SetColor({ 1, 1, 1, 0 }); // 非表示
+
+    // ルール説明UI
+	uint32_t ruleTex = TextureManager::Load("title/rule.png");
+	ruleSprite_ = Sprite::Create(ruleTex, {0, 0});
+	ruleSprite_->SetSize({1280, 720});
 
     // モデル演出
     titleUI_ = new TitleUI();
@@ -85,9 +91,16 @@ void TitleScene::Update() {
         titleUISprite_->SetColor({ 1, 1, 1, alpha });
     }
 
-    // 入力処理（Enterでゲーム開始）
-    if (modelArrived_ && input_->TriggerKey(DIK_RETURN) && fade_.GetState() == Fade::State::Stay) {
+    // ルール表示切替
+    if (input_->TriggerKey(DIK_RETURN) && !showRule_) {
         selectSEHandle_ = audio_->PlayWave(selectSEHandle_, false, 1.0f);
+        showRule_ = true;
+    }
+
+    // 入力処理（Enterでゲーム開始）
+    if (modelArrived_ && input_->TriggerKey(DIK_SPACE) && showRule_ && fade_.GetState() == Fade::State::Stay) {
+        selectSEHandle_ = audio_->PlayWave(selectSEHandle_, false, 1.0f);
+        showRule_ = false;
         fade_.StartFadeOut();
         fadeOutStarted_ = true;
         SetSceneNo(SCENE::Game);
@@ -120,6 +133,9 @@ void TitleScene::Draw() {
     Sprite::PreDraw(dxCommon->GetCommandList());
     titleSprite_->Draw();
     titleUISprite_->Draw();
+    if (showRule_) {
+        ruleSprite_->Draw();
+    }
     fade_.Draw();
     Sprite::PostDraw();
 }
