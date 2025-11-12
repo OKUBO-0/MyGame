@@ -43,14 +43,6 @@ public:                            // メンバ変数
 	std::string textureFilename_;  // テクスチャファイル名
 
 public:
-	// コンストラクタ
-	Material() {
-		ambient_ = {0.3f, 0.3f, 0.3f};
-		diffuse_ = {0.8f, 0.8f, 0.8f};
-		specular_ = {0.0f, 0.0f, 0.0f};
-		alpha_ = 1.0f;
-	}
-
 	/// <summary>
 	/// 定数バッファの取得
 	/// </summary>
@@ -96,6 +88,13 @@ private:
 	uint32_t textureHandle_ = 0;
 
 private:
+	// コンストラクタの外部呼び出しを禁止
+	Material() {
+		ambient_ = {0.3f, 0.3f, 0.3f};
+		diffuse_ = {0.8f, 0.8f, 0.8f};
+		specular_ = {0.0f, 0.0f, 0.0f};
+		alpha_ = 1.0f;
+	}
 	/// <summary>
 	/// 初期化
 	/// </summary>

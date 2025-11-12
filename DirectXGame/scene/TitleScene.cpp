@@ -113,7 +113,7 @@ void TitleScene::Draw() {
 
     // モデル
     dxCommon_->ClearDepthBuffer();
-    Model::PreDraw(dxCommon->GetCommandList());
+    Model::PreDraw();
     titleUI_->Draw();
     Model::PostDraw();
 

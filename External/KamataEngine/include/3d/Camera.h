@@ -22,9 +22,9 @@ class Camera {
 public:
 #pragma region ビュー行列の設定
 	// X,Y,Z軸回りのローカル回転角
-	Vector3 rotation_ = {1.5, 0, 0};
+	Vector3 rotation_ = { 1.5, 0, 0 };
 	// ローカル座標
-	Vector3 translation_ = {0, 80, 0};
+	Vector3 translation_ = { 0, 80, 0 };
 #pragma endregion
 
 #pragma region 射影行列の設定

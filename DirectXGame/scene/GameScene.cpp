@@ -293,7 +293,7 @@ void GameScene::Draw() {
 
     // モデル描画
     dxCommon_->ClearDepthBuffer();
-    Model::PreDraw(dxCommon->GetCommandList());
+    Model::PreDraw();
     skyDome_->Draw();
     player_->Draw();
     enemyManager_.Draw(&player_->GetCamera());
