@@ -1,5 +1,6 @@
 #include "TitleScene.h"
 #include <cmath>
+
 using namespace KamataEngine;
 
 TitleScene::TitleScene() {}
