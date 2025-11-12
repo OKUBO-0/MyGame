@@ -1,75 +1,128 @@
 #include "TitleScene.h"
+#include <cmath>
 
 using namespace KamataEngine;
 
-// コンストラクタ
-TitleScene::TitleScene() {
-}
-
-// デストラクタ
+TitleScene::TitleScene() {}
 TitleScene::~TitleScene() {
-	delete titleSprite_;
+    delete backgroundSprite_;
+    delete titleSprite_;
+    delete titleUISprite_;
+    delete titleUI_;
 }
 
 void TitleScene::Initialize() {
-	// DirectXCommonインスタンスの取得
-	dxCommon_ = DirectXCommon::GetInstance();
-	// Inputインスタンスの取得
-	input_ = Input::GetInstance();
-	// Audioインスタンスの取得
-	audio_ = Audio::GetInstance();
+    dxCommon_ = DirectXCommon::GetInstance();
+    input_ = Input::GetInstance();
+    audio_ = Audio::GetInstance();
 
-	// カメラ
-	camera_.Initialize();
+    // BGM読み込み
+    titleBGMHandle_ = audio_->LoadWave("Sounds/title.wav");
+	selectSEHandle_ = audio_->LoadWave("Sounds/select.wav");
 
-	// 背景スプライトの初期化
-	backgroundSpriteHandle_ = TextureManager::Load("color/black.png");
-	backgroundSprite_ = Sprite::Create(backgroundSpriteHandle_, {0.0f, 0.0f});
-	backgroundSprite_->SetSize(Vector2(1280, 720));
+    // 背景スプライト
+    uint32_t blackTex = TextureManager::Load("color/black.png");
+    backgroundSprite_ = Sprite::Create(blackTex, { 0, 0 });
+    backgroundSprite_->SetSize({ 1280, 720 });
 
-	// タイトルスプライトの初期化
-	titleSpriteHandle_ = TextureManager::Load("color/black.png");
-	titleSprite_ = Sprite::Create(titleSpriteHandle_, {0.0f, 0.0f});
-	titleSprite_->SetSize(Vector2(1280, 720));
+    // タイトルロゴ
+    uint32_t titleTex = TextureManager::Load("title/title.png");
+    titleSprite_ = Sprite::Create(titleTex, { 0, 0 });
+    titleSprite_->SetSize({ 1280, 720 });
+    titleSprite_->SetColor({ 1, 1, 1, 0 }); // 非表示
+
+    // タイトルUI（点滅用）
+    uint32_t titleUITex = TextureManager::Load("title/titleUI.png");
+    titleUISprite_ = Sprite::Create(titleUITex, { 0, 0 });
+    titleUISprite_->SetSize({ 1280, 720 });
+    titleUISprite_->SetColor({ 1, 1, 1, 0 }); // 非表示
+
+    // モデル演出
+    titleUI_ = new TitleUI();
+    titleUI_->Initialize();
+    titleUI_->SetPositionZ(modelStartZ_);
+
+    // フェード初期化
+    fade_.Initialize();
+    fadeOutStarted_ = false;
+    modelArrived_ = false;
+    startRotate_ = false;
+    blinkTimer_ = 0.0f;
 }
 
 void TitleScene::Update() {
-	if (input_->TriggerKey(DIK_SPACE)) {
-		finished_ = true;
-	}
+    fade_.Update();
+
+    // BGM再生（ループ）
+    if (!audio_->IsPlaying(titleBGMHandle_)) {
+        titleBGMHandle_ = audio_->PlayWave(titleBGMHandle_, true, 0.5f);
+    }
+
+    // モデル移動（手前→奥）
+    if (!modelArrived_) {
+        float z = titleUI_->GetPositionZ();
+        z += modelSpeed_;
+        if (z <= modelTargetZ_) {
+            z = modelTargetZ_;
+            modelArrived_ = true;
+
+            // 到達 → タイトル表示・回転開始
+            titleSprite_->SetColor({ 1, 1, 1, 1 });
+            titleUISprite_->SetColor({ 1, 1, 1, 1 });
+            startRotate_ = true;
+        }
+        titleUI_->SetPositionZ(z);
+    }
+
+    // モデル回転
+    if (startRotate_) {
+        titleUI_->AddRotation(0.02f);
+    }
+
+    // UI点滅
+    if (modelArrived_) {
+        blinkTimer_ += 0.05f;
+        float alpha = std::sin(blinkTimer_) * 0.5f + 0.5f;
+        titleUISprite_->SetColor({ 1, 1, 1, alpha });
+    }
+
+    // 入力処理（Enterでゲーム開始）
+    if (modelArrived_ && input_->TriggerKey(DIK_RETURN) && fade_.GetState() == Fade::State::Stay) {
+        selectSEHandle_ = audio_->PlayWave(selectSEHandle_, false, 1.0f);
+        fade_.StartFadeOut();
+        fadeOutStarted_ = true;
+        SetSceneNo(SCENE::Game);
+    }
+
+    // フェード完了 → シーン終了
+    if (fadeOutStarted_ && fade_.IsFinished()) {
+        audio_->StopWave(titleBGMHandle_);
+        finished_ = true;
+    }
+
+    titleUI_->Update();
 }
 
 void TitleScene::Draw() {
-	// DirectXCommon インスタンスの取得
-	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
-#pragma region 背景スプライト描画
-	// 背景スプライト描画前処理
-	Sprite::PreDraw(dxCommon->GetCommandList());
+    // 背景
+    Sprite::PreDraw(dxCommon->GetCommandList());
+    backgroundSprite_->Draw();
+    Sprite::PostDraw();
 
-	// タイトルスプライトの描画
-	titleSprite_->Draw();
+    // モデル
+    dxCommon_->ClearDepthBuffer();
+    Model::PreDraw(dxCommon->GetCommandList());
+    titleUI_->Draw();
+    Model::PostDraw();
 
-	// スプライト描画後処理
-	Sprite::PostDraw();
-
-	// 深度バッファクリア
-	dxCommon_->ClearDepthBuffer();
-#pragma endregion
-
-#pragma region 3Dモデル描画
-	// 3Dモデル描画前処理
-	Model::PreDraw(dxCommon->GetCommandList());
-
-	// 3Dモデル描画後処理
-	Model::PostDraw();
-#pragma endregion
-
-#pragma region 前景スプライト描画
-	// 背景スプライト描画前処理
-	Sprite::PreDraw(dxCommon->GetCommandList());
-
-	// スプライト描画後処理
-	Sprite::PostDraw();
-#pragma endregion
+    // UI・フェード
+    Sprite::PreDraw(dxCommon->GetCommandList());
+    titleSprite_->Draw();
+    titleUISprite_->Draw();
+    fade_.Draw();
+    Sprite::PostDraw();
 }
+
+void TitleScene::Finalize() {}

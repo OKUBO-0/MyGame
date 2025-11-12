@@ -4,27 +4,19 @@
 #include <functional>
 #include "IScene.h"
 
-enum class SceneName {
-	Title,
-	Game,
-};
-
 class SceneManager {
 public:
-	SceneManager();
-	~SceneManager();
+    SceneManager();
+    ~SceneManager();
 
-	void Update();
-	void Draw();
+    void Update();
+    void Draw();
 
-	// シーン登録
-	void RegisterScene(SceneName name, std::function<std::unique_ptr<IScene>()> createFunc);
-
-	// 初期シーンの設定
-	void ChangeScene(SceneName name);
+    void RegisterScene(SCENE scene, std::function<std::unique_ptr<IScene>()> createFunc);
+    void ChangeScene(SCENE scene);
 
 private:
-	std::unordered_map<SceneName, std::function<std::unique_ptr<IScene>()>> sceneFactory_;
-	std::unique_ptr<IScene> currentScene_;
-	SceneName currentSceneName_;
+    std::unordered_map<SCENE, std::function<std::unique_ptr<IScene>()>> sceneFactory_;
+    std::unique_ptr<IScene> currentScene_;
+    SCENE currentSceneNo_;
 };

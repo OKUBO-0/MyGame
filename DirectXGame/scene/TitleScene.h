@@ -1,44 +1,52 @@
 #pragma once
-#include "KamataEngine.h"
+
 #include "IScene.h"
+#include "../2d/Fade.h"
+#include "../ui/TitleUI.h"
+#include <KamataEngine.h>
 
-class TitleScene : public IScene
-{
+class TitleScene : public IScene {
 public:
-	// コンストラクタ
-	TitleScene();
+    TitleScene();
+    ~TitleScene();
 
-	// デストラクタ
-	~TitleScene();
+    void Initialize() override;
+    void Update() override;
+    void Draw() override;
+    void Finalize() override;
 
-	// 初期化
-	void Initialize();
-
-	// 更新
-	void Update();
-
-	// 描画
-	void Draw();
-
-	// 終了フラグ
-	bool IsFinished() const { return finished_; }
+    bool IsFinished() const override { return finished_; }
 
 private:
-	KamataEngine::DirectXCommon* dxCommon_ = nullptr;
-	KamataEngine::Input* input_ = nullptr;
-	KamataEngine::Audio* audio_ = nullptr;
+    // エンジン関連
+    KamataEngine::DirectXCommon* dxCommon_ = nullptr;
+    KamataEngine::Input* input_ = nullptr;
+    KamataEngine::Audio* audio_ = nullptr;
 
-	// カメラ
-	KamataEngine::Camera camera_;
+    // スプライトUI
+    KamataEngine::Sprite* backgroundSprite_ = nullptr;
+    KamataEngine::Sprite* titleSprite_ = nullptr;
+    KamataEngine::Sprite* titleUISprite_ = nullptr;
+    TitleUI* titleUI_ = nullptr;
 
-	// 背景スプライト
-	uint32_t backgroundSpriteHandle_ = 0;
-	KamataEngine::Sprite* backgroundSprite_ = nullptr;
+    // フェード・シーン制御
+    Fade fade_;
+    bool fadeOutStarted_ = false;
+    bool finished_ = false;
 
-	// タイトルスプライト
-	uint32_t titleSpriteHandle_ = 0;
-	KamataEngine::Sprite* titleSprite_ = nullptr;
+    // BGM
+    uint32_t titleBGMHandle_ = 0;
+	uint32_t selectSEHandle_ = 0;
 
-	// 終了フラグ
-	bool finished_ = false;
+    // モデル演出（Z軸移動）
+    bool modelArrived_ = false;
+    float modelTargetZ_ = 0.0f;
+    float modelStartZ_ = 30.0f;
+    float modelSpeed_ = -0.2f;
+
+    // 回転演出
+    bool startRotate_ = false;
+
+    // 点滅演出
+    float blinkTimer_ = 0.0f;
 };

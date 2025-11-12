@@ -1,52 +1,49 @@
-#include "KamataEngine.h"
+#include <Windows.h>
+#include <KamataEngine.h>
+
 #include "scene/SceneManager.h"
 #include "scene/TitleScene.h"
 #include "scene/GameScene.h"
-
-#include <Windows.h>
+#include "scene/ResultScene.h"
 
 using namespace KamataEngine;
 
-// Windowsアプリでのエントリーポイント(main関数)
+// Windowsアプリのエントリーポイント
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
-	// エンジンの初期化
-	Initialize(L"LE3C_04_オオクボ_タク");
+    // エンジン初期化
+    Initialize(L"LE3C_04_オオクボ_タク");
 
-	// DirectXCommonのインスタンスを取得
-	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+    // DirectXCommonインスタンス取得
+    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
-	SceneManager sceneManager;
+    // シーン管理
+    SceneManager sceneManager;
 
-	// シーン登録
-	sceneManager.RegisterScene(SceneName::Title, []() { return std::make_unique<TitleScene>(); });
-	sceneManager.RegisterScene(SceneName::Game, []() { return std::make_unique<GameScene>(); });
+    // シーン登録
+    sceneManager.RegisterScene(SCENE::Title, []() { return std::make_unique<TitleScene>(); });
+    sceneManager.RegisterScene(SCENE::Game, []() { return std::make_unique<GameScene>(); });
+    sceneManager.RegisterScene(SCENE::Result, []() { return std::make_unique<ResultScene>(); });
 
-	// 初期シーンをタイトルに設定
-	sceneManager.ChangeScene(SceneName::Title);
+    // 初期シーン設定
+    sceneManager.ChangeScene(SCENE::Title);
 
-	// メインループ
-	while (true) {
-		// エンジンの更新
-		if (Update()) {
-			break;
-		}
+    // メインループ
+    while (true) {
+        // エンジン更新（終了判定）
+        if (Update()) break;
 
-		// シーン更新
-		sceneManager.Update();
+        // シーン更新
+        sceneManager.Update();
 
-		// 描画開始
-		dxCommon->PreDraw();
+        // 描画処理
+        dxCommon->PreDraw();
+        sceneManager.Draw();
+        dxCommon->PostDraw();
+    }
 
-		// シーンの描画
-		sceneManager.Draw();
+    // エンジン終了処理
+    Finalize();
 
-		// 描画終了
-		dxCommon->PostDraw();
-	}
-
-	// エンジンの終了処理
-	Finalize();
-
-	return 0;
+    return 0;
 }
