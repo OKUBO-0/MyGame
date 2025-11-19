@@ -14,6 +14,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     // エンジン初期化
     Initialize(L"LE3C_04_オオクボ_タク");
 
+    // 起動時にフルスクリーンにする
+    //WinApp::GetInstance()->SetFullscreen(true);
+
     // DirectXCommonインスタンス取得
     DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 

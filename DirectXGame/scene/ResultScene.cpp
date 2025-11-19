@@ -22,7 +22,7 @@ void ResultScene::Initialize() {
     resultSprite_ = Sprite::Create(resultTex, { 0,0 });
     resultSprite_->SetSize({ 1280,720 });
 
-    uint32_t uiTex = TextureManager::Load("result/resultUI.png");
+    uint32_t uiTex = TextureManager::Load("result/finish_ui.png");
 	resultUI_ = Sprite::Create(uiTex, { 0,0 });
 	resultUI_->SetSize({ 1280,720 });
 
