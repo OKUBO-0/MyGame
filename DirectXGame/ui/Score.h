@@ -62,7 +62,7 @@ private:
     static const int kDigitCount = 5;                         ///< 最大表示桁数
     std::array<KamataEngine::Sprite*, kDigitCount> sprite_{}; ///< 各桁ごとのスプライト
     uint32_t textureHandle_ = 0;                              ///< 数字テクスチャのハンドル
-    KamataEngine::Vector2 size_ = { 32.0f, 64.0f };           ///< 各数字スプライトのサイズ
+    KamataEngine::Vector2 size_ = { 16.0f, 32.0f };           ///< 各数字スプライトのサイズ
     KamataEngine::Vector2 basePosition_ = { 800.0f, 10.0f };  ///< スコア全体の基準位置
     float scale_ = 1.0f;                                      ///< 全体のスケール値
 };

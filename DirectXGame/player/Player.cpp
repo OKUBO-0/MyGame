@@ -34,10 +34,16 @@ void Player::Update() {
     if (input_->PushKey(DIK_A)) move.x -= moveSpeed;
     if (input_->PushKey(DIK_D)) move.x += moveSpeed;
 
-    worldTransform_.translation_.x += move.x;
-    worldTransform_.translation_.z += move.z;
+    // ✅ 斜め移動補正：ベクトルを正規化
+    float moveLen = std::sqrt(move.x * move.x + move.z * move.z);
+    if (moveLen > 0.0f) {
+        move.x = (move.x / moveLen) * moveSpeed;
+        move.z = (move.z / moveLen) * moveSpeed;
 
-    if (move.x != 0.0f || move.z != 0.0f) {
+        worldTransform_.translation_.x += move.x;
+        worldTransform_.translation_.z += move.z;
+
+        // 向きを移動方向に合わせる
         worldTransform_.rotation_.y = std::atan2(move.x, move.z);
     }
 
