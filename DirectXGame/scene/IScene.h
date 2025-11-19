@@ -1,4 +1,5 @@
 #pragma once
+#include "../GameData.h"
 #include <cstdint>
 
 /// <summary>

@@ -126,6 +126,7 @@ void GameScene::Update() {
         }
 
         if (fadeOutStarted_ && fade_.IsFinished()) {
+            GameData::totalEXP = player_->GetTotalEXP();
             finished_ = true;
         }
         return;
@@ -152,6 +153,7 @@ void GameScene::Update() {
             }
 
             if (fadeOutStarted_ && fade_.IsFinished()) {
+                GameData::totalEXP = player_->GetTotalEXP();
                 finished_ = true;
             }
 
@@ -206,6 +208,7 @@ void GameScene::Update() {
         }
 
         if (fadeOutStarted_ && fade_.IsFinished()) {
+            GameData::totalEXP = player_->GetTotalEXP();
             finished_ = true;
         }
 

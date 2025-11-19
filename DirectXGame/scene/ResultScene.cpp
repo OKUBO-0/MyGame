@@ -34,7 +34,7 @@ void ResultScene::Initialize() {
     scoreUI_->SetScale(2.0f);
 
     currentScore_ = 0;
-    targetScore_ = 100;
+    targetScore_ = GameData::totalEXP;
 
     fade_.Initialize();
     fadeOutStarted_ = false;

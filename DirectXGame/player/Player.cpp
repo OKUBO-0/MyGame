@@ -22,6 +22,9 @@ void Player::Initialize() {
     bulletPower_ = 1;
     bulletCooldown_ = 1.0f;
     maxLifeStock_ = 3;
+
+    exp_ = 0;
+    totalExp_ = 0;
 }
 
 void Player::Update() {
@@ -155,6 +158,7 @@ void Player::TakeDamage() {
 // ✅ レベルアップ処理
 void Player::AddEXP(int amount) {
     exp_ += amount;
+    totalExp_ += amount;
     while (exp_ >= nextLevelExp_) {
         exp_ -= nextLevelExp_;
         level_++;
