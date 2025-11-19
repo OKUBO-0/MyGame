@@ -79,6 +79,9 @@ void GameScene::Initialize() {
     waveUI_ = new WaveUI();
     waveUI_->Initialize();
 	waveUI_->SetWave(currentWave_);
+
+    gridPlane_ = new GridPlane();
+    gridPlane_->Initialize();
 }
 
 void GameScene::Update() {
@@ -173,6 +176,10 @@ void GameScene::Update() {
         waveUI_->SetWave(currentWave_);
         waveUI_->Update();
 	}
+
+    if (gridPlane_) {
+        gridPlane_->Update();
+    }
 
     // プレイヤー死亡＋ゲージが0になったら演出開始
     if (player_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
@@ -305,8 +312,14 @@ void GameScene::Draw() {
     // モデル描画
     dxCommon_->ClearDepthBuffer();
     Model::PreDraw();
+
     skyDome_->Draw();
-    player_->Draw();
+    gridPlane_->Draw(&player_->GetCamera());
+
+    if (player_) {
+        player_->Draw();
+    }
+
     enemyManager_.Draw(&player_->GetCamera());
 
     Model::PostDraw();
@@ -335,9 +348,9 @@ void GameScene::Draw() {
     }
 
     // ✅ HPゲージ描画
-	if (hpGauge_ && !player_->IsDead() && !levelUpActive_ && !paused_) {
-		hpGauge_->Draw();
-	}
+    if (hpGauge_ && player_ && !player_->IsDead() && !levelUpActive_ && !paused_) {
+        hpGauge_->Draw();
+    }
 
     // ✅ WaveUI描画
     if (waveUI_) {

@@ -4,6 +4,7 @@
 #include "../player/Player.h"
 #include "../enemy/EnemyManager.h"
 #include "../3d/SkyDome.h"
+#include "../3d/GridPlane.h"
 #include "../2d/Fade.h"
 #include "../ui/ExpGauge.h"
 #include "../ui/HpGauge.h"
@@ -110,4 +111,5 @@ private:
     HpGauge* hpGauge_ = nullptr;   ///< HPゲージ
     bool isGameOver_ = false;      ///< ゲームオーバーフラグ
     WaveUI* waveUI_ = nullptr;     ///< Wave表示UI
+    GridPlane* gridPlane_ = nullptr;
 };
