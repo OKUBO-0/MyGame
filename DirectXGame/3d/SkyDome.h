@@ -2,31 +2,45 @@
 
 #include <KamataEngine.h>
 
+/// <summary>
+/// 天球モデルを用いて背景を描画するクラス。
+/// シーン全体の空を表現し、カメラやワールドトランスフォームを管理する。
+/// </summary>
 class SkyDome
 {
 public:
-	// コンストラクタ
-	SkyDome();
+    /// <summary>
+    /// コンストラクタ
+    /// SkyDomeの初期値を設定する
+    /// </summary>
+    SkyDome();
 
-	// デストラクタ
-	~SkyDome();
+    /// <summary>
+    /// デストラクタ
+    /// 使用したリソースを解放する
+    /// </summary>
+    ~SkyDome();
 
-	// 初期化
-	void Initialize();
+    /// <summary>
+    /// 初期化処理
+    /// 天球モデルの読み込みやワールドトランスフォームの設定を行う
+    /// </summary>
+    void Initialize();
 
-	// 更新
-	void Update();
+    /// <summary>
+    /// 毎フレーム更新処理
+    /// カメラやトランスフォームの更新を行う
+    /// </summary>
+    void Update();
 
-	// 描画
-	void Draw();
+    /// <summary>
+    /// 描画処理
+    /// 天球モデルを画面に描画する
+    /// </summary>
+    void Draw();
 
 private:
-	// ワールドトランスフォーム
-	KamataEngine::WorldTransform worldTransform_;
-
-	// カメラ
-	KamataEngine::Camera camera_;
-
-	// 天球モデル
-	KamataEngine::Model* skyModel_ = nullptr;
+    KamataEngine::WorldTransform worldTransform_; ///< 天球のワールドトランスフォーム
+    KamataEngine::Camera camera_;                 ///< 天球描画用カメラ
+    KamataEngine::Model* skyModel_ = nullptr;     ///< 天球モデル
 };

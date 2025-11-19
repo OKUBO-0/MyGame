@@ -244,6 +244,8 @@ private: // メンバ変数
 
 	// ダーティフラグ
 	bool dirty_ = false;
+	// コンストラクタの外部呼び出しを禁止
+	LightGroup() = default;
 };
 
 } // namespace KamataEngine

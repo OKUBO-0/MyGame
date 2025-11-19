@@ -9,6 +9,7 @@ GameScene::~GameScene() {
     delete pauseText_;
     delete expGauge_;
 	delete hpGauge_;
+    delete waveUI_;
 }
 
 void GameScene::Initialize() {
@@ -73,6 +74,11 @@ void GameScene::Initialize() {
     // HPゲージ生成
 	hpGauge_ = new HpGauge();
 	hpGauge_->Initialize();
+
+    // WaveUI生成
+    waveUI_ = new WaveUI();
+    waveUI_->Initialize();
+	waveUI_->SetWave(currentWave_);
 }
 
 void GameScene::Update() {
@@ -132,7 +138,7 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        const int MAX_WAVE = 5;
+        const int MAX_WAVE = 1;
 
         if (currentWave_ >= MAX_WAVE) {
             // ✅ Wave10終了 → ResultSceneへ
@@ -162,6 +168,11 @@ void GameScene::Update() {
         hpGauge_->SetHP(player_->GetHP(), player_->GetMaxHP());
         hpGauge_->Update();
     }
+
+    if (waveUI_) {
+        waveUI_->SetWave(currentWave_);
+        waveUI_->Update();
+	}
 
     // プレイヤー死亡＋ゲージが0になったら演出開始
     if (player_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
@@ -293,7 +304,7 @@ void GameScene::Draw() {
 
     // モデル描画
     dxCommon_->ClearDepthBuffer();
-    Model::PreDraw(dxCommon->GetCommandList());
+    Model::PreDraw();
     skyDome_->Draw();
     player_->Draw();
     enemyManager_.Draw(&player_->GetCamera());
@@ -326,6 +337,11 @@ void GameScene::Draw() {
     // ✅ HPゲージ描画
 	if (hpGauge_ && !player_->IsDead() && !levelUpActive_ && !paused_) {
 		hpGauge_->Draw();
+	}
+
+    // ✅ WaveUI描画
+    if (waveUI_) {
+        waveUI_->Draw();
 	}
 
     // ポーズ表示

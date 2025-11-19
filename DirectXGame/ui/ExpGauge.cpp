@@ -15,7 +15,7 @@ ExpGauge::~ExpGauge() {
 void ExpGauge::Initialize() {
     dummyTextureHandle_ = TextureManager::Load("white1x1.png");
     lvLabelHandle_ = TextureManager::Load("lv_label.png");
-    lvDigitsHandle_ = TextureManager::Load("number_lv.png");
+    lvDigitsHandle_ = TextureManager::Load("number.png");
 
     // 黄色のふち（外枠）
     yellowFrame_ = Sprite::Create(dummyTextureHandle_, { 0, 1 });
