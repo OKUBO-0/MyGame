@@ -7,6 +7,7 @@
 #include "../2d/Fade.h"
 #include "../ui/ExpGauge.h"
 #include "../ui/HpGauge.h"
+#include "../ui/WaveUI.h"
 #include <KamataEngine.h>
 
 class GameScene : public IScene {
@@ -78,4 +79,7 @@ private:
 
     // GameScene.h（必要なら）
     bool isGameOver_ = false;
+
+    // waveui
+	WaveUI* waveUI_ = nullptr;
 };

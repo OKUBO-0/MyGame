@@ -123,6 +123,7 @@
     <ClCompile Include="2d\Score.cpp" />
     <ClCompile Include="ui\TitleUI.cpp" />
     <ClCompile Include="math\WorldTransformEx.cpp" />
+    <ClCompile Include="ui\WaveUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\TerrainPS.hlsl">
@@ -215,6 +216,7 @@
     <ClInclude Include="3d\SkyDome.h" />
     <ClInclude Include="2d\Score.h" />
     <ClInclude Include="ui\TitleUI.h" />
+    <ClInclude Include="ui\WaveUI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

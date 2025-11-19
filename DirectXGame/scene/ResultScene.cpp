@@ -6,6 +6,7 @@ ResultScene::~ResultScene() {
     delete backgroundSprite_;
     delete resultSprite_;
 	delete resultUI_;
+    delete scoreUI_;
 }
 
 void ResultScene::Initialize() {
@@ -25,12 +26,29 @@ void ResultScene::Initialize() {
 	resultUI_ = Sprite::Create(uiTex, { 0,0 });
 	resultUI_->SetSize({ 1280,720 });
 
+    // ✅ Score初期化
+    scoreUI_ = new Score();
+    scoreUI_->Initialize();
+    scoreUI_->SetNumber(0); // 最初は0
+    scoreUI_->SetPosition({ 600, 400 }); // 中央付近
+    scoreUI_->SetScale(2.0f);
+
+    currentScore_ = 0;
+    targetScore_ = 100;
+
     fade_.Initialize();
     fadeOutStarted_ = false;
 }
 
 void ResultScene::Update() {
     fade_.Update();
+
+    // ✅ スコア加算演出
+    if (currentScore_ < targetScore_) {
+        currentScore_++;
+        scoreUI_->SetNumber(currentScore_);
+    }
+    scoreUI_->Update();
 
     if (input_->TriggerKey(DIK_RETURN) && fade_.GetState() == Fade::State::Stay) {
         fade_.StartFadeOut();
@@ -49,6 +67,12 @@ void ResultScene::Draw() {
     backgroundSprite_->Draw();
     resultSprite_->Draw();
 	resultUI_->Draw();
+
+    // ✅ スコア描画
+    if (scoreUI_) {
+        scoreUI_->Draw();
+    }
+
     fade_.Draw();
     Sprite::PostDraw();
 }

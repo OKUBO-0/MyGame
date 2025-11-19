@@ -1,6 +1,7 @@
 #pragma once
 #include "IScene.h"
 #include "../2d/Fade.h"
+#include "../2d/Score.h"
 #include <KamataEngine.h>
 
 class ResultScene : public IScene {
@@ -27,4 +28,9 @@ private:
     Fade fade_;
     bool fadeOutStarted_ = false;
     bool finished_ = false;
+
+    // ✅ Score用
+    Score* scoreUI_ = nullptr;
+    int currentScore_ = 0;   // 現在のスコア
+    int targetScore_ = 100;  // 目標スコア
 };
