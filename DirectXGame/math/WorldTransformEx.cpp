@@ -4,21 +4,25 @@ using namespace KamataEngine;
 using namespace MathUtility;
 
 void WorldTransform::UpdateMatrix() {
-	// スケーリング行列
-	Matrix4x4 matScale = MakeScaleMatrix(scale_);
+    // オブジェクトの拡大縮小を表すスケーリング行列を生成
+    Matrix4x4 matScale = MakeScaleMatrix(scale_);
 
-	// 回転行列
-	Matrix4x4 matRotX = MakeRotateXMatrix(rotation_.x);
-	Matrix4x4 matRotY = MakeRotateYMatrix(rotation_.y);
-	Matrix4x4 matRotZ = MakeRotateZMatrix(rotation_.z);
-	Matrix4x4 matRot = matRotZ * matRotX * matRotY;
+    // 各軸の回転行列を生成（X, Y, Z）
+    Matrix4x4 matRotX = MakeRotateXMatrix(rotation_.x);
+    Matrix4x4 matRotY = MakeRotateYMatrix(rotation_.y);
+    Matrix4x4 matRotZ = MakeRotateZMatrix(rotation_.z);
 
-	// 平行移動行列
-	Matrix4x4 matTrans = MakeTranslateMatrix(translation_);
+    // 回転行列を合成（Z→X→Y の順で適用）
+    // この順序により、モデルの回転が自然に見えるよう調整されている
+    Matrix4x4 matRot = matRotZ * matRotX * matRotY;
 
-	// スケーリング、回転、平行移動の合成
-	matWorld_ = matScale * matRot * matTrans;
+    // オブジェクトの位置を表す平行移動行列を生成
+    Matrix4x4 matTrans = MakeTranslateMatrix(translation_);
 
-	// 定数バッファに転送
-	TransferMatrix();
+    // スケーリング → 回転 → 平行移動 の順で行列を合成
+    // これにより、拡大縮小や回転を適用した後に最終的な位置へ移動する
+    matWorld_ = matScale * matRot * matTrans;
+
+    // 計算したワールド行列を定数バッファへ転送し、描画処理で利用可能にする
+    this->TransferMatrix();
 }

@@ -8,44 +8,47 @@
 
 using namespace KamataEngine;
 
-// Windowsアプリのエントリーポイント
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
-    // エンジン初期化
+    // エンジン初期化（ウィンドウタイトルを指定）
     Initialize(L"LE3C_04_オオクボ_タク");
 
-    // 起動時にフルスクリーンにする
-    //WinApp::GetInstance()->SetFullscreen(true);
+    // フルスクリーン化（必要なら有効化）
+    // WinApp::GetInstance()->SetFullscreen(true);
 
-    // DirectXCommonインスタンス取得
+    // DirectX共通インスタンス取得（描画制御用）
     DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
-    // シーン管理
+    // シーン管理クラス生成
     SceneManager sceneManager;
 
-    // シーン登録
+    // 各シーンを登録（Title / Game / Result）
     sceneManager.RegisterScene(SCENE::Title, []() { return std::make_unique<TitleScene>(); });
     sceneManager.RegisterScene(SCENE::Game, []() { return std::make_unique<GameScene>(); });
     sceneManager.RegisterScene(SCENE::Result, []() { return std::make_unique<ResultScene>(); });
 
-    // 初期シーン設定
+    // 初期シーンをタイトルに設定
     sceneManager.ChangeScene(SCENE::Title);
 
-    // メインループ
+    // メインループ（ゲームが終了するまで繰り返し）
     while (true) {
-        // エンジン更新（終了判定）
+        // エンジン更新（終了判定。trueが返ればループ終了）
         if (Update()) break;
 
-        // シーン更新
+        // 現在のシーンを更新
         sceneManager.Update();
 
-        // 描画処理
+        // 描画処理開始
         dxCommon->PreDraw();
+
+        // 現在のシーンを描画
         sceneManager.Draw();
+
+        // 描画処理終了
         dxCommon->PostDraw();
     }
 
-    // エンジン終了処理
+    // エンジン終了処理（リソース解放など）
     Finalize();
 
     return 0;

@@ -5,56 +5,55 @@ using namespace KamataEngine;
 Score::Score() {}
 
 Score::~Score() {
-    // 各桁スプライトのメモリ解放
+    // 動的に生成した各桁スプライトを解放
     for (int i = 0; i < kDigitCount; ++i) {
         delete sprite_[i];
     }
 }
 
 void Score::Initialize() {
-    // 数字テクスチャを読み込む
+    // 数字表示用テクスチャを読み込み
     textureHandle_ = TextureManager::Load("number.png");
 
-    // 各桁分のスプライトを生成し、横に配置
+    // 各桁分のスプライトを生成し、横並びに配置
     for (int i = 0; i < kDigitCount; ++i) {
         sprite_[i] = Sprite::Create(textureHandle_, { basePosition_.x + size_.x * i, basePosition_.y });
         sprite_[i]->SetSize(size_);
+        // 初期状態は「0」を表示
         sprite_[i]->SetTextureRect({ 0.0f, 0.0f }, size_);
     }
 }
 
 void Score::Update() {
-    // 現時点では特に更新処理はなし
+    // スコアは外部から更新されるため、ここでは特別な処理は不要
 }
 
 void Score::Draw() {
-    // スプライト描画開始
     DirectXCommon* dxCommon = DirectXCommon::GetInstance();
     Sprite::PreDraw(dxCommon->GetCommandList());
 
-    // 各桁を順に描画
+    // 各桁スプライトを順に描画
     for (int i = 0; i < kDigitCount; ++i) {
         sprite_[i]->Draw();
     }
 
-    // スプライト描画終了
     Sprite::PostDraw();
 }
 
 void Score::SetNumber(int number) {
-    // 数値を各桁に分解して対応するテクスチャ領域を設定
-    int32_t digit = 10000; // 5桁対応（10000の位から）
+    // 数値を桁ごとに分解してスプライトに反映
+    int32_t digit = 10000; // 5桁対応（10000の位から処理）
 
     for (int i = 0; i < kDigitCount; ++i) {
-        int nowNumber = number / digit;
+        int nowNumber = number / digit; // 現在の桁の数値
         sprite_[i]->SetTextureRect({ size_.x * nowNumber, 0.0f }, size_);
-        number %= digit;
+        number %= digit; // 次の桁へ
         digit /= 10;
     }
 }
 
 void Score::SetPosition(const Vector2& pos) {
-    // スコアの基準位置を更新
+    // 基準位置を更新
     basePosition_ = pos;
 
     // 各桁スプライトの座標を再計算
@@ -67,7 +66,7 @@ void Score::SetScale(float scale) {
     // スケール値を更新
     scale_ = scale;
 
-    // 各桁のスプライトサイズと位置を再設定
+    // 各桁スプライトのサイズと位置を再設定
     for (int i = 0; i < kDigitCount; ++i) {
         sprite_[i]->SetSize({ size_.x * scale_, size_.y * scale_ });
         sprite_[i]->SetPosition({ basePosition_.x + (size_.x * scale_ * i), basePosition_.y });
