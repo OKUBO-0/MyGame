@@ -3,6 +3,7 @@
 #include "IScene.h"
 #include "../player/Player.h"
 #include "../enemy/EnemyManager.h"
+#include "../3d/GridPlane.h"
 #include "../3d/SkyDome.h"
 #include "../2d/Fade.h"
 #include "../ui/ExpGauge.h"
@@ -82,7 +83,6 @@ private:
     KamataEngine::Sprite* readyOverlay_ = nullptr; ///< "Ready"表示用スプライト
     KamataEngine::Sprite* goOverlay_ = nullptr;    ///< "Go"表示用スプライト
 
-    SkyDome* skyDome_ = nullptr; ///< 背景の天球
     Player* player_ = nullptr;   ///< プレイヤー
     EnemyManager enemyManager_;  ///< 敵管理
 
@@ -110,4 +110,6 @@ private:
     HpGauge* hpGauge_ = nullptr;   ///< HPゲージ
     bool isGameOver_ = false;      ///< ゲームオーバーフラグ
     WaveUI* waveUI_ = nullptr;     ///< Wave表示UI
+    GridPlane* gridPlane_ = nullptr;
+	SkyDome* skyDome_ = nullptr;
 };

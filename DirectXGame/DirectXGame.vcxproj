@@ -56,6 +56,7 @@
     <LibraryPath>$(ProjectDir)..\External\KamataEngine\lib\$(Configuration);$(ProjectDir)..\External\DirectXTex\lib\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)..\Generated\Outputs\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\Generated\Obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>Octopus</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -106,6 +107,9 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="3d\GridPlane.cpp" />
+    <ClCompile Include="GameData.cpp" />
+    <ClCompile Include="3d\RippleEffect.cpp" />
     <ClCompile Include="ui\HpGauge.cpp" />
     <ClCompile Include="ui\ExpGauge.cpp" />
     <ClCompile Include="player\Bullet.cpp" />
@@ -120,7 +124,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="scene\TitleScene.cpp" />
     <ClCompile Include="3d\SkyDome.cpp" />
-    <ClCompile Include="2d\Score.cpp" />
+    <ClCompile Include="ui\Score.cpp" />
     <ClCompile Include="ui\TitleUI.cpp" />
     <ClCompile Include="math\WorldTransformEx.cpp" />
     <ClCompile Include="ui\WaveUI.cpp" />
@@ -201,6 +205,9 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3d\GridPlane.h" />
+    <ClInclude Include="GameData.h" />
+    <ClInclude Include="3d\RippleEffect.h" />
     <ClInclude Include="ui\HpGauge.h" />
     <ClInclude Include="ui\ExpGauge.h" />
     <ClInclude Include="player\Bullet.h" />
@@ -214,7 +221,7 @@
     <ClInclude Include="scene\GameScene.h" />
     <ClInclude Include="scene\TitleScene.h" />
     <ClInclude Include="3d\SkyDome.h" />
-    <ClInclude Include="2d\Score.h" />
+    <ClInclude Include="ui\Score.h" />
     <ClInclude Include="ui\TitleUI.h" />
     <ClInclude Include="ui\WaveUI.h" />
   </ItemGroup>

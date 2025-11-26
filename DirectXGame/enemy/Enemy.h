@@ -111,7 +111,7 @@ private:
     KamataEngine::WorldTransform worldTransform_; ///< 敵のワールドトランスフォーム
     KamataEngine::Model* enemyModel_ = nullptr;   ///< 敵モデル
 
-    float speed_ = 0.1f; ///< 移動速度
+    float speed_ = 0.0f; ///< 移動速度
 
     int hp_ = 3;         ///< HP値
     int exp_ = 0;        ///< 経験値

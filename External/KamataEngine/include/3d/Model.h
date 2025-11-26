@@ -270,6 +270,12 @@ public: // メンバ関数
 	/// <param name="lightGroup">ライトグループ</param>
 	void SetLightGroup(const LightGroup* lightGroup) { lightGroup_ = lightGroup; }
 
+	/// <summary>
+	/// モデルの色を設定する
+	/// </summary>
+	/// <param name="color">設定する色（Vector4: RGBA）</param>
+	void SetColor(const Vector4& color);
+
 private: // メンバ変数
 	// 名前
 	std::string name_;

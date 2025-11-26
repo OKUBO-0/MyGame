@@ -1,7 +1,7 @@
 #pragma once
 #include "IScene.h"
 #include "../2d/Fade.h"
-#include "../2d/Score.h"
+#include "../ui/Score.h"
 #include <KamataEngine.h>
 
 /// <summary>

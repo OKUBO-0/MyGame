@@ -4,6 +4,7 @@
 #include <vector>
 #include "Bullet.h"
 #include "EnemyManager.h"
+#include "RippleEffect.h"
 
 class EnemyManager;
 
@@ -96,6 +97,7 @@ public:
     /// </summary>
     /// <returns>経験値の値</returns>
     int GetEXP() const { return exp_; }
+    int GetTotalEXP() const { return totalExp_; }
 
     /// <summary>
     /// 現在のレベルを取得する
@@ -174,7 +176,13 @@ private:
     bool visible_ = true;          ///< 描画可否フラグ
 
     int exp_ = 0;                   ///< 経験値
+    int totalExp_ = 0;              ///< 総獲得経験値（リセットしない）
     int level_ = 1;                 ///< 現在レベル
     int nextLevelExp_ = 1;          ///< 次のレベルに必要な経験値
     bool levelUpRequested_ = false; ///< レベルアップ要求フラグ
+
+    // ✅ パーティクルリスト
+    std::vector<RippleEffect*> effects_;
+    float effectTimer_ = 0.0f;
+    float effectInterval_ = 0.2f; // 0.1秒ごとに生成
 };
