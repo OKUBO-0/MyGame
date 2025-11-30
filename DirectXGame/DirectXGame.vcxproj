@@ -110,6 +110,7 @@
     <ClCompile Include="3d\GridPlane.cpp" />
     <ClCompile Include="GameData.cpp" />
     <ClCompile Include="3d\RippleEffect.cpp" />
+    <ClCompile Include="3d\HitParticle.cpp" />
     <ClCompile Include="ui\HpGauge.cpp" />
     <ClCompile Include="ui\ExpGauge.cpp" />
     <ClCompile Include="player\Bullet.cpp" />
@@ -208,6 +209,7 @@
     <ClInclude Include="3d\GridPlane.h" />
     <ClInclude Include="GameData.h" />
     <ClInclude Include="3d\RippleEffect.h" />
+    <ClInclude Include="3d\HitParticle.h" />
     <ClInclude Include="ui\HpGauge.h" />
     <ClInclude Include="ui\ExpGauge.h" />
     <ClInclude Include="player\Bullet.h" />

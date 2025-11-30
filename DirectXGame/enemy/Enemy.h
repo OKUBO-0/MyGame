@@ -91,9 +91,10 @@ public:
 
     /// <summary>
     /// ダメージを受けてHPを減少させる
+    ///（オプションでノックバック方向と強さを指定可能）
     /// </summary>
     /// <param name="damage">受けるダメージ量</param>
-    void TakeDamage(int damage);
+    void TakeDamage(int damage, const KamataEngine::Vector3& knockDir = { 0.0f, 0.0f, 0.0f }, float strength = 0.0f);
 
     /// <summary>
     /// 敵の撃破時に得られる経験値を設定する
@@ -111,11 +112,22 @@ private:
     KamataEngine::WorldTransform worldTransform_; ///< 敵のワールドトランスフォーム
     KamataEngine::Model* enemyModel_ = nullptr;   ///< 敵モデル
 
-    float speed_ = 0.0f; ///< 移動速度
+    float speed_ = 0.1f; ///< 移動速度
 
     int hp_ = 3;         ///< HP値
     int exp_ = 0;        ///< 経験値
     bool active_ = true; ///< アクティブ状態フラグ
 
     Player* player_ = nullptr; ///< プレイヤー参照
+
+    // ヒット時の白化
+    KamataEngine::ObjectColor* objectColor_ = nullptr;
+    float hitFlashTimer_ = 0.0f;
+    static constexpr float kHitFlashDuration_ = 0.12f;
+    uint32_t whiteTextureHandle_ = 0;
+
+    // ノックバック関連
+    KamataEngine::Vector3 knockbackVelocity_ = { 0.0f, 0.0f, 0.0f };
+    float knockbackTimer_ = 0.0f;
+    static constexpr float kKnockbackDuration_ = 0.18f;
 };
