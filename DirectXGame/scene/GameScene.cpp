@@ -163,7 +163,7 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        const int MAX_WAVE = 1;
+        const int MAX_WAVE = 2;
 
         if (currentWave_ >= MAX_WAVE) {
             // 最終Wave終了 → ResultSceneへ遷移
