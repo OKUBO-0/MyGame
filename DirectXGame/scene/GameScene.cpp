@@ -129,7 +129,7 @@ void GameScene::Update() {
     }
 
     // ESCキーでポーズ切り替え（フェード中は無効）
-    if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::Stay) {
+    if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::kStay) {
         paused_ = !paused_;
     }
 
@@ -138,16 +138,16 @@ void GameScene::Update() {
         if (input_->TriggerKey(DIK_1)) {
             fade_.StartFadeOut();
             fadeOutStarted_ = true;
-            SetSceneNo(SCENE::Title);
+            SetSceneNo(Scene::Title);
         }
         else if (input_->TriggerKey(DIK_2)) {
             fade_.StartFadeOut();
             fadeOutStarted_ = true;
-            SetSceneNo(SCENE::Result);
+            SetSceneNo(Scene::Result);
         }
 
         if (fadeOutStarted_ && fade_.IsFinished()) {
-            GameData::totalEXP = player_->GetTotalEXP();
+            GameData::totalExp = player_->GetTotalEXP();
             finished_ = true;
         }
         return;
@@ -163,18 +163,18 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        const int MAX_WAVE = 2;
+        static constexpr int32_t kMaxWave = 2;
 
-        if (currentWave_ >= MAX_WAVE) {
+        if (currentWave_ >= kMaxWave) {
             // 最終Wave終了 → ResultSceneへ遷移
             if (!fadeOutStarted_) {
                 fade_.StartFadeOut();
                 fadeOutStarted_ = true;
-                SetSceneNo(SCENE::Result);
+                SetSceneNo(Scene::Result);
             }
 
             if (fadeOutStarted_ && fade_.IsFinished()) {
-                GameData::totalEXP = player_->GetTotalEXP();
+                GameData::totalExp = player_->GetTotalEXP();
                 finished_ = true;
             }
 
@@ -244,11 +244,11 @@ void GameScene::Update() {
         if (deathFadeInComplete_ && input_->TriggerKey(DIK_SPACE)) {
             fade_.StartFadeOut();
             fadeOutStarted_ = true;
-            SetSceneNo(SCENE::Result);
+            SetSceneNo(Scene::Result);
         }
 
         if (fadeOutStarted_ && fade_.IsFinished()) {
-            GameData::totalEXP = player_->GetTotalEXP();
+            GameData::totalExp = player_->GetTotalEXP();
             finished_ = true;
         }
 
@@ -327,8 +327,8 @@ void GameScene::Update() {
 
                 Vector3 hitPos = bullet->GetPosition();
 
-                const int sparkCount = 4;
-                for (int i = 0; i < sparkCount; ++i) {
+                static constexpr int32_t kSparkCount = 4;
+                for (int32_t i = 0; i < kSparkCount; ++i) {
                     HitParticle* particle = new HitParticle();
                     particle->Initialize(hitPos);
                     hitParticles_.push_back(particle);

@@ -2,13 +2,13 @@
 
 #include <array>
 #include <KamataEngine.h>
+#include <cstdint> // int32_t
 
 /// <summary>
 /// スコアを画面に表示・管理するクラス。
 /// 数字スプライトを並べてスコアを描画し、位置やスケールを調整できる。
 /// </summary>
-class Score
-{
+class Score {
 public:
     /// <summary>
     /// コンストラクタ
@@ -44,7 +44,7 @@ public:
     /// 表示するスコア値を設定する
     /// </summary>
     /// <param name="number">表示したいスコア値</param>
-    void SetNumber(int number);
+    void SetNumber(int32_t number);
 
     /// <summary>
     /// スコア全体の表示位置を設定する
@@ -59,7 +59,7 @@ public:
     void SetScale(float scale);
 
 private:
-    static const int kDigitCount = 5;                         ///< 最大表示桁数
+    static constexpr int32_t kDigitCount = 5; ///< 最大表示桁数
     std::array<KamataEngine::Sprite*, kDigitCount> sprite_{}; ///< 各桁ごとのスプライト
     uint32_t textureHandle_ = 0;                              ///< 数字テクスチャのハンドル
     KamataEngine::Vector2 size_ = { 16.0f, 32.0f };           ///< 各数字スプライトのサイズ

@@ -2,6 +2,7 @@
 
 #include <KamataEngine.h>
 #include <vector>
+#include <cstdint> // int32_t
 #include "Bullet.h"
 #include "EnemyManager.h"
 #include "RippleEffect.h"
@@ -90,31 +91,27 @@ public:
     /// 経験値を加算する
     /// </summary>
     /// <param name="amount">加算する経験値</param>
-    void AddEXP(int amount);
+    void AddEXP(int32_t amount);
 
     /// <summary>
     /// 現在の経験値を取得する
     /// </summary>
-    /// <returns>経験値の値</returns>
-    int GetEXP() const { return exp_; }
-    int GetTotalEXP() const { return totalExp_; }
+    int32_t GetEXP() const { return exp_; }
+    int32_t GetTotalEXP() const { return totalExp_; }
 
     /// <summary>
     /// 現在のレベルを取得する
     /// </summary>
-    /// <returns>レベル値</returns>
-    int GetLevel() const { return level_; }
+    int32_t GetLevel() const { return level_; }
 
     /// <summary>
     /// 次のレベルに必要な経験値を取得する
     /// </summary>
-    /// <returns>必要経験値</returns>
-    int GetNextLevelEXP() const { return nextLevelExp_; }
+    int32_t GetNextLevelEXP() const { return nextLevelExp_; }
 
     /// <summary>
     /// レベルアップ選択が要求されているか判定する
     /// </summary>
-    /// <returns>true: 要求あり / false: 要求なし</returns>
     bool IsLevelUpRequested() const { return levelUpRequested_; }
 
     /// <summary>
@@ -140,20 +137,17 @@ public:
     /// <summary>
     /// 弾の攻撃力を取得する
     /// </summary>
-    /// <returns>攻撃力の値</returns>
-    int GetBulletPower() const { return bulletPower_; }
+    int32_t GetBulletPower() const { return bulletPower_; }
 
     /// <summary>
     /// 現在のHPを取得する
     /// </summary>
-    /// <returns>HP値</returns>
-    int GetHP() const { return lifeStock_; }
+    int32_t GetHP() const { return lifeStock_; }
 
     /// <summary>
     /// 最大HPを取得する
     /// </summary>
-    /// <returns>最大HP値</returns>
-    int GetMaxHP() const { return maxLifeStock_; }
+    int32_t GetMaxHP() const { return maxLifeStock_; }
 
 private:
     KamataEngine::Input* input_ = nullptr;        ///< 入力管理
@@ -165,24 +159,24 @@ private:
     float bulletCooldown_ = 1.0f;  ///< 弾発射間隔
     float bulletTimer_ = 0.0f;     ///< 弾発射タイマー
     float range_ = 30.0f;          ///< 弾の射程
-    int bulletPower_ = 1;          ///< 弾の攻撃力
+    int32_t bulletPower_ = 1;      ///< 弾の攻撃力
 
     EnemyManager* enemyManager_ = nullptr; ///< 敵管理クラス参照
 
-    int lifeStock_ = 3;            ///< 現在HP
-    int maxLifeStock_ = 3;         ///< 最大HP
+    int32_t lifeStock_ = 3;        ///< 現在HP
+    int32_t maxLifeStock_ = 3;     ///< 最大HP
     bool invincible_ = false;      ///< 無敵状態フラグ
     float invincibleTimer_ = 0.0f; ///< 無敵時間管理
     bool visible_ = true;          ///< 描画可否フラグ
 
-    int exp_ = 0;                   ///< 経験値
-    int totalExp_ = 0;              ///< 総獲得経験値（リセットしない）
-    int level_ = 1;                 ///< 現在レベル
-    int nextLevelExp_ = 1;          ///< 次のレベルに必要な経験値
+    int32_t exp_ = 0;              ///< 経験値
+    int32_t totalExp_ = 0;         ///< 総獲得経験値（リセットしない）
+    int32_t level_ = 1;            ///< 現在レベル
+    int32_t nextLevelExp_ = 1;     ///< 次のレベルに必要な経験値
     bool levelUpRequested_ = false; ///< レベルアップ要求フラグ
 
-    // ✅ パーティクルリスト
+    // パーティクルリスト
     std::vector<RippleEffect*> effects_;
     float effectTimer_ = 0.0f;
-    float effectInterval_ = 0.2f; // 0.1秒ごとに生成
+    static constexpr float kEffectInterval = 0.2f; ///< パーティクル生成間隔
 };

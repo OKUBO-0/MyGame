@@ -33,7 +33,10 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string value;
-        int type = 0, count = 0, hp = 3, exp = 0;
+        int32_t type = 0;
+        int32_t count = 0;
+        int32_t hp = 3;
+        int32_t exp = 0;
         float distance = 0.0f;
 
         // CSVの各列を読み込み（type, distance, count, hp, exp）
@@ -44,7 +47,7 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
         std::getline(ss, value, ','); exp = std::stoi(value);
 
         // 指定された数だけ敵を円形に配置
-        for (int i = 0; i < count; ++i) {
+        for (int32_t i = 0; i < count; ++i) {
             float angle = (2.0f * 3.14159265f * i) / count; // 円周上の角度
             Vector3 pos = {
                 player_->GetWorldPosition().x + std::cos(angle) * distance,
@@ -77,16 +80,16 @@ void EnemyManager::Update() {
 
     // 敵同士の衝突判定と分離処理
     // 一定距離未満で重なった場合、押し返して距離を保つ
-    const float minDist = 3.0f;       // 最低限保つべき距離
-    const float pushStrength = 1.0f;  // 押し返しの強さ
+    const float kMinDist = 3.0f;       ///< 最低限保つべき距離
+    const float kPushStrength = 1.0f;  ///< 押し返しの強さ
 
     for (size_t i = 0; i < enemies_.size(); ++i) {
         Enemy* a = enemies_[i];
-        if (!a->IsActive()) continue;
+        if (!a->IsActive()) { continue; }
 
         for (size_t j = i + 1; j < enemies_.size(); ++j) {
             Enemy* b = enemies_[j];
-            if (!b->IsActive()) continue;
+            if (!b->IsActive()) { continue; }
 
             Vector3 posA = a->GetPosition();
             Vector3 posB = b->GetPosition();
@@ -96,19 +99,19 @@ void EnemyManager::Update() {
             float distSq = dx * dx + dz * dz;
 
             // 距離が近すぎる場合に分離処理を行う
-            if (distSq < minDist * minDist && distSq > 0.0001f) {
+            if (distSq < kMinDist * kMinDist && distSq > 0.0001f) {
                 float dist = std::sqrt(distSq);
-                float overlap = minDist - dist;
+                float overlap = kMinDist - dist;
 
                 // 正規化ベクトル（押し返す方向）
                 float nx = dx / dist;
                 float nz = dz / dist;
 
                 // 双方を押し返して距離を確保
-                posA.x -= nx * overlap * pushStrength;
-                posA.z -= nz * overlap * pushStrength;
-                posB.x += nx * overlap * pushStrength;
-                posB.z += nz * overlap * pushStrength;
+                posA.x -= nx * overlap * kPushStrength;
+                posA.z -= nz * overlap * kPushStrength;
+                posB.x += nx * overlap * kPushStrength;
+                posB.z += nz * overlap * kPushStrength;
 
                 a->SetPosition(posA);
                 b->SetPosition(posB);

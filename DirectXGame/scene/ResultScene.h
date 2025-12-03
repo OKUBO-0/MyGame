@@ -3,6 +3,7 @@
 #include "../2d/Fade.h"
 #include "../ui/Score.h"
 #include <KamataEngine.h>
+#include <cstdint> // int32_t
 
 /// <summary>
 /// リザルトシーンを管理するクラス。
@@ -61,11 +62,11 @@ private:
     KamataEngine::Sprite* resultSprite_ = nullptr;     ///< リザルト文字スプライト
     KamataEngine::Sprite* resultUI_ = nullptr;         ///< リザルトUIスプライト
 
-    Fade fade_;                  ///< フェード演出
+    Fade fade_;                   ///< フェード演出
     bool fadeOutStarted_ = false; ///< フェードアウト開始フラグ
     bool finished_ = false;       ///< シーン終了フラグ
 
     Score* scoreUI_ = nullptr; ///< スコア表示UI
-    int currentScore_ = 0;     ///< 現在のスコア
-    int targetScore_ = 100;    ///< 目標スコア
+    int32_t currentScore_ = 0; ///< 現在のスコア
+    int32_t targetScore_ = 100; ///< 目標スコア
 };

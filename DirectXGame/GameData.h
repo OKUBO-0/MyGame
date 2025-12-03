@@ -1,7 +1,14 @@
-// GameData.h
 #pragma once
+#include <cstdint> // int32_t
 
+/// <summary>
+/// ゲーム全体で共有されるデータを管理するクラス。
+/// プレイヤーが獲得した総経験値などを保持する。
+/// </summary>
 class GameData {
 public:
-    static int totalEXP; // プレイヤーが獲得した総経験値
+    /// <summary>
+    /// プレイヤーが獲得した総経験値
+    /// </summary>
+    static int32_t totalExp;
 };

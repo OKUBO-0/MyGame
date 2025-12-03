@@ -2,62 +2,85 @@
 using namespace KamataEngine;
 
 WaveUI::WaveUI() {}
+
 WaveUI::~WaveUI() {
-    // 動的に生成したスプライトを解放
+    /// <summary>
+    /// 動的に生成したスプライトを解放
+    /// </summary>
     delete waveLabel_;
-    for (auto& d : digits_) delete d;
+    for (auto& d : digits_) { delete d; }
 }
 
 void WaveUI::Initialize() {
-    // テクスチャ読み込み（ラベル用と数字用）
+    /// <summary>
+    /// テクスチャ読み込み（ラベル用と数字用）
+    /// </summary>
     labelTexHandle_ = TextureManager::Load("wave.png");
     numberTexHandle_ = TextureManager::Load("number.png");
 
-    // ラベルスプライト生成（画面上部中央に「WAVE」表示）
-    waveLabel_ = Sprite::Create(labelTexHandle_, { 580.0f, 50.0f });
-    waveLabel_->SetSize({ 64, 32 });
+    /// <summary>
+    /// ラベルスプライト生成（画面上部中央に「WAVE」表示）
+    /// </summary>
+    static constexpr float kLabelPosX = 580.0f;
+    static constexpr float kLabelPosY = 50.0f;
+    static constexpr float kLabelWidth = 64.0f;
+    static constexpr float kLabelHeight = 32.0f;
 
-    // 数字スプライト生成（最大2桁分を用意）
-    for (int i = 0; i < kMaxDigits; ++i) {
-        digits_[i] = Sprite::Create(numberTexHandle_, { 660.0f + digitSize_.x * i, 50.0f });
+    waveLabel_ = Sprite::Create(labelTexHandle_, { kLabelPosX, kLabelPosY });
+    waveLabel_->SetSize({ kLabelWidth, kLabelHeight });
+
+    /// <summary>
+    /// 数字スプライト生成（最大2桁分を用意）
+    /// </summary>
+    static constexpr float kDigitStartX = 660.0f;
+    for (int32_t i = 0; i < kMaxDigits; ++i) {
+        digits_[i] = Sprite::Create(numberTexHandle_, { kDigitStartX + digitSize_.x * i, kLabelPosY });
         digits_[i]->SetSize(digitSize_);
-        // 初期状態は「0」を表示
         digits_[i]->SetTextureRect({ 0, 0 }, digitSize_);
     }
 }
 
-void WaveUI::SetWave(int wave) {
-    // 表示する桁数を判定（1桁か2桁か）
-    int digitsToShow = (wave < 10) ? 1 : 2;
+void WaveUI::SetWave(int32_t wave) {
+    /// <summary>
+    /// 表示する桁数を判定（1桁か2桁か）
+    /// </summary>
+    int32_t digitsToShow = (wave < 10) ? 1 : 2;
 
-    // 桁ごとに数値を分解してスプライトに反映
-    int digit = (digitsToShow == 1) ? 1 : 10;
-    for (int i = 0; i < kMaxDigits; ++i) {
+    /// <summary>
+    /// 桁ごとに数値を分解してスプライトに反映
+    /// </summary>
+    int32_t digit = (digitsToShow == 1) ? 1 : 10;
+    for (int32_t i = 0; i < kMaxDigits; ++i) {
         if (i < digitsToShow) {
-            int num = wave / digit; // 現在の桁の数値
+            int32_t num = wave / digit;
             digits_[i]->SetTextureRect({ digitSize_.x * num, 0 }, digitSize_);
-            digits_[i]->SetColor({ 1, 1, 1, 1 }); // 表示
+            digits_[i]->SetColor({ 1, 1, 1, 1 });
             wave %= digit;
             digit /= 10;
         }
         else {
-            // 不要な桁は非表示（透明化）
             digits_[i]->SetColor({ 1, 1, 1, 0 });
         }
     }
 }
 
 void WaveUI::Update() {
-    // 必要に応じてアニメーションや点滅処理を追加可能
+    /// <summary>
+    /// 必要に応じてアニメーションや点滅処理を追加可能
+    /// </summary>
 }
 
 void WaveUI::Draw() {
     DirectXCommon* dx = DirectXCommon::GetInstance();
     Sprite::PreDraw(dx->GetCommandList());
 
-    // ラベルと数字を描画
-    waveLabel_->Draw();
-    for (auto& d : digits_) d->Draw();
+    /// <summary>
+    /// ラベルと数字を描画
+    /// </summary>
+    if (waveLabel_) { waveLabel_->Draw(); }
+    for (auto& d : digits_) {
+        if (d) { d->Draw(); }
+    }
 
     Sprite::PostDraw();
 }

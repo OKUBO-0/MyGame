@@ -1,6 +1,7 @@
 #pragma once
 #include <KamataEngine.h>
 #include <algorithm>
+#include <cstdint> // int32_t
 
 /// <summary>
 /// プレイヤーのHPを可視化するゲージUIクラス。
@@ -43,7 +44,7 @@ public:
     /// </summary>
     /// <param name="current">現在のHP値</param>
     /// <param name="max">最大HP値</param>
-    void SetHP(int current, int max);
+    void SetHP(int32_t current, int32_t max);
 
     /// <summary>
     /// HPがゼロになっているかを判定する
@@ -57,7 +58,9 @@ private:
     KamataEngine::Sprite* blackGauge_ = nullptr; ///< 背景スプライト
     KamataEngine::Sprite* redGauge_ = nullptr;   ///< HPゲージスプライト
 
-    int displayedHP_ = 0; ///< 表示中のHP（補間用）
-    int targetHP_ = 0;    ///< 実際のHP
-    int maxHP_ = 1;       ///< 最大HP（0除算防止）
+    int32_t displayedHP_ = 0; ///< 表示中のHP（補間用）
+    int32_t targetHP_ = 0;    ///< 実際のHP
+    int32_t maxHP_ = 1;       ///< 最大HP（0除算防止）
+
+    static constexpr int32_t kDefaultMaxHP = 1; ///< 最大HPの初期値（0除算防止用）
 };

@@ -2,6 +2,7 @@
 using namespace KamataEngine;
 
 GridPlane::GridPlane() {}
+
 GridPlane::~GridPlane() {
     // 動的に生成した平面モデルを解放
     delete planeModel_;
@@ -21,17 +22,17 @@ void GridPlane::Initialize() {
     worldTransform_.rotation_ = { 0.0f, 0.0f, 0.0f };       // 回転は不要なのでゼロ
 
     // テクスチャの繰り返し設定（UVスケール）
-    // tileSize は「1タイルの大きさ」を決める値で、床のスケールに応じて繰り返し数を算出する
-    const float tileSize = 5.0f;
-    const float uvScaleX = worldTransform_.scale_.x / tileSize; // X方向の繰り返し数
-    const float uvScaleY = worldTransform_.scale_.z / tileSize; // Z方向の繰り返し数
+    // kTileSize は「1タイルの大きさ」を決める値で、床のスケールに応じて繰り返し数を算出する
+    const float kTileSize = 5.0f;
+    const float uvScaleX = worldTransform_.scale_.x / kTileSize; // X方向の繰り返し数
+    const float uvScaleY = worldTransform_.scale_.z / kTileSize; // Z方向の繰り返し数
 
     if (planeModel_) {
         // モデル内の各メッシュに対して UVスケールを設定
         for (auto& mesh : planeModel_->GetMeshes()) {
-            if (!mesh) continue;
+            if (!mesh) { continue; }
             Material* material = mesh->GetMaterial();
-            if (!material) continue;
+            if (!material) { continue; }
 
             // グリッド模様を均等に表示するために X,Z方向のUVスケールを反映
             material->uvScale_.x = uvScaleX;

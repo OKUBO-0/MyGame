@@ -1,4 +1,3 @@
-// HitParticle.cpp
 #include "HitParticle.h"
 #include <cstdlib> // rand()
 using namespace KamataEngine;
@@ -24,10 +23,10 @@ void HitParticle::Initialize(const Vector3& pos) {
 }
 
 void HitParticle::Update() {
-    const float dt = 0.016f;
-    age_ += dt;
+    const float kDeltaTime = 0.016f;
+    age_ += kDeltaTime;
 
-    if (age_ >= lifetime_) {
+    if (age_ >= kLifetime) {
         active_ = false;
         return;
     }
@@ -38,13 +37,13 @@ void HitParticle::Update() {
     worldTransform_.translation_.z += velocity_.z;
 
     // 徐々に透明化
-    alpha_ = 1.0f - (age_ / lifetime_);
+    alpha_ = 1.0f - (age_ / kLifetime);
     model_->SetAlpha(alpha_);
 
     worldTransform_.UpdateMatrix();
 }
 
 void HitParticle::Draw(Camera* camera) {
-    if (!active_) return;
+    if (!active_) { return; }
     model_->Draw(worldTransform_, *camera);
 }

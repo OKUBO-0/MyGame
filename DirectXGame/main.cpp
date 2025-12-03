@@ -17,35 +17,35 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     // WinApp::GetInstance()->SetFullscreen(true);
 
     // DirectX共通インスタンス取得（描画制御用）
-    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+    DirectXCommon* directXCommon = DirectXCommon::GetInstance();
 
     // シーン管理クラス生成
     SceneManager sceneManager;
 
     // 各シーンを登録（Title / Game / Result）
-    sceneManager.RegisterScene(SCENE::Title, []() { return std::make_unique<TitleScene>(); });
-    sceneManager.RegisterScene(SCENE::Game, []() { return std::make_unique<GameScene>(); });
-    sceneManager.RegisterScene(SCENE::Result, []() { return std::make_unique<ResultScene>(); });
+    sceneManager.RegisterScene(Scene::Title, []() { return std::make_unique<TitleScene>(); });
+    sceneManager.RegisterScene(Scene::Game, []() { return std::make_unique<GameScene>(); });
+    sceneManager.RegisterScene(Scene::Result, []() { return std::make_unique<ResultScene>(); });
 
     // 初期シーンをタイトルに設定
-    sceneManager.ChangeScene(SCENE::Title);
+    sceneManager.ChangeScene(Scene::Title);
 
     // メインループ（ゲームが終了するまで繰り返し）
     while (true) {
         // エンジン更新（終了判定。trueが返ればループ終了）
-        if (Update()) break;
+        if (Update()) { break; }
 
         // 現在のシーンを更新
         sceneManager.Update();
 
         // 描画処理開始
-        dxCommon->PreDraw();
+        directXCommon->PreDraw();
 
         // 現在のシーンを描画
         sceneManager.Draw();
 
         // 描画処理終了
-        dxCommon->PostDraw();
+        directXCommon->PostDraw();
     }
 
     // エンジン終了処理（リソース解放など）

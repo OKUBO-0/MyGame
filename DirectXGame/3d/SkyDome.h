@@ -6,8 +6,7 @@
 /// 天球モデルを用いて背景を描画するクラス。
 /// シーン全体の空を表現し、カメラやワールドトランスフォームを管理する。
 /// </summary>
-class SkyDome
-{
+class SkyDome {
 public:
     /// <summary>
     /// コンストラクタ

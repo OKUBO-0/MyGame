@@ -10,16 +10,16 @@ class Fade {
 public:
     /// <summary>
     /// フェードの状態を表す列挙型
-    /// None: フェードなし
-    /// FadeIn: フェードイン中
-    /// Stay: 完全表示状態で待機
-    /// FadeOut: フェードアウト中
+    /// kNone: フェードなし
+    /// kFadeIn: フェードイン中
+    /// kStay: 完全表示状態で待機
+    /// kFadeOut: フェードアウト中
     /// </summary>
     enum class State {
-        None,
-        FadeIn,
-        Stay,
-        FadeOut,
+        kNone,
+        kFadeIn,
+        kStay,
+        kFadeOut,
     };
 
     /// <summary>
@@ -80,6 +80,6 @@ private:
     KamataEngine::Sprite* fadeSprite_ = nullptr; ///< フェード用スプライト
     float alpha_ = 1.0f;                         ///< 現在のアルファ値
     float speed_ = 0.02f;                        ///< アルファ値の変化速度
-    State state_ = State::None;                  ///< 現在のフェード状態
+    State state_ = State::kNone;                 ///< 現在のフェード状態
     bool finished_ = false;                      ///< フェード完了フラグ
 };

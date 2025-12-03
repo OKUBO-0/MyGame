@@ -2,6 +2,7 @@
 using namespace KamataEngine;
 
 Enemy::Enemy() {}
+
 Enemy::~Enemy() {
     // 敵モデルを動的に生成しているため、破棄時に解放
     delete enemyModel_;
@@ -33,7 +34,7 @@ void Enemy::Initialize() {
     whiteTextureHandle_ = TextureManager::Load("color/white.png");
 }
 
-void Enemy::SetModelByType(int type) {
+void Enemy::SetModelByType(int32_t type) {
     // 既存モデルがある場合は解放してから新しいモデルを設定
     if (enemyModel_) {
         delete enemyModel_;
@@ -70,16 +71,16 @@ void Enemy::SetModelByType(int type) {
 
 void Enemy::Update() {
     // 非アクティブ状態なら処理しない
-    if (!active_) return;
+    if (!active_) { return; }
 
     // ヒット点滅の時間経過処理（60FPS前提で固定dt）
-    const float dt = 0.016f;
+    const float kDeltaTime = 0.016f;
     if (hitFlashTimer_ > 0.0f) {
-        hitFlashTimer_ -= dt;
+        hitFlashTimer_ -= kDeltaTime;
         if (hitFlashTimer_ <= 0.0f) {
             hitFlashTimer_ = 0.0f;
             // 点滅終了 → 元の色に戻す
-            if (objectColor_) objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+            if (objectColor_) { objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f }); }
         }
     }
 
@@ -92,7 +93,7 @@ void Enemy::Update() {
         knockbackVelocity_.x *= 0.88f;
         knockbackVelocity_.z *= 0.88f;
 
-        knockbackTimer_ -= dt;
+        knockbackTimer_ -= kDeltaTime;
         if (knockbackTimer_ <= 0.0f) {
             knockbackTimer_ = 0.0f;
             knockbackVelocity_ = { 0.0f, 0.0f, 0.0f };
@@ -126,7 +127,7 @@ void Enemy::Update() {
 
 void Enemy::Draw(KamataEngine::Camera* camera) {
     // 非アクティブまたはモデル未設定なら描画しない
-    if (!active_ || !enemyModel_) return;
+    if (!active_ || !enemyModel_) { return; }
 
     // ヒット中は白テクスチャで上書きし、かつ objectColor_ を渡して強く乗算する
     if (hitFlashTimer_ > 0.0f && whiteTextureHandle_ != 0 && objectColor_) {
@@ -144,7 +145,7 @@ void Enemy::Draw(KamataEngine::Camera* camera) {
     }
 }
 
-void Enemy::TakeDamage(int damage, const Vector3& knockDir, float strength) {
+void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) {
     // ダメージを受けてHPを減少
     hp_ -= damage;
 
@@ -155,7 +156,7 @@ void Enemy::TakeDamage(int damage, const Vector3& knockDir, float strength) {
     }
 
     // 白フラッシュ
-    hitFlashTimer_ = kHitFlashDuration_;
+    hitFlashTimer_ = kHitFlashDuration;
     if (objectColor_) {
         // 値を大きくしてより白く見せる
         objectColor_->SetColor({ 10.0f, 10.0f, 10.0f, 1.0f });
@@ -170,6 +171,6 @@ void Enemy::TakeDamage(int damage, const Vector3& knockDir, float strength) {
         // strength を初速として使用
         knockbackVelocity_.x = dir.x * strength;
         knockbackVelocity_.z = dir.z * strength;
-        knockbackTimer_ = kKnockbackDuration_;
+        knockbackTimer_ = kKnockbackDuration;
     }
 }
