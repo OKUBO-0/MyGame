@@ -1,6 +1,7 @@
 #pragma once
 #include <KamataEngine.h>
 #include <array>
+#include <cstdint> // int32_t
 
 /// <summary>
 /// Wave数を表示するUIクラス。
@@ -30,7 +31,7 @@ public:
     /// Wave数を設定する
     /// </summary>
     /// <param name="wave">表示するWave番号</param>
-    void SetWave(int wave);
+    void SetWave(int32_t wave);
 
     /// <summary>
     /// 毎フレーム更新処理
@@ -45,7 +46,7 @@ public:
     void Draw();
 
 private:
-    static const int kMaxDigits = 2; ///< Wave表示の最大桁数（例：10まで）
+    static constexpr int32_t kMaxDigits = 2; ///< Wave表示の最大桁数（例：10まで）
 
     KamataEngine::Sprite* waveLabel_ = nullptr; ///< [WAVE]ラベルスプライト
     std::array<KamataEngine::Sprite*, kMaxDigits> digits_{}; ///< Wave数字スプライト

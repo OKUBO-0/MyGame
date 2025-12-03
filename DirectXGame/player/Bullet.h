@@ -1,5 +1,6 @@
 #pragma once
 #include <KamataEngine.h>
+#include <cstdint> // int32_t
 
 /// <summary>
 /// 弾（Bullet）を表すクラス。
@@ -25,7 +26,7 @@ public:
     /// <param name="startPos">弾の開始位置</param>
     /// <param name="direction">弾の進行方向</param>
     /// <param name="speed">弾の速度（デフォルト0.5f）</param>
-    void Initialize(const KamataEngine::Vector3& startPos, const KamataEngine::Vector3& direction, float speed = 0.5f);
+    void Initialize(const KamataEngine::Vector3& startPos, const KamataEngine::Vector3& direction, float speed = kDefaultSpeed);
 
     /// <summary>
     /// 毎フレーム更新処理
@@ -62,21 +63,23 @@ public:
     /// 弾の攻撃力を設定する
     /// </summary>
     /// <param name="value">設定する攻撃力</param>
-    void SetDamage(int value) { damage_ = value; }
+    void SetDamage(int32_t value) { damage_ = value; }
 
     /// <summary>
     /// 弾の攻撃力を取得する
     /// </summary>
     /// <returns>攻撃力の値</returns>
-    int GetDamage() const { return damage_; }
+    int32_t GetDamage() const { return damage_; }
 
 private:
     KamataEngine::WorldTransform worldTransform_; ///< 弾のワールドトランスフォーム
     KamataEngine::Model* model_ = nullptr;        ///< 弾モデル
 
     KamataEngine::Vector3 direction_; ///< 弾の進行方向
-    float speed_ = 0.5f;              ///< 弾の速度
+    float speed_ = kDefaultSpeed;     ///< 弾の速度
 
     bool active_ = false;             ///< アクティブ状態フラグ
-    int damage_ = 1;                  ///< 弾の攻撃力
+    int32_t damage_ = 1;              ///< 弾の攻撃力
+
+    static constexpr float kDefaultSpeed = 0.5f; ///< 弾のデフォルト速度
 };

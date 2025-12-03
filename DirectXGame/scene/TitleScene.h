@@ -63,7 +63,7 @@ private:
     KamataEngine::Sprite* titleUISprite_ = nullptr;    ///< タイトルUIスプライト
     TitleUI* titleUI_ = nullptr;                       ///< タイトルUI管理
 
-    Fade fade_;                  ///< フェード演出
+    Fade fade_;                   ///< フェード演出
     bool fadeOutStarted_ = false; ///< フェードアウト開始フラグ
     bool finished_ = false;       ///< シーン終了フラグ
 
@@ -72,8 +72,8 @@ private:
 
     bool modelArrived_ = false; ///< モデル演出到達フラグ
     float modelTargetZ_ = 0.0f; ///< モデルの目標Z座標
-    float modelStartZ_ = 30.0f; ///< モデルの開始Z座標
-    float modelSpeed_ = -0.2f;  ///< モデルの移動速度
+    static constexpr float kModelStartZ = 30.0f; ///< モデルの開始Z座標
+    static constexpr float kModelSpeed = -0.2f;  ///< モデルの移動速度
 
     bool startRotate_ = false;  ///< 回転演出開始フラグ
     float blinkTimer_ = 0.0f;   ///< 点滅演出タイマー

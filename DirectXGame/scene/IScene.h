@@ -8,7 +8,7 @@
 /// Game: ゲームプレイシーン
 /// Result: リザルトシーン
 /// </summary>
-enum class SCENE {
+enum class Scene {
     Title,
     Game,
     Result,
@@ -20,7 +20,7 @@ enum class SCENE {
 /// </summary>
 class IScene {
 protected:
-    static SCENE sceneNo; ///< 現在のシーン番号
+    static Scene sceneNo_; ///< 現在のシーン番号
 
 public:
     /// <summary>
@@ -63,23 +63,23 @@ public:
     /// 現在のシーン番号を取得する
     /// </summary>
     /// <returns>現在のシーン番号</returns>
-    SCENE GetSceneNo() const;
+    Scene GetSceneNo() const;
 
     /// <summary>
     /// 次のシーン番号を設定する
     /// </summary>
     /// <param name="next">設定するシーン番号</param>
-    void SetSceneNo(SCENE next) { sceneNo = next; }
+    void SetSceneNo(Scene next) { sceneNo_ = next; }
 
     /// <summary>
     /// 静的関数でシーン番号を設定する
     /// </summary>
     /// <param name="next">設定するシーン番号</param>
-    static void SetStaticSceneNo(SCENE next) { sceneNo = next; }
+    static void SetStaticSceneNo(Scene next) { sceneNo_ = next; }
 
     /// <summary>
     /// 静的関数で現在のシーン番号を取得する
     /// </summary>
     /// <returns>現在のシーン番号</returns>
-    static SCENE GetStaticSceneNo() { return sceneNo; }
+    static Scene GetStaticSceneNo() { return sceneNo_; }
 };

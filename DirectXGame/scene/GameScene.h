@@ -11,6 +11,7 @@
 #include "../ui/HpGauge.h"
 #include "../ui/WaveUI.h"
 #include <KamataEngine.h>
+#include <cstdint> // int32_t
 
 /// <summary>
 /// ゲームプレイ全体を管理するシーン。
@@ -79,7 +80,7 @@ private:
     };
 
     StartState startState_ = StartState::Ready; ///< 開始演出状態
-    int startTimer_ = 0;                        ///< 開始演出タイマー
+    int32_t startTimer_ = 0;                    ///< 開始演出タイマー
 
     KamataEngine::Sprite* readyOverlay_ = nullptr; ///< "Ready"表示用スプライト
     KamataEngine::Sprite* goOverlay_ = nullptr;    ///< "Go"表示用スプライト
@@ -95,8 +96,8 @@ private:
     KamataEngine::Sprite* pauseOverlay_ = nullptr; ///< ポーズ背景
     KamataEngine::Sprite* pauseText_ = nullptr;    ///< ポーズ文字
 
-    int currentWave_ = 1;   ///< 現在のWave番号
-    bool waveLoading_ = false; ///< Wave読み込み中フラグ
+    int32_t currentWave_ = 1;   ///< 現在のWave番号
+    bool waveLoading_ = false;  ///< Wave読み込み中フラグ
 
     KamataEngine::Sprite* deathOverlay_ = nullptr; ///< 死亡演出スプライト
     float deathAlpha_ = 0.0f;                      ///< 死亡演出アルファ値
@@ -111,8 +112,8 @@ private:
     HpGauge* hpGauge_ = nullptr;   ///< HPゲージ
     bool isGameOver_ = false;      ///< ゲームオーバーフラグ
     WaveUI* waveUI_ = nullptr;     ///< Wave表示UI
-    GridPlane* gridPlane_ = nullptr;
-	SkyDome* skyDome_ = nullptr;
+    GridPlane* gridPlane_ = nullptr; ///< グリッド背景
+    SkyDome* skyDome_ = nullptr;     ///< 天球背景
 
-    std::list<HitParticle*> hitParticles_;
+    std::list<HitParticle*> hitParticles_; ///< ヒットパーティクルリスト
 };

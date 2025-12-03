@@ -2,6 +2,7 @@
 #include <KamataEngine.h>
 #include <array>
 #include <algorithm>
+#include <cstdint> // int32_t
 
 /// <summary>
 /// プレイヤーの経験値を可視化するゲージUIクラス。
@@ -44,13 +45,13 @@ public:
     /// </summary>
     /// <param name="current">現在のEXP値</param>
     /// <param name="max">最大EXP値</param>
-    void SetEXP(int current, int max);
+    void SetEXP(int32_t current, int32_t max);
 
     /// <summary>
     /// プレイヤーのレベルを設定する
     /// </summary>
     /// <param name="level">表示するレベル値</param>
-    void SetLevel(int level);
+    void SetLevel(int32_t level);
 
     /// <summary>
     /// EXPゲージが満タンかどうかを判定する
@@ -68,12 +69,12 @@ private:
     KamataEngine::Sprite* blueGauge_ = nullptr;   ///< ゲージ本体スプライト
 
     KamataEngine::Sprite* lvLabel_ = nullptr;     ///< [LV]ラベルスプライト
-    static const int lvDigits_ = 2;               ///< レベル表示の最大桁数
-    std::array<KamataEngine::Sprite*, lvDigits_> sprite_{}; ///< レベル数字スプライト
+    static constexpr int32_t kLvDigits = 2;       ///< レベル表示の最大桁数
+    std::array<KamataEngine::Sprite*, kLvDigits> sprite_{}; ///< レベル数字スプライト
 
     KamataEngine::Vector2 size_ = { 16.0f, 32.0f }; ///< 数字1桁のサイズ
 
-    int displayedExp_ = 0; ///< 表示中のEXP値（アニメーション用）
-    int targetExp_ = 0;    ///< 設定されたEXP値
-    int maxExp_ = 1;       ///< 最大EXP値
+    int32_t displayedExp_ = 0; ///< 表示中のEXP値（アニメーション用）
+    int32_t targetExp_ = 0;    ///< 設定されたEXP値
+    int32_t maxExp_ = 1;       ///< 最大EXP値
 };
