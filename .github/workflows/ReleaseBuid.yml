@@ -2,7 +2,7 @@ name: ReleaseBuid
 on:
   push:
     branches:
-      - GE3master
+      - master
       
 env:
   # リポジトリのルートディレクトリを基点としたソリューションファイルのパス
