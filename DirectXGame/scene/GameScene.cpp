@@ -4,14 +4,31 @@ using namespace KamataEngine;
 GameScene::GameScene() {}
 GameScene::~GameScene() {
     // 動的に生成したリソースを解放
+    // プレイヤー
     delete player_;
-    delete pauseOverlay_;
-    delete pauseText_;
+
+    // UI
     delete expGauge_;
     delete hpGauge_;
     delete waveUI_;
+
+    // スプライト
+    delete readyOverlay_;
+    delete goOverlay_;
+    delete pauseOverlay_;
+    delete pauseText_;
+    delete deathOverlay_;
+    delete levelUpOverlay_;
+
+    // 背景
     delete gridPlane_;
     delete skyDome_;
+
+    // ヒットパーティクル（リスト内の全削除）
+    for (auto particle : hitParticles_) {
+        delete particle;
+    }
+    hitParticles_.clear();
 }
 
 void GameScene::Initialize() {
@@ -146,7 +163,7 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        const int MAX_WAVE = 1;
+        const int MAX_WAVE = 2;
 
         if (currentWave_ >= MAX_WAVE) {
             // 最終Wave終了 → ResultSceneへ遷移
@@ -189,8 +206,21 @@ void GameScene::Update() {
     if (gridPlane_) {
         gridPlane_->Update();
     }
+
+    // 天球更新
     if (skyDome_) {
         skyDome_->Update();
+    }
+
+    for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
+        (*it)->Update();
+        if (!(*it)->IsActive()) {
+            delete* it;
+            it = hitParticles_.erase(it);
+        }
+        else {
+            ++it;
+        }
     }
 
     // プレイヤー死亡時の演出開始判定
@@ -276,15 +306,34 @@ void GameScene::Update() {
             float distSq = dx * dx + dy * dy + dz * dz;
 
             // 一定距離以内ならヒット判定
-            if (distSq < 1.0f) {
-                enemy->TakeDamage(bullet->GetDamage());
+            if (distSq < 5.0f) {
+                // ノックバック方向：敵位置から弾位置へのベクトルの反対（弾が当たった側から押し出す）
+                Vector3 knockDir = { ePos.x - bPos.x, 0.0f, ePos.z - bPos.z };
+                float knockLen = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
+                if (knockLen > 0.0001f) {
+                    knockDir.x /= knockLen;
+                    knockDir.z /= knockLen;
+                }
 
-                // 敵が倒れた場合は経験値を加算
+                // ノックバック強さ：ダメージに基づく簡易算出（調整可）
+                float knockStrength = 0.6f + static_cast<float>(bullet->GetDamage()) * 0.15f;
+
+                // ダメージとノックバックを同時に通知
+                enemy->TakeDamage(bullet->GetDamage(), knockDir, knockStrength);
+
                 if (!enemy->IsActive()) {
                     player_->AddEXP(enemy->GetEXP());
                 }
 
-                // 弾を消去
+                Vector3 hitPos = bullet->GetPosition();
+
+                const int sparkCount = 4;
+                for (int i = 0; i < sparkCount; ++i) {
+                    HitParticle* particle = new HitParticle();
+                    particle->Initialize(hitPos);
+                    hitParticles_.push_back(particle);
+                }
+
                 bullet->Deactivate();
             }
         }
@@ -343,6 +392,10 @@ void GameScene::Draw() {
     // 背景要素の描画（スカイドーム）
     if (skyDome_) {
         skyDome_->Draw();
+    }
+
+    for (auto particle : hitParticles_) {
+        particle->Draw(&player_->GetCamera());
     }
 
     // プレイヤー描画

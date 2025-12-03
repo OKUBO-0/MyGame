@@ -5,6 +5,7 @@
 #include "../enemy/EnemyManager.h"
 #include "../3d/GridPlane.h"
 #include "../3d/SkyDome.h"
+#include "../3d/HitParticle.h"
 #include "../2d/Fade.h"
 #include "../ui/ExpGauge.h"
 #include "../ui/HpGauge.h"
@@ -112,4 +113,6 @@ private:
     WaveUI* waveUI_ = nullptr;     ///< Wave表示UI
     GridPlane* gridPlane_ = nullptr;
 	SkyDome* skyDome_ = nullptr;
+
+    std::list<HitParticle*> hitParticles_;
 };
