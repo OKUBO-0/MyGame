@@ -4,7 +4,7 @@ using namespace KamataEngine;
 GameScene::GameScene() {}
 GameScene::~GameScene() {
     // 動的に生成したリソースを解放
-  // プレイヤー
+    // プレイヤー
     delete player_;
 
     // UI
