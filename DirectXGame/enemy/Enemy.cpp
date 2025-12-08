@@ -152,6 +152,7 @@ void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) 
     // HPが0以下になったら非アクティブ化
     if (hp_ <= 0) {
         Deactivate();
+        justDied_ = true; // 死亡直後フラグを立てる
         return;
     }
 

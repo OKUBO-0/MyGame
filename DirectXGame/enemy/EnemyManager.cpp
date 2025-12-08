@@ -13,6 +13,11 @@ EnemyManager::~EnemyManager() {
         delete enemy;
     }
     enemies_.clear();
+
+    for (auto particle : deathParticles_) {
+        delete particle;
+    }
+    deathParticles_.clear();
 }
 
 void EnemyManager::Initialize(const std::string& csvPath, Player* player) {
@@ -76,6 +81,28 @@ void EnemyManager::Update() {
         if (enemy->IsActive()) {
             enemy->Update();
         }
+        else if (enemy->GetHP() <= 0 && enemy->JustDied()) {
+            // 死亡直後だけ煙パーティクル生成
+            const int particleCount = 3; // 発生量を抑える
+            for (int i = 0; i < particleCount; ++i) {
+                DeathParticle* p = new DeathParticle();
+                p->Initialize(enemy->GetPosition());
+                deathParticles_.push_back(p);
+            }
+            enemy->ResetJustDied(); // 生成済みなのでリセット
+        }
+    }
+
+    // パーティクル更新
+    for (auto it = deathParticles_.begin(); it != deathParticles_.end();) {
+        (*it)->Update();
+        if (!(*it)->IsActive()) {
+            delete* it;
+            it = deathParticles_.erase(it);
+        }
+        else {
+            ++it;
+        }
     }
 
     // 敵同士の衝突判定と分離処理
@@ -126,5 +153,9 @@ void EnemyManager::Draw(Camera* camera) {
         if (enemy->IsActive()) {
             enemy->Draw(camera);
         }
+    }
+
+    for (auto p : deathParticles_) {
+        p->Draw(camera);
     }
 }

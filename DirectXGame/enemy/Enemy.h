@@ -108,6 +108,10 @@ public:
     /// <returns>経験値の値</returns>
     int32_t GetEXP() const { return exp_; }
 
+    /// 死亡直後かどうかを判定
+    bool JustDied() const { return justDied_; }
+    void ResetJustDied() { justDied_ = false; }
+
 private:
     KamataEngine::WorldTransform worldTransform_; ///< 敵のワールドトランスフォーム
     KamataEngine::Model* enemyModel_ = nullptr;   ///< 敵モデル
@@ -130,4 +134,6 @@ private:
     KamataEngine::Vector3 knockbackVelocity_ = { 0.0f, 0.0f, 0.0f };
     float knockbackTimer_ = 0.0f;
     static constexpr float kKnockbackDuration = 0.18f; ///< ノックバック継続時間
+
+    bool justDied_ = false; ///< 死亡直後フラグ
 };

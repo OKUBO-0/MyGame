@@ -1,10 +1,12 @@
 #pragma once
 
 #include <vector>
+#include <list>
 #include <string>
 #include <KamataEngine.h>
 #include "Enemy.h"
 #include "Player.h"
+#include "DeathParticle.h"
 
 class Player;
 class Enemy;
@@ -64,4 +66,6 @@ public:
 private:
     std::vector<Enemy*> enemies_; ///< 敵リスト
     Player* player_ = nullptr;    ///< プレイヤー参照
+
+    std::list<DeathParticle*> deathParticles_; ///< 死亡パーティクルリスト
 };
