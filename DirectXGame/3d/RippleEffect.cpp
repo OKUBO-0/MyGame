@@ -2,28 +2,28 @@
 using namespace KamataEngine;
 
 void RippleEffect::Initialize(const Vector3& pos) {
-    // エフェクト用モデルを読み込み（ripples.obj を利用）
-    model_ = Model::CreateFromOBJ("ripples");
+    // モデル生成（波紋の見た目を表現するモデルを読み込み）
+    model_.reset(Model::CreateFromOBJ("ripples"));
 
-    // ワールドトランスフォームを初期化し、生成位置を設定
+    // ワールド変換初期化（位置・回転・スケールの基準を設定）
     worldTransform_.Initialize();
-    worldTransform_.translation_ = pos;
+    worldTransform_.translation_ = pos; // 波紋の生成位置を設定
 
-    // 初期スケールを設定（小さな状態から始まる）
+    // 初期スケール設定（小さな状態から始まり、時間経過で拡大する演出）
     worldTransform_.scale_ = { kStartScale, kStartScale, kStartScale };
 
-    // パーティクルの寿命管理用変数を初期化
-    age_ = 0.0f;     // 経過時間
-    alpha_ = 1.0f;   // 完全不透明から開始
-    active_ = true;  // 有効状態に設定
+    // 初期状態の設定
+    age_ = 0.0f;    // 経過時間リセット
+    alpha_ = 1.0f;  // 完全不透明から開始
+    active_ = true; // 有効状態に設定
 }
 
 void RippleEffect::Update() {
-    // 1フレームの経過時間（60FPS前提で固定値）
-    const float kDeltaTime = 0.016f;
-    age_ += kDeltaTime; // 経過時間を加算
+    constexpr float kDeltaTime = 0.016f; // 1フレーム時間（60FPS前提）
+    age_ += kDeltaTime;
 
-    // 寿命を超えたら非アクティブ化して終了
+    // 寿命判定
+    // 意図: 一定時間経過後に波紋を非アクティブ化する
     if (age_ >= kLifetime) {
         active_ = false;
         return;
@@ -32,22 +32,22 @@ void RippleEffect::Update() {
     // 寿命に対する進行度（0.0 → 1.0）
     float t = age_ / kLifetime;
 
-    // スケールを徐々に拡大（開始サイズから終了サイズへ線形補間）
+    // スケール拡大処理
+    // 意図: 開始サイズから終了サイズへ線形補間し、波紋が広がる演出を行う
     float s = kStartScale + (kEndScale - kStartScale) * t;
     worldTransform_.scale_ = { s, s, s };
 
-    // 透明度を徐々に減少（不透明 → 完全透明）
+    // 透明度減少処理
+    // 意図: 時間経過に応じて透明度を減少させ、波紋が消えていく演出を行う
     alpha_ = 1.0f - t;
-    model_->SetAlpha(alpha_);
+    if (model_) {
+        model_->SetAlpha(alpha_);
+    }
 
-    // ワールド行列を更新（位置・スケール・回転を反映）
-    worldTransform_.UpdateMatrix();
+    worldTransform_.UpdateMatrix(); // 行列更新
 }
 
 void RippleEffect::Draw(Camera* camera) {
-    // 非アクティブ状態なら描画しない
-    if (!active_) { return; }
-
-    // 現在のワールド座標系とカメラを用いて描画
+    if (!active_ || !model_) return;
     model_->Draw(worldTransform_, *camera);
 }

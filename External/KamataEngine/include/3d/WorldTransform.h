@@ -25,7 +25,7 @@ public:
 	// ローカル座標
 	Vector3 translation_ = {0, 0, 0};
 	// ローカル → ワールド変換行列
-	Matrix4x4 matWorld_;
+	Matrix4x4 matWorld_ = { 0, 0, 0 };
 	// 親となるワールド変換へのポインタ
 	const WorldTransform* parent_ = nullptr;
 

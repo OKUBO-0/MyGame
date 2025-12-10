@@ -11,7 +11,9 @@
 #include "../ui/HpGauge.h"
 #include "../ui/WaveUI.h"
 #include <KamataEngine.h>
-#include <cstdint> // int32_t
+#include <cstdint>
+#include <memory>
+#include <list>
 
 /// <summary>
 /// ゲームプレイ全体を管理するシーン。
@@ -19,18 +21,6 @@
 /// </summary>
 class GameScene : public IScene {
 public:
-    /// <summary>
-    /// コンストラクタ
-    /// シーンの初期値を設定する
-    /// </summary>
-    GameScene();
-
-    /// <summary>
-    /// デストラクタ
-    /// 使用したリソースを解放する
-    /// </summary>
-    ~GameScene();
-
     /// <summary>
     /// 初期化処理
     /// ゲームオブジェクトやUIの生成・設定を行う
@@ -58,7 +48,6 @@ public:
     /// <summary>
     /// シーンが終了状態かどうかを判定する
     /// </summary>
-    /// <returns>true: 終了 / false: 継続</returns>
     bool IsFinished() const override { return finished_; }
 
 private:
@@ -69,51 +58,48 @@ private:
 
     /// <summary>
     /// ゲーム開始演出の状態
-    /// Ready: 準備表示
-    /// Go: 開始表示
-    /// Play: プレイ中
+    /// Ready: 準備表示 / Go: 開始表示 / Play: プレイ中
     /// </summary>
-    enum class StartState {
-        Ready,
-        Go,
-        Play
-    };
+    enum class StartState { Ready, Go, Play };
 
     StartState startState_ = StartState::Ready; ///< 開始演出状態
     int32_t startTimer_ = 0;                    ///< 開始演出タイマー
 
-    KamataEngine::Sprite* readyOverlay_ = nullptr; ///< "Ready"表示用スプライト
-    KamataEngine::Sprite* goOverlay_ = nullptr;    ///< "Go"表示用スプライト
+    std::unique_ptr<KamataEngine::Sprite> readyOverlay_; ///< "Ready"表示用スプライト
+    std::unique_ptr<KamataEngine::Sprite> goOverlay_;    ///< "Go"表示用スプライト
 
-    Player* player_ = nullptr;   ///< プレイヤー
-    EnemyManager enemyManager_;  ///< 敵管理
+    std::unique_ptr<Player> player_;           ///< プレイヤー
+    EnemyManager enemyManager_;                ///< 敵管理
 
-    Fade fade_;                  ///< フェード演出
-    bool fadeOutStarted_ = false; ///< フェードアウト開始フラグ
-    bool finished_ = false;       ///< シーン終了フラグ
+    Fade fade_;                                ///< フェード演出
+    bool fadeOutStarted_ = false;              ///< フェードアウト開始フラグ
+    bool finished_ = false;                    ///< シーン終了フラグ
 
     bool paused_ = false; ///< ポーズ状態
-    KamataEngine::Sprite* pauseOverlay_ = nullptr; ///< ポーズ背景
-    KamataEngine::Sprite* pauseText_ = nullptr;    ///< ポーズ文字
+    std::unique_ptr<KamataEngine::Sprite> pauseOverlay_; ///< ポーズ背景
+    std::unique_ptr<KamataEngine::Sprite> pauseText_;    ///< ポーズ文字
 
     int32_t currentWave_ = 1;   ///< 現在のWave番号
     bool waveLoading_ = false;  ///< Wave読み込み中フラグ
 
-    KamataEngine::Sprite* deathOverlay_ = nullptr; ///< 死亡演出スプライト
-    float deathAlpha_ = 0.0f;                      ///< 死亡演出アルファ値
-    bool deathFadeInStarted_ = false;              ///< 死亡フェードイン開始フラグ
-    bool deathFadeInComplete_ = false;             ///< 死亡フェードイン完了フラグ
-    bool gameStopped_ = false;                     ///< ゲーム停止フラグ
+    std::unique_ptr<KamataEngine::Sprite> deathOverlay_; ///< 死亡演出スプライト
+    float deathAlpha_ = 0.0f;                             ///< 死亡演出アルファ値
+    bool deathFadeInStarted_ = false;                     ///< 死亡フェードイン開始フラグ
+    bool deathFadeInComplete_ = false;                    ///< 死亡フェードイン完了フラグ
+    bool gameStopped_ = false;                            ///< ゲーム停止フラグ
 
     bool levelUpActive_ = false; ///< レベルアップ演出フラグ
-    KamataEngine::Sprite* levelUpOverlay_ = nullptr; ///< レベルアップ演出スプライト
+    std::unique_ptr<KamataEngine::Sprite> levelUpOverlay_; ///< レベルアップ演出スプライト
 
-    ExpGauge* expGauge_ = nullptr; ///< 経験値ゲージ
-    HpGauge* hpGauge_ = nullptr;   ///< HPゲージ
-    bool isGameOver_ = false;      ///< ゲームオーバーフラグ
-    WaveUI* waveUI_ = nullptr;     ///< Wave表示UI
-    GridPlane* gridPlane_ = nullptr; ///< グリッド背景
-    SkyDome* skyDome_ = nullptr;     ///< 天球背景
+    std::unique_ptr<ExpGauge> expGauge_; ///< 経験値ゲージ
+    std::unique_ptr<HpGauge> hpGauge_;   ///< HPゲージ
+    bool isGameOver_ = false;            ///< ゲームオーバーフラグ
+    std::unique_ptr<WaveUI> waveUI_;     ///< Wave表示UI
+    std::unique_ptr<GridPlane> gridPlane_; ///< グリッド背景
+    std::unique_ptr<SkyDome> skyDome_;     ///< 天球背景
 
-    std::list<HitParticle*> hitParticles_; ///< ヒットパーティクルリスト
+    std::list<std::unique_ptr<HitParticle>> hitParticles_; ///< ヒットパーティクルリスト
+
+    std::unique_ptr<KamataEngine::Sprite> arrowSprite_; ///< レベルアップ選択用矢印
+    int32_t levelUpSelection_ = 0;                      ///< 現在の選択インデックス
 };

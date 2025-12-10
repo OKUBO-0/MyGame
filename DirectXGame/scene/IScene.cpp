@@ -6,16 +6,16 @@
 /// </summary>
 Scene IScene::sceneNo_ = Scene::Title;
 
-IScene::~IScene() {
-    /// <summary>
-    /// 基底クラスのデストラクタ（派生クラスで必要に応じてリソース解放）
-    /// </summary>
-}
+/// <summary>
+/// 基底クラスのデストラクタ
+/// 派生クラスで必要に応じてリソース解放を行う
+/// </summary>
+IScene::~IScene() {}
 
-// <summary>
-// 現在のシーン番号を返す
-// この値を参照することで、シーン遷移の判定や処理分岐を行う
-// </summary>
+/// <summary>
+/// 現在のシーン番号を返す
+/// この値を参照することで、シーン遷移の判定や処理分岐を行う
+/// </summary>
 Scene IScene::GetSceneNo() const {
     return sceneNo_;
 }

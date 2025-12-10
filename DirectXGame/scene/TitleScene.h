@@ -4,6 +4,7 @@
 #include "../2d/Fade.h"
 #include "../ui/TitleUI.h"
 #include <KamataEngine.h>
+#include <memory>
 
 /// <summary>
 /// タイトルシーンを管理するクラス。
@@ -11,57 +12,30 @@
 /// </summary>
 class TitleScene : public IScene {
 public:
-    /// <summary>
-    /// コンストラクタ
-    /// タイトルシーンの初期値を設定する
-    /// </summary>
-    TitleScene();
-
-    /// <summary>
-    /// デストラクタ
-    /// 使用したリソースを解放する
-    /// </summary>
-    ~TitleScene();
-
-    /// <summary>
-    /// 初期化処理
-    /// 背景スプライトやUI、BGMの準備を行う
-    /// </summary>
+    /// <summary>初期化処理（背景スプライトやUI、BGMの準備を行う）</summary>
     void Initialize() override;
 
-    /// <summary>
-    /// 毎フレーム更新処理
-    /// 入力判定や演出更新を行う
-    /// </summary>
+    /// <summary>毎フレーム更新処理（入力判定や演出更新を行う）</summary>
     void Update() override;
 
-    /// <summary>
-    /// 描画処理
-    /// 背景、UI、演出を画面に描画する
-    /// </summary>
+    /// <summary>描画処理（背景、UI、演出を画面に描画する）</summary>
     void Draw() override;
 
-    /// <summary>
-    /// 終了処理
-    /// リソース解放やシーン終了時の後処理を行う
-    /// </summary>
+    /// <summary>終了処理（リソース解放やシーン終了時の後処理を行う）</summary>
     void Finalize() override;
 
-    /// <summary>
-    /// シーンが終了状態かどうかを判定する
-    /// </summary>
-    /// <returns>true: 終了 / false: 継続</returns>
+    /// <summary>シーンが終了状態かどうかを判定する</summary>
     bool IsFinished() const override { return finished_; }
 
 private:
-    KamataEngine::DirectXCommon* dxCommon_ = nullptr; ///< DirectX管理
-    KamataEngine::Input* input_ = nullptr;            ///< 入力管理
-    KamataEngine::Audio* audio_ = nullptr;            ///< オーディオ管理
+    KamataEngine::DirectXCommon* dxCommon_ = nullptr; ///< DirectX管理（外部から取得）
+    KamataEngine::Input* input_ = nullptr;            ///< 入力管理（外部から取得）
+    KamataEngine::Audio* audio_ = nullptr;            ///< オーディオ管理（外部から取得）
 
-    KamataEngine::Sprite* backgroundSprite_ = nullptr; ///< 背景スプライト
-    KamataEngine::Sprite* titleSprite_ = nullptr;      ///< タイトル文字スプライト
-    KamataEngine::Sprite* titleUISprite_ = nullptr;    ///< タイトルUIスプライト
-    TitleUI* titleUI_ = nullptr;                       ///< タイトルUI管理
+    std::unique_ptr<KamataEngine::Sprite> backgroundSprite_; ///< 背景スプライト
+    std::unique_ptr<KamataEngine::Sprite> titleSprite_;      ///< タイトル文字スプライト
+    std::unique_ptr<KamataEngine::Sprite> titleUISprite_;    ///< タイトルUIスプライト
+    std::unique_ptr<TitleUI> titleUI_;                       ///< タイトルUI管理
 
     Fade fade_;                   ///< フェード演出
     bool fadeOutStarted_ = false; ///< フェードアウト開始フラグ

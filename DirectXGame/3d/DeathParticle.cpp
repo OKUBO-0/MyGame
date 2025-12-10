@@ -1,0 +1,69 @@
+#include "DeathParticle.h"
+using namespace KamataEngine;
+
+// パーティクル寿命（調整値）
+const float DeathParticle::kLifetime = 0.6f;
+
+void DeathParticle::Initialize(const Vector3& pos) {
+    // モデル生成（煙っぽい球体）
+    model_.reset(Model::CreateFromOBJ("bullet"));
+
+    // ワールド変換初期化
+    worldTransform_.Initialize();
+    worldTransform_.translation_ = pos;
+    worldTransform_.scale_ = { 1.0f, 1.0f, 1.0f };
+
+    // ランダムな速度を設定（煙が拡散する意図）
+    velocity_ = {
+        (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 0.05f,
+        0.1f + static_cast<float>(rand()) / RAND_MAX * 0.1f,
+        (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 0.05f
+    };
+
+    age_ = 0.0f;
+    active_ = true;
+
+    // 色管理（灰色から開始）
+    objectColor_ = std::make_unique<ObjectColor>();
+    objectColor_->Initialize();
+    objectColor_->SetColor({ 0.5f, 0.5f, 0.5f, 1.0f });
+}
+
+void DeathParticle::Update() {
+    constexpr float kDeltaTime = 0.016f; // 1フレーム時間（60FPS前提）
+    age_ += kDeltaTime;
+
+    // 寿命を超えたら非アクティブ化
+    if (age_ >= kLifetime) {
+        active_ = false;
+        return;
+    }
+
+    // 移動処理（煙が上昇・拡散する意図）
+    worldTransform_.translation_.x += velocity_.x;
+    worldTransform_.translation_.y += velocity_.y;
+    worldTransform_.translation_.z += velocity_.z;
+
+    // 徐々に減速（煙が自然に消える演出）
+    velocity_.x *= 0.95f;
+    velocity_.y *= 0.98f;
+    velocity_.z *= 0.95f;
+
+    // スケール拡大（煙が広がる演出）
+    float scale = 1.0f + age_ * 0.3f;
+    worldTransform_.scale_ = { scale, scale, scale };
+
+    // アルファ減衰（煙が消える演出）
+    float alpha = 1.0f - (age_ / kLifetime);
+    if (objectColor_) {
+        objectColor_->SetColor({ 0.5f, 0.5f, 0.5f, alpha });
+    }
+
+    // 行列更新
+    worldTransform_.UpdateMatrix();
+}
+
+void DeathParticle::Draw(Camera* camera) {
+    if (!active_ || !model_) return;
+    model_->Draw(worldTransform_, *camera, objectColor_.get());
+}

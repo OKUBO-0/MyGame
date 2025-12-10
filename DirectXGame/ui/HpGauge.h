@@ -1,7 +1,8 @@
 #pragma once
 #include <KamataEngine.h>
 #include <algorithm>
-#include <cstdint> // int32_t
+#include <cstdint>
+#include <memory>
 
 /// <summary>
 /// プレイヤーのHPを可視化するゲージUIクラス。
@@ -9,58 +10,30 @@
 /// </summary>
 class HpGauge {
 public:
-    /// <summary>
-    /// コンストラクタ
-    /// HpGaugeの初期値を設定する
-    /// </summary>
-    HpGauge();
-
-    /// <summary>
-    /// デストラクタ
-    /// 使用したリソースを解放する
-    /// </summary>
-    ~HpGauge();
-
-    /// <summary>
-    /// 初期化処理
-    /// スプライトやテクスチャの準備を行う
-    /// </summary>
+    /// <summary>初期化処理（スプライトやテクスチャの準備を行う）</summary>
     void Initialize();
 
-    /// <summary>
-    /// 毎フレーム更新処理
-    /// HPゲージの補間や表示状態を更新する
-    /// </summary>
+    /// <summary>毎フレーム更新処理（HPゲージの補間や表示状態を更新する）</summary>
     void Update();
 
-    /// <summary>
-    /// 描画処理
-    /// 現在のHPゲージを画面に描画する
-    /// </summary>
+    /// <summary>描画処理（現在のHPゲージを画面に描画する）</summary>
     void Draw();
 
-    /// <summary>
-    /// プレイヤーのHPを設定する
-    /// </summary>
-    /// <param name="current">現在のHP値</param>
-    /// <param name="max">最大HP値</param>
+    /// <summary>プレイヤーのHPを設定する</summary>
     void SetHP(int32_t current, int32_t max);
 
-    /// <summary>
-    /// HPがゼロになっているかを判定する
-    /// </summary>
-    /// <returns>true: HPゼロ / false: HPあり</returns>
+    /// <summary>HPがゼロになっているかを判定する</summary>
     bool IsDepleted() const;
 
 private:
     uint32_t dummyTextureHandle_ = 0; ///< ダミーテクスチャハンドル
 
-    KamataEngine::Sprite* blackGauge_ = nullptr; ///< 背景スプライト
-    KamataEngine::Sprite* redGauge_ = nullptr;   ///< HPゲージスプライト
+    std::unique_ptr<KamataEngine::Sprite> blackGauge_; ///< 背景スプライト
+    std::unique_ptr<KamataEngine::Sprite> redGauge_;   ///< HPゲージスプライト
 
     int32_t displayedHP_ = 0; ///< 表示中のHP（補間用）
     int32_t targetHP_ = 0;    ///< 実際のHP
-    int32_t maxHP_ = 1;       ///< 最大HP（0除算防止）
+    int32_t maxHP_ = kDefaultMaxHP; ///< 最大HP（0除算防止）
 
     static constexpr int32_t kDefaultMaxHP = 1; ///< 最大HPの初期値（0除算防止用）
 };

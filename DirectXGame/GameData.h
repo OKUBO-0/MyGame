@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint> // int32_t
+#include <cstdint>
 
 /// <summary>
 /// ゲーム全体で共有されるデータを管理するクラス。
