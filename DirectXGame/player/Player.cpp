@@ -1,42 +1,24 @@
 #include "Player.h"
 using namespace KamataEngine;
 
-Player::Player() {}
-
-Player::~Player() {
-    /// <summary>
-    /// プレイヤーモデルを解放
-    /// </summary>
-    delete playerModel_;
-
-    /// <summary>
-    /// 弾インスタンスを解放
-    /// </summary>
-    for (auto b : bullets_) { delete b; }
-    bullets_.clear();
-
-    /// <summary>
-    /// パーティクルインスタンスを解放
-    /// </summary>
-    for (auto p : effects_) { delete p; }
-    effects_.clear();
-}
-
 void Player::Initialize() {
+    // 入力・カメラ初期化
     input_ = Input::GetInstance();
     camera_.Initialize();
 
-    playerModel_ = Model::CreateFromOBJ("octopus");
+    // プレイヤーモデル生成（タコモデル）
+    playerModel_ = std::unique_ptr<Model>(Model::CreateFromOBJ("octopus"));
 
+    // ワールドトランスフォーム初期化（位置・回転・スケール）
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 
+    // 初期ステータス設定
     level_ = 1;
     nextLevelExp_ = 50;
     bulletPower_ = 1;
     bulletCooldown_ = 1.0f;
     maxLifeStock_ = 3;
-
     exp_ = 0;
     totalExp_ = 0;
 }
@@ -47,6 +29,7 @@ void Player::Update() {
 
     Vector3 move = { 0.0f, 0.0f, 0.0f };
 
+    // --- 入力による移動処理 ---
     if (input_->PushKey(DIK_W)) { move.z += kMoveSpeed; }
     if (input_->PushKey(DIK_S)) { move.z -= kMoveSpeed; }
     if (input_->PushKey(DIK_A)) { move.x -= kMoveSpeed; }
@@ -59,20 +42,21 @@ void Player::Update() {
 
         worldTransform_.translation_.x += move.x;
         worldTransform_.translation_.z += move.z;
-
         worldTransform_.rotation_.y = std::atan2(move.x, move.z);
 
+        // --- 移動時のエフェクト生成 ---
         effectTimer_ += kDeltaTime;
         if (effectTimer_ >= kEffectInterval) {
-            RippleEffect* e = new RippleEffect();
+            auto e = std::make_unique<RippleEffect>();
             e->Initialize(worldTransform_.translation_);
-            effects_.push_back(e);
+            effects_.push_back(std::move(e));
             effectTimer_ = 0.0f;
         }
     }
 
     bulletTimer_ += kDeltaTime;
 
+    // --- 無敵状態の処理（点滅演出） ---
     if (invincible_) {
         invincibleTimer_ -= kDeltaTime;
         if (invincibleTimer_ <= 0.0f) {
@@ -85,13 +69,14 @@ void Player::Update() {
         }
     }
 
+    // --- 敵探索（最も近い敵を狙う） ---
     Vector3 nearestDir = { 0.0f, 0.0f, 1.0f };
     float minDistSq = FLT_MAX;
     bool enemyInRange = false;
 
     if (enemyManager_) {
-        for (auto enemy : enemyManager_->GetEnemies()) {
-            if (!enemy->IsActive()) { continue; }
+        for (auto& enemy : enemyManager_->GetEnemies()) {
+            if (!enemy->IsActive()) continue;
 
             Vector3 ePos = enemy->GetPosition();
             Vector3 pPos = worldTransform_.translation_;
@@ -121,6 +106,7 @@ void Player::Update() {
         worldTransform_.rotation_.y = std::atan2(move.x, move.z);
     }
 
+    // --- 弾発射処理 ---
     if (bulletTimer_ >= bulletCooldown_ && enemyInRange) {
         float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
         if (len > 0.0f) {
@@ -128,68 +114,73 @@ void Player::Update() {
             nearestDir.z /= len;
         }
 
-        Bullet* bullet = new Bullet();
+        auto bullet = std::make_unique<Bullet>();
         bullet->Initialize(worldTransform_.translation_, nearestDir, 0.5f);
         bullet->SetDamage(bulletPower_);
-        bullets_.push_back(bullet);
+        bullets_.push_back(std::move(bullet));
         bulletTimer_ = 0.0f;
     }
 
+    // --- 弾更新 ---
     for (auto it = bullets_.begin(); it != bullets_.end();) {
-        Bullet* bullet = *it;
-        bullet->Update(worldTransform_.translation_);
-        if (!bullet->IsActive()) {
-            delete bullet;
-            it = bullets_.erase(it);
+        (*it)->Update(worldTransform_.translation_);
+        if (!(*it)->IsActive()) {
+            it = bullets_.erase(it); // unique_ptr により自動解放
         }
         else {
             ++it;
         }
     }
 
+    // --- エフェクト更新 ---
     for (auto it = effects_.begin(); it != effects_.end();) {
-        RippleEffect* e = *it;
-        e->Update();
-        if (!e->IsActive()) {
-            delete e;
-            it = effects_.erase(it);
+        (*it)->Update();
+        if (!(*it)->IsActive()) {
+            it = effects_.erase(it); // unique_ptr により自動解放
         }
         else {
             ++it;
         }
     }
 
+    // --- カメラ追従 ---
     camera_.translation_.x = worldTransform_.translation_.x;
     camera_.translation_.z = worldTransform_.translation_.z;
     camera_.UpdateMatrix();
 
+    // --- 行列更新 ---
     worldTransform_.UpdateMatrix();
 }
 
 void Player::Draw() {
-    if (visible_) {
+    // --- プレイヤーモデル描画 ---
+    if (visible_ && playerModel_) {
         playerModel_->Draw(worldTransform_, camera_);
     }
 
-    for (auto bullet : bullets_) {
+    // --- 弾描画 ---
+    for (auto& bullet : bullets_) {
         bullet->Draw(&camera_);
     }
 
-    for (auto e : effects_) {
+    // --- エフェクト描画 ---
+    for (auto& e : effects_) {
         e->Draw(&camera_);
     }
 }
 
 void Player::TakeDamage() {
-    if (invincible_) { return; }
+    if (invincible_) return;
 
+    // --- ダメージ処理 ---
     lifeStock_--;
     invincible_ = true;
-    invincibleTimer_ = 1.0f; ///< 無敵時間を定数化するなら kInvincibleDuration に変更可能
+    invincibleTimer_ = 1.0f; // 無敵時間（定数化可能）
     visible_ = false;
 }
 
 void Player::AddEXP(int32_t amount) {
+    // --- 経験値加算処理 ---
     exp_ += amount;
     totalExp_ += amount;
     while (exp_ >= nextLevelExp_) {
@@ -201,15 +192,15 @@ void Player::AddEXP(int32_t amount) {
 }
 
 void Player::UpgradeBulletPower() {
-    bulletPower_ += 1;
+    bulletPower_ += 1; // 弾攻撃力強化
 }
 
 void Player::UpgradeBulletCooldown() {
-    bulletCooldown_ -= 0.1f;
+    bulletCooldown_ -= 0.1f; // 弾発射間隔短縮
 }
 
 void Player::RecoverHP() {
-    lifeStock_ += 1;
+    lifeStock_ += 1; // HP回復
     if (lifeStock_ > maxLifeStock_) {
         lifeStock_ = maxLifeStock_;
     }

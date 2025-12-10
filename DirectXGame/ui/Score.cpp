@@ -2,46 +2,29 @@
 
 using namespace KamataEngine;
 
-Score::Score() {}
-
-Score::~Score() {
-    /// <summary>
-    /// 動的に生成した各桁スプライトを解放
-    /// </summary>
-    for (int32_t i = 0; i < kDigitCount; ++i) {
-        delete sprite_[i];
-    }
-}
-
 void Score::Initialize() {
-    /// <summary>
-    /// 数字表示用テクスチャを読み込み
-    /// </summary>
+    // 数字表示用テクスチャを読み込み
     textureHandle_ = TextureManager::Load("number.png");
 
-    /// <summary>
-    /// 各桁分のスプライトを生成し、横並びに配置
-    /// </summary>
+    // 各桁分のスプライトを生成し、横並びに配置
     for (int32_t i = 0; i < kDigitCount; ++i) {
-        sprite_[i] = Sprite::Create(textureHandle_, { basePosition_.x + size_.x * i, basePosition_.y });
+        sprite_[i] = std::unique_ptr<Sprite>(
+            Sprite::Create(textureHandle_, { basePosition_.x + size_.x * i, basePosition_.y })
+        );
         sprite_[i]->SetSize(size_);
         sprite_[i]->SetTextureRect({ 0.0f, 0.0f }, size_);
     }
 }
 
 void Score::Update() {
-    /// <summary>
-    /// スコアは外部から更新されるため、ここでは特別な処理は不要
-    /// </summary>
+    // スコアは外部から更新されるため、ここでは特別な処理は不要
 }
 
 void Score::Draw() {
     DirectXCommon* dxCommon = DirectXCommon::GetInstance();
     Sprite::PreDraw(dxCommon->GetCommandList());
 
-    /// <summary>
-    /// 各桁スプライトを順に描画
-    /// </summary>
+    // 各桁スプライトを順に描画
     for (int32_t i = 0; i < kDigitCount; ++i) {
         if (sprite_[i]) { sprite_[i]->Draw(); }
     }
@@ -50,9 +33,7 @@ void Score::Draw() {
 }
 
 void Score::SetNumber(int32_t number) {
-    /// <summary>
-    /// 数値を桁ごとに分解してスプライトに反映
-    /// </summary>
+    // 数値を桁ごとに分解してスプライトに反映
     static constexpr int32_t kInitialDigit = 10000; // 5桁対応（10000の位から処理）
     int32_t digit = kInitialDigit;
 
@@ -65,9 +46,7 @@ void Score::SetNumber(int32_t number) {
 }
 
 void Score::SetPosition(const Vector2& pos) {
-    /// <summary>
-    /// 基準位置を更新し、各桁スプライトの座標を再計算
-    /// </summary>
+    // 基準位置を更新し、各桁スプライトの座標を再計算
     basePosition_ = pos;
 
     for (int32_t i = 0; i < kDigitCount; ++i) {
@@ -76,9 +55,7 @@ void Score::SetPosition(const Vector2& pos) {
 }
 
 void Score::SetScale(float scale) {
-    /// <summary>
-    /// スケール値を更新し、各桁スプライトのサイズと位置を再設定
-    /// </summary>
+    // スケール値を更新し、各桁スプライトのサイズと位置を再設定
     scale_ = scale;
 
     for (int32_t i = 0; i < kDigitCount; ++i) {

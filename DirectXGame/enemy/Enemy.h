@@ -2,6 +2,7 @@
 
 #include <KamataEngine.h>
 #include "Player.h"
+#include <memory>
 
 class Player;
 
@@ -11,18 +12,6 @@ class Player;
 /// </summary>
 class Enemy {
 public:
-    /// <summary>
-    /// コンストラクタ
-    /// 敵の初期値を設定する
-    /// </summary>
-    Enemy();
-
-    /// <summary>
-    /// デストラクタ
-    /// 使用したリソースを解放する
-    /// </summary>
-    ~Enemy();
-
     /// <summary>
     /// 初期化処理
     /// モデルやトランスフォームの設定を行う
@@ -39,82 +28,53 @@ public:
     /// 描画処理
     /// 敵モデルをカメラに基づいて描画する
     /// </summary>
-    /// <param name="camera">描画に使用するカメラ</param>
     void Draw(KamataEngine::Camera* camera);
 
-    /// <summary>
-    /// 敵の位置を設定する
-    /// </summary>
-    /// <param name="pos">設定する座標</param>
-    void SetPosition(const KamataEngine::Vector3& pos) { worldTransform_.translation_ = pos; }
+    /// <summary>敵の位置を設定する</summary>
+    void SetPosition(const KamataEngine::Vector3& pos);
 
-    /// <summary>
-    /// プレイヤー情報を関連付ける
-    /// </summary>
-    /// <param name="player">関連付けるプレイヤー</param>
-    void SetPlayer(Player* player) { player_ = player; }
+    /// <summary>プレイヤー情報を関連付ける</summary>
+    void SetPlayer(Player* player);
 
-    /// <summary>
-    /// 敵の種類に応じてモデルを設定する
-    /// </summary>
-    /// <param name="type">敵の種類を表す整数値</param>
+    /// <summary>敵の種類に応じてモデルを設定する</summary>
     void SetModelByType(int32_t type);
 
-    /// <summary>
-    /// 敵の現在位置を取得する
-    /// </summary>
-    /// <returns>敵の座標</returns>
-    KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
+    /// <summary>敵の現在位置を取得する</summary>
+    KamataEngine::Vector3 GetPosition() const;
 
-    /// <summary>
-    /// 敵がアクティブかどうかを判定する
-    /// </summary>
-    /// <returns>true: アクティブ / false: 非アクティブ</returns>
-    bool IsActive() const { return active_; }
+    /// <summary>敵がアクティブかどうかを判定する</summary>
+    bool IsActive() const;
 
-    /// <summary>
-    /// 敵を非アクティブ状態にする
-    /// </summary>
-    void Deactivate() { active_ = false; }
+    /// <summary>敵を非アクティブ状態にする</summary>
+    void Deactivate();
 
-    /// <summary>
-    /// 敵のHPを設定する
-    /// </summary>
-    /// <param name="hp">設定するHP値</param>
-    void SetHP(int32_t hp) { hp_ = hp; }
+    /// <summary>敵のHPを設定する</summary>
+    void SetHP(int32_t hp);
 
-    /// <summary>
-    /// 敵のHPを取得する
-    /// </summary>
-    /// <returns>現在のHP値</returns>
-    int32_t GetHP() const { return hp_; }
+    /// <summary>敵のHPを取得する</summary>
+    int32_t GetHP() const;
 
     /// <summary>
     /// ダメージを受けてHPを減少させる
-    ///（オプションでノックバック方向と強さを指定可能）
+    /// （オプションでノックバック方向と強さを指定可能）
     /// </summary>
-    /// <param name="damage">受けるダメージ量</param>
     void TakeDamage(int32_t damage, const KamataEngine::Vector3& knockDir = { 0.0f, 0.0f, 0.0f }, float strength = 0.0f);
 
-    /// <summary>
-    /// 敵の撃破時に得られる経験値を設定する
-    /// </summary>
-    /// <param name="exp">設定する経験値</param>
-    void SetEXP(int32_t exp) { exp_ = exp; }
+    /// <summary>敵の撃破時に得られる経験値を設定する</summary>
+    void SetEXP(int32_t exp);
 
-    /// <summary>
-    /// 敵の撃破時に得られる経験値を取得する
-    /// </summary>
-    /// <returns>経験値の値</returns>
-    int32_t GetEXP() const { return exp_; }
+    /// <summary>敵の撃破時に得られる経験値を取得する</summary>
+    int32_t GetEXP() const;
 
-    /// 死亡直後かどうかを判定
-    bool JustDied() const { return justDied_; }
-    void ResetJustDied() { justDied_ = false; }
+    /// <summary>死亡直後かどうかを判定する</summary>
+    bool JustDied() const;
+
+    /// <summary>死亡直後フラグをリセットする</summary>
+    void ResetJustDied();
 
 private:
-    KamataEngine::WorldTransform worldTransform_; ///< 敵のワールドトランスフォーム
-    KamataEngine::Model* enemyModel_ = nullptr;   ///< 敵モデル
+    KamataEngine::WorldTransform worldTransform_; ///< 敵の位置・回転・スケールを保持するワールドトランスフォーム
+    std::unique_ptr<KamataEngine::Model> enemyModel_; ///< 敵モデル（スマートポインタで管理）
 
     float speed_ = 0.1f; ///< 移動速度
 
@@ -125,7 +85,7 @@ private:
     Player* player_ = nullptr; ///< プレイヤー参照
 
     // ヒット時の白化
-    KamataEngine::ObjectColor* objectColor_ = nullptr;
+    std::unique_ptr<KamataEngine::ObjectColor> objectColor_; ///< ヒット時の色管理
     float hitFlashTimer_ = 0.0f;
     static constexpr float kHitFlashDuration = 0.12f; ///< ヒット時の白化時間
     uint32_t whiteTextureHandle_ = 0;

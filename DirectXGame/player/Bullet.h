@@ -1,6 +1,7 @@
 #pragma once
 #include <KamataEngine.h>
-#include <cstdint> // int32_t
+#include <cstdint>
+#include <memory>
 
 /// <summary>
 /// 弾（Bullet）を表すクラス。
@@ -9,24 +10,14 @@
 class Bullet {
 public:
     /// <summary>
-    /// コンストラクタ
-    /// 弾の初期値を設定する
-    /// </summary>
-    Bullet();
-
-    /// <summary>
-    /// デストラクタ
-    /// 使用したリソースを解放する
-    /// </summary>
-    ~Bullet();
-
-    /// <summary>
     /// 弾を初期化する
     /// </summary>
     /// <param name="startPos">弾の開始位置</param>
     /// <param name="direction">弾の進行方向</param>
     /// <param name="speed">弾の速度（デフォルト0.5f）</param>
-    void Initialize(const KamataEngine::Vector3& startPos, const KamataEngine::Vector3& direction, float speed = kDefaultSpeed);
+    void Initialize(const KamataEngine::Vector3& startPos,
+        const KamataEngine::Vector3& direction,
+        float speed = kDefaultSpeed);
 
     /// <summary>
     /// 毎フレーム更新処理
@@ -42,40 +33,26 @@ public:
     /// <param name="camera">描画に使用するカメラ</param>
     void Draw(KamataEngine::Camera* camera);
 
-    /// <summary>
-    /// 弾がアクティブかどうかを判定する
-    /// </summary>
-    /// <returns>true: アクティブ / false: 非アクティブ</returns>
+    /// <summary>弾がアクティブかどうかを判定する</summary>
     bool IsActive() const { return active_; }
 
-    /// <summary>
-    /// 弾を非アクティブ状態にする
-    /// </summary>
+    /// <summary>弾を非アクティブ状態にする</summary>
     void Deactivate() { active_ = false; }
 
-    /// <summary>
-    /// 弾の現在位置を取得する
-    /// </summary>
-    /// <returns>弾の座標</returns>
+    /// <summary>弾の現在位置を取得する</summary>
     KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
 
-    /// <summary>
-    /// 弾の攻撃力を設定する
-    /// </summary>
-    /// <param name="value">設定する攻撃力</param>
+    /// <summary>弾の攻撃力を設定する</summary>
     void SetDamage(int32_t value) { damage_ = value; }
 
-    /// <summary>
-    /// 弾の攻撃力を取得する
-    /// </summary>
-    /// <returns>攻撃力の値</returns>
+    /// <summary>弾の攻撃力を取得する</summary>
     int32_t GetDamage() const { return damage_; }
 
 private:
     KamataEngine::WorldTransform worldTransform_; ///< 弾のワールドトランスフォーム
-    KamataEngine::Model* model_ = nullptr;        ///< 弾モデル
+    std::unique_ptr<KamataEngine::Model> model_;  ///< 弾モデル（スマートポインタで管理）
 
-    KamataEngine::Vector3 direction_; ///< 弾の進行方向
+    KamataEngine::Vector3 direction_{ 0.0f, 0.0f, 0.0f }; ///< 弾の進行方向
     float speed_ = kDefaultSpeed;     ///< 弾の速度
 
     bool active_ = false;             ///< アクティブ状態フラグ

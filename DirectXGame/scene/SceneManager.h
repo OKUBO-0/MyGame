@@ -10,28 +10,16 @@
 /// </summary>
 class SceneManager {
 public:
-    /// <summary>
-    /// コンストラクタ
-    /// シーン管理用の初期値を設定する
-    /// </summary>
+    /// <summary>コンストラクタ（シーン管理用の初期値を設定する）</summary>
     SceneManager();
 
-    /// <summary>
-    /// デストラクタ
-    /// 使用したリソースを解放する
-    /// </summary>
+    /// <summary>デストラクタ（unique_ptrによりリソースは自動解放される）</summary>
     ~SceneManager();
 
-    /// <summary>
-    /// 毎フレーム更新処理
-    /// 現在のシーンの更新を呼び出す
-    /// </summary>
+    /// <summary>毎フレーム更新処理（現在のシーンの更新を呼び出す）</summary>
     void Update();
 
-    /// <summary>
-    /// 描画処理
-    /// 現在のシーンの描画を呼び出す
-    /// </summary>
+    /// <summary>描画処理（現在のシーンの描画を呼び出す）</summary>
     void Draw();
 
     /// <summary>
@@ -49,6 +37,6 @@ public:
 
 private:
     std::unordered_map<Scene, std::function<std::unique_ptr<IScene>()>> sceneFactory_; ///< シーン生成関数のマップ
-    std::unique_ptr<IScene> currentScene_; ///< 現在のシーン
-    Scene currentSceneNo_;                 ///< 現在のシーン番号
+    std::unique_ptr<IScene> currentScene_; ///< 現在のシーン（unique_ptrで管理）
+    Scene currentSceneNo_ = Scene::Title;  ///< 現在のシーン番号（初期値はタイトル）
 };

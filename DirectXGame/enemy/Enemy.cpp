@@ -1,95 +1,104 @@
 #include "Enemy.h"
 using namespace KamataEngine;
 
-Enemy::Enemy() {}
-
-Enemy::~Enemy() {
-    // 敵モデルを動的に生成しているため、破棄時に解放
-    delete enemyModel_;
-    enemyModel_ = nullptr;
-
-    // オブジェクトカラーを解放
-    delete objectColor_;
-    objectColor_ = nullptr;
-}
-
 void Enemy::Initialize() {
-    // ワールドトランスフォームを初期化（位置・回転・スケールをリセット）
+    // ワールドトランスフォーム初期化（位置・回転・スケールの基準を設定）
     worldTransform_.Initialize();
+    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f }; // 初期位置は原点
 
-    // 初期位置を原点に設定
-    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
-
-    // 敵をアクティブ状態にする
+    // 敵をアクティブ状態に設定
     active_ = true;
 
-    // オブジェクトカラーを生成して初期化（デフォルト色）
+    // オブジェクトカラー生成（デフォルトは白色）
     if (!objectColor_) {
-        objectColor_ = new ObjectColor();
+        objectColor_ = std::make_unique<ObjectColor>();
         objectColor_->Initialize();
         objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
     }
 
-    // 白テクスチャをロードしておく（既存UI等と共通の white1x1.png を使用）
+    // 白テクスチャをロード（ヒット時のフラッシュ用）
     whiteTextureHandle_ = TextureManager::Load("color/white.png");
 }
 
+void Enemy::SetPosition(const Vector3& pos) {
+    worldTransform_.translation_ = pos;
+}
+
+void Enemy::SetPlayer(Player* player) {
+    player_ = player;
+}
+
 void Enemy::SetModelByType(int32_t type) {
-    // 既存モデルがある場合は解放してから新しいモデルを設定
-    if (enemyModel_) {
-        delete enemyModel_;
-        enemyModel_ = nullptr;
-    }
-
-    // 敵の種類に応じて異なるモデルを読み込む
     switch (type) {
-    case 0:
-        enemyModel_ = Model::CreateFromOBJ("Enemy1");
-        break;
-    case 1:
-        enemyModel_ = Model::CreateFromOBJ("Enemy2");
-        break;
-    case 2:
-        enemyModel_ = Model::CreateFromOBJ("Enemy3");
-        break;
-    case 3:
-        enemyModel_ = Model::CreateFromOBJ("Enemy4");
-        break;
-    default:
-        // デフォルトはタコモデル（octopus）
-        enemyModel_ = Model::CreateFromOBJ("octopus");
-        break;
+    case 0: enemyModel_.reset(Model::CreateFromOBJ("Enemy1")); break;
+    case 1: enemyModel_.reset(Model::CreateFromOBJ("Enemy2")); break;
+    case 2: enemyModel_.reset(Model::CreateFromOBJ("Enemy3")); break;
+    case 3: enemyModel_.reset(Model::CreateFromOBJ("Enemy4")); break;
+    default: enemyModel_.reset(Model::CreateFromOBJ("octopus")); break;
     }
 
-    // モデルを切り替えた場合もオブジェクトカラーを用意しておく
     if (!objectColor_) {
-        objectColor_ = new ObjectColor();
+        objectColor_ = std::make_unique<ObjectColor>();
         objectColor_->Initialize();
         objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
     }
 }
 
-void Enemy::Update() {
-    // 非アクティブ状態なら処理しない
-    if (!active_) { return; }
+Vector3 Enemy::GetPosition() const {
+    return worldTransform_.translation_;
+}
 
-    // ヒット点滅の時間経過処理（60FPS前提で固定dt）
-    const float kDeltaTime = 0.016f;
+bool Enemy::IsActive() const {
+    return active_;
+}
+
+void Enemy::Deactivate() {
+    active_ = false;
+}
+
+void Enemy::SetHP(int32_t hp) {
+    hp_ = hp;
+}
+
+int32_t Enemy::GetHP() const {
+    return hp_;
+}
+
+void Enemy::SetEXP(int32_t exp) {
+    exp_ = exp;
+}
+
+int32_t Enemy::GetEXP() const {
+    return exp_;
+}
+
+bool Enemy::JustDied() const {
+    return justDied_;
+}
+
+void Enemy::ResetJustDied() {
+    justDied_ = false;
+}
+
+void Enemy::Update() {
+    if (!active_) return;
+
+    const float kDeltaTime = 0.016f; // 60FPS前提
+
+    // ヒット点滅処理
     if (hitFlashTimer_ > 0.0f) {
         hitFlashTimer_ -= kDeltaTime;
         if (hitFlashTimer_ <= 0.0f) {
             hitFlashTimer_ = 0.0f;
-            // 点滅終了 → 元の色に戻す
-            if (objectColor_) { objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f }); }
+            if (objectColor_) objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
         }
     }
 
-    // ノックバック処理：ノックバック中は追尾を行わず押し出す
+    // ノックバック処理
     if (knockbackTimer_ > 0.0f) {
         worldTransform_.translation_.x += knockbackVelocity_.x;
         worldTransform_.translation_.z += knockbackVelocity_.z;
 
-        // 減衰
         knockbackVelocity_.x *= 0.88f;
         knockbackVelocity_.z *= 0.88f;
 
@@ -100,7 +109,7 @@ void Enemy::Update() {
         }
     }
     else {
-        // 通常の追尾処理
+        // プレイヤー追尾処理
         if (player_) {
             const Vector3& playerPos = player_->GetWorldPosition();
             Vector3 dir = {
@@ -114,30 +123,30 @@ void Enemy::Update() {
                 dir.x /= len;
                 dir.z /= len;
 
+                // 進行方向に応じてY軸回転を設定
                 worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
 
+                // プレイヤーに向かって移動
                 worldTransform_.translation_.x += dir.x * speed_;
                 worldTransform_.translation_.z += dir.z * speed_;
             }
         }
     }
 
+    // 行列更新
     worldTransform_.UpdateMatrix();
 }
 
-void Enemy::Draw(KamataEngine::Camera* camera) {
-    // 非アクティブまたはモデル未設定なら描画しない
-    if (!active_ || !enemyModel_) { return; }
+void Enemy::Draw(Camera* camera) {
+    if (!active_ || !enemyModel_) return;
 
-    // ヒット中は白テクスチャで上書きし、かつ objectColor_ を渡して強く乗算する
+    // ヒット中は白テクスチャで上書き
     if (hitFlashTimer_ > 0.0f && whiteTextureHandle_ != 0 && objectColor_) {
-        // 白テクスチャ＋白カラーで完全な白に
-        enemyModel_->Draw(worldTransform_, *camera, whiteTextureHandle_, objectColor_);
+        enemyModel_->Draw(worldTransform_, *camera, whiteTextureHandle_, objectColor_.get());
     }
     else {
-        // 通常描画（ObjectColor を渡しておいても問題ない）
         if (objectColor_) {
-            enemyModel_->Draw(worldTransform_, *camera, objectColor_);
+            enemyModel_->Draw(worldTransform_, *camera, objectColor_.get());
         }
         else {
             enemyModel_->Draw(worldTransform_, *camera);
@@ -146,30 +155,29 @@ void Enemy::Draw(KamataEngine::Camera* camera) {
 }
 
 void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) {
-    // ダメージを受けてHPを減少
+    // HP減少
     hp_ -= damage;
 
-    // HPが0以下になったら非アクティブ化
+    // HPが0以下なら死亡処理
     if (hp_ <= 0) {
         Deactivate();
-        justDied_ = true; // 死亡直後フラグを立てる
+        justDied_ = true;
         return;
     }
 
-    // 白フラッシュ
+    // 白フラッシュ開始
     hitFlashTimer_ = kHitFlashDuration;
     if (objectColor_) {
-        // 値を大きくしてより白く見せる
         objectColor_->SetColor({ 10.0f, 10.0f, 10.0f, 1.0f });
     }
 
-    // ノックバックを適用（方向と強さが有効な場合）
+    // ノックバック適用
     float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
     if (len > 0.0001f && strength > 0.0f) {
         Vector3 dir = knockDir;
         dir.x /= len;
         dir.z /= len;
-        // strength を初速として使用
+
         knockbackVelocity_.x = dir.x * strength;
         knockbackVelocity_.z = dir.z * strength;
         knockbackTimer_ = kKnockbackDuration;
