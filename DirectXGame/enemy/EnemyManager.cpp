@@ -60,12 +60,17 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
 }
 
 void EnemyManager::Update() {
-    // 各敵の更新処理
+    // 敵更新
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
             enemy->Update();
         }
         else if (enemy->GetHP() <= 0 && enemy->JustDied()) {
+            // 経験値オーブ生成
+            auto orb = std::make_unique<ExpOrb>();
+            orb->Initialize(enemy->GetPosition(), enemy->GetEXP());
+            expOrbs_.push_back(std::move(orb));
+
             // 死亡直後だけ煙パーティクル生成
             const int particleCount = 5;
             for (int i = 0; i < particleCount; ++i) {
@@ -73,6 +78,7 @@ void EnemyManager::Update() {
                 p->Initialize(enemy->GetPosition());
                 deathParticles_.push_back(std::move(p));
             }
+
             enemy->ResetJustDied();
         }
     }
@@ -88,7 +94,20 @@ void EnemyManager::Update() {
         }
     }
 
-    // 敵同士の衝突判定と分離処理
+    // 経験値オーブ更新
+    for (auto it = expOrbs_.begin(); it != expOrbs_.end();) {
+        (*it)->Update(player_->GetWorldPosition());
+        if (!(*it)->IsActive()) {
+            // プレイヤーに経験値加算
+            player_->AddEXP((*it)->GetEXP());
+            it = expOrbs_.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    // 敵同士の衝突処理
     const float kMinDist = 3.0f;
     const float kPushStrength = 1.0f;
 
@@ -127,14 +146,16 @@ void EnemyManager::Update() {
 }
 
 void EnemyManager::Draw(Camera* camera) {
-    // アクティブな敵のみ描画
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
             enemy->Draw(camera);
         }
     }
 
-    // 死亡パーティクル描画
+    for (auto& orb : expOrbs_) {
+        orb->Draw(camera);
+    }
+
     for (auto& p : deathParticles_) {
         p->Draw(camera);
     }
