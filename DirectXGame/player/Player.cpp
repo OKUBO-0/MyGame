@@ -11,12 +11,14 @@ void Player::Initialize() {
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 
     level_ = 1;
-    nextLevelExp_ = 50;
+    nextLevelExp_ = 10;
     bulletPower_ = 1;
     bulletCooldown_ = 1.0f;
     maxLifeStock_ = 3;
     exp_ = 0;
     totalExp_ = 0;
+
+    AddOrbitBullets();
 }
 
 void Player::Update() {
@@ -221,28 +223,41 @@ void Player::RecoverHP() {
     }
 }
 
-// --- 周囲弾追加・強化 ---
+// --- 周囲弾追加（初期は1発） ---
 void Player::AddOrbitBullets() {
     hasOrbitBullets_ = true;
-    const int bulletCount = 2;
+    const int bulletCount = 1; // 初期は1発
+    orbitBullets_.clear();     // 念のためクリア
+
     for (int i = 0; i < bulletCount; ++i) {
         float angle = (2.0f * 3.14159265f * i) / bulletCount;
         auto orb = std::make_unique<OrbitBullet>();
-        orb->Initialize(worldTransform_.translation_, 3.0f, angle, 1);
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle, 1);
         orbitBullets_.push_back(std::move(orb));
     }
 }
 
+// --- 周囲弾強化（弾数を増やし均等配置を再計算） ---
 void Player::UpgradeOrbitBullets() {
+    // 既存弾の強化
     for (auto& orb : orbitBullets_) {
         orb->UpgradeDamage();
-        orb->IncreaseRadius(0.5f);
     }
-    // 弾数増加
-    float angle = (2.0f * 3.14159265f * orbitBullets_.size()) / (orbitBullets_.size() + 1);
-    auto orb = std::make_unique<OrbitBullet>();
-    orb->Initialize(worldTransform_.translation_, 3.0f, angle, 1);
-    orbitBullets_.push_back(std::move(orb));
+
+    // 新しい弾数（既存＋1）
+    int newCount = static_cast<int>(orbitBullets_.size()) + 1;
+
+    // 均等配置し直す
+    std::vector<std::unique_ptr<OrbitBullet>> newOrbs;
+    for (int i = 0; i < newCount; ++i) {
+        float angle = (2.0f * 3.14159265f * i) / newCount;
+        auto orb = std::make_unique<OrbitBullet>();
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle, 1);
+        newOrbs.push_back(std::move(orb));
+    }
+
+    // 新しいリストに差し替え
+    orbitBullets_ = std::move(newOrbs);
 }
 
 // --- ダメージフィールド追加・強化 ---

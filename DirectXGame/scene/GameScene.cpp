@@ -318,7 +318,12 @@ void GameScene::Update() {
             float dz = oPos.z - ePos.z;
             float distSq = dx * dx + dz * dz;
 
-            if (distSq < 4.0f) {
+            if (distSq < 5.0f) {
+                // --- 追加: ヒットクールタイム判定 ---
+                if (!orb->CanHitEnemy(enemy.get())) continue;
+
+                orb->RegisterHit(enemy.get());
+
                 Vector3 knockDir = { ePos.x - oPos.x, 0.0f, ePos.z - oPos.z };
                 float knockLen = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
                 if (knockLen > 0.0001f) {
@@ -328,6 +333,7 @@ void GameScene::Update() {
                 float knockStrength = 0.5f + static_cast<float>(orb->GetDamage()) * 0.1f;
                 enemy->TakeDamage(orb->GetDamage(), knockDir, knockStrength);
 
+                // ヒット演出
                 Vector3 hitPos = oPos;
                 static constexpr int32_t kSparkCount = 4;
                 for (int32_t i = 0; i < kSparkCount; ++i) {

@@ -16,6 +16,16 @@ void OrbitBullet::Initialize(const Vector3& center, float radius, float angle, i
     };
 }
 
+bool OrbitBullet::CanHitEnemy(void* enemyPtr) {
+    auto it = hitCooldowns_.find(enemyPtr);
+    if (it == hitCooldowns_.end()) return true;
+    return (it->second <= 0.0f);
+}
+
+void OrbitBullet::RegisterHit(void* enemyPtr) {
+    hitCooldowns_[enemyPtr] = kHitInterval;
+}
+
 void OrbitBullet::Update(const Vector3& center) {
     if (!active_) return;
 
@@ -28,6 +38,18 @@ void OrbitBullet::Update(const Vector3& center) {
         center.y,
         center.z + std::sin(angle_) * orbitRadius_
     };
+
+    // クールタイム更新
+    const float kDeltaTime = 0.016f;
+    for (auto it = hitCooldowns_.begin(); it != hitCooldowns_.end();) {
+        it->second -= kDeltaTime;
+        if (it->second <= 0.0f) {
+            it = hitCooldowns_.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
 
     worldTransform_.UpdateMatrix();
 }
