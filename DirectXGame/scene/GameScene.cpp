@@ -137,7 +137,7 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        static constexpr int32_t kMaxWave = 2;
+        static constexpr int32_t kMaxWave = 3;
 
         if (currentWave_ >= kMaxWave) {
             // 最終Wave終了 → ResultSceneへ遷移
@@ -242,24 +242,23 @@ void GameScene::Update() {
         }
         if (input_->TriggerKey(DIK_RETURN) || input_->TriggerKey(DIK_SPACE)) {
             switch (levelUpSelection_) {
-            case 0: // 通常弾強化
-                player_->UpgradeNormalBullet();
+            case 0: // 通常弾
+                if (!player_->HasNormalBullet()) {
+                    player_->AddNormalBullet({ 0,0,1 }); // 初回解禁
+                }
+                else {
+                    player_->UpgradeNormalBullet();    // 強化
+                }
                 break;
             case 1: // 周囲弾
                 if (!player_->HasOrbitBullets()) {
-                    player_->AddOrbitBullets(); // 新しい攻撃方法追加
+                    player_->AddOrbitBullets();
                 }
                 else {
-                    player_->UpgradeOrbitBullets(); // 強化
+                    player_->UpgradeOrbitBullets();
                 }
                 break;
-            case 2: // ダメージフィールド
-                if (!player_->HasDamageField()) {
-                    player_->AddDamageField(); // 新しい攻撃方法追加
-                }
-                else {
-                    player_->UpgradeDamageField(); // 強化
-                }
+            case 2:
                 break;
             }
             levelUpActive_ = false;
@@ -274,33 +273,38 @@ void GameScene::Update() {
     // --- 通常弾と敵の当たり判定 ---
     for (auto& bullet : player_->GetBullets()) {
         if (!bullet->IsActive()) continue;
+
         for (auto& enemy : enemyManager_.GetEnemies()) {
             if (!enemy->IsActive()) continue;
 
             Vector3 bPos = bullet->GetPosition();
             Vector3 ePos = enemy->GetPosition();
             float dx = bPos.x - ePos.x;
-            float dy = bPos.y - ePos.y;
             float dz = bPos.z - ePos.z;
-            float distSq = dx * dx + dy * dy + dz * dz;
+            float distSq = dx * dx + dz * dz;
 
-            if (distSq < 5.0f) {
-                Vector3 knockDir = { ePos.x - bPos.x, 0.0f, ePos.z - bPos.z };
-                float knockLen = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
-                if (knockLen > 0.0001f) {
-                    knockDir.x /= knockLen;
-                    knockDir.z /= knockLen;
+            if (distSq < 4.0f) {
+
+                // --- ノックバック処理 ---
+                Vector3 knockDir = { ePos.x - bPos.x, 0, ePos.z - bPos.z };
+                float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
+                if (len > 0.0f) {
+                    knockDir.x /= len;
+                    knockDir.z /= len;
                 }
-                float knockStrength = 0.6f + static_cast<float>(bullet->GetDamage()) * 0.15f;
+
+                float knockStrength = 0.6f + bullet->GetDamage() * 0.15f;
                 enemy->TakeDamage(bullet->GetDamage(), knockDir, knockStrength);
 
-                Vector3 hitPos = bullet->GetPosition();
+                // --- ★ ヒットパーティクル生成（追加部分） ---
                 static constexpr int32_t kSparkCount = 4;
                 for (int32_t i = 0; i < kSparkCount; ++i) {
-                    hitParticles_.push_back(std::make_unique<HitParticle>());
-                    hitParticles_.back()->Initialize(hitPos);
+                    auto spark = std::make_unique<HitParticle>();
+                    spark->Initialize(bPos);
+                    hitParticles_.push_back(std::move(spark));
                 }
 
+                // --- 弾を消す ---
                 bullet->Deactivate();
             }
         }
@@ -336,39 +340,6 @@ void GameScene::Update() {
                 // ヒット演出
                 Vector3 hitPos = oPos;
                 static constexpr int32_t kSparkCount = 4;
-                for (int32_t i = 0; i < kSparkCount; ++i) {
-                    hitParticles_.push_back(std::make_unique<HitParticle>());
-                    hitParticles_.back()->Initialize(hitPos);
-                }
-            }
-        }
-    }
-
-    // --- ダメージフィールドと敵の当たり判定 ---
-    if (player_->HasDamageField()) {
-        auto field = player_->GetDamageField();
-        Vector3 pPos = player_->GetWorldPosition();
-
-        for (auto& enemy : enemyManager_.GetEnemies()) {
-            if (!enemy->IsActive()) continue;
-
-            Vector3 ePos = enemy->GetPosition();
-            float dx = ePos.x - pPos.x;
-            float dz = ePos.z - pPos.z;
-            float distSq = dx * dx + dz * dz;
-
-            if (distSq < field->GetRadius() * field->GetRadius()) {
-                Vector3 knockDir = { dx, 0.0f, dz };
-                float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
-                if (len > 0.0001f) {
-                    knockDir.x /= len;
-                    knockDir.z /= len;
-                }
-                float knockStrength = 0.3f + static_cast<float>(field->GetDamage()) * 0.05f;
-                enemy->TakeDamage(field->GetDamage(), knockDir, knockStrength);
-
-                Vector3 hitPos = ePos;
-                static constexpr int32_t kSparkCount = 6;
                 for (int32_t i = 0; i < kSparkCount; ++i) {
                     hitParticles_.push_back(std::make_unique<HitParticle>());
                     hitParticles_.back()->Initialize(hitPos);

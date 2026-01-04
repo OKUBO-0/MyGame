@@ -12,8 +12,6 @@ void Player::Initialize() {
 
     level_ = 1;
     nextLevelExp_ = 10;
-    bulletPower_ = 1;
-    bulletCooldown_ = 1.0f;
     maxLifeStock_ = 3;
     exp_ = 0;
     totalExp_ = 0;
@@ -22,7 +20,7 @@ void Player::Initialize() {
 }
 
 void Player::Update() {
-    const float kMoveSpeed = 0.2f;
+    const float kMoveSpeed = 0.9f;
     const float kDeltaTime = 0.016f;
 
     Vector3 move = { 0.0f, 0.0f, 0.0f };
@@ -52,8 +50,6 @@ void Player::Update() {
         }
     }
 
-    bulletTimer_ += kDeltaTime;
-
     // --- 無敵状態の処理（点滅演出） ---
     if (invincible_) {
         invincibleTimer_ -= kDeltaTime;
@@ -67,68 +63,60 @@ void Player::Update() {
         }
     }
 
-    // --- 敵探索（最も近い敵を狙う） ---
-    Vector3 nearestDir = { 0.0f, 0.0f, 1.0f };
-    float minDistSq = FLT_MAX;
-    bool enemyInRange = false;
-
-    if (enemyManager_) {
-        for (auto& enemy : enemyManager_->GetEnemies()) {
-            if (!enemy->IsActive()) continue;
-
-            Vector3 ePos = enemy->GetPosition();
-            Vector3 pPos = worldTransform_.translation_;
-            float dx = ePos.x - pPos.x;
-            float dz = ePos.z - pPos.z;
-            float distSq = dx * dx + dz * dz;
-
-            if (distSq <= range_ * range_) {
-                enemyInRange = true;
-                if (distSq < minDistSq) {
-                    minDistSq = distSq;
-                    nearestDir = { dx, 0.0f, dz };
-                }
-            }
+    // --- 周囲弾更新 ---
+    if (hasOrbitBullets_) {
+        for (auto& orb : orbitBullets_) {
+            orb->Update(worldTransform_.translation_);
         }
-    }
-
-    if (enemyInRange) {
-        float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
-        if (len > 0.0f) {
-            nearestDir.x /= len;
-            nearestDir.z /= len;
-            worldTransform_.rotation_.y = std::atan2(nearestDir.x, nearestDir.z);
-        }
-    }
-    else if (move.x != 0.0f || move.z != 0.0f) {
-        worldTransform_.rotation_.y = std::atan2(move.x, move.z);
     }
 
     // --- 通常弾発射処理 ---
-    if (bulletTimer_ >= bulletCooldown_ && enemyInRange) {
-        float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
-        if (len > 0.0f) {
-            nearestDir.x /= len;
-            nearestDir.z /= len;
+    bulletTimer_ += kDeltaTime;
+
+    if (hasNormalBullet_ && bulletTimer_ >= bulletCooldown_) {
+
+        Vector3 nearestDir = { 0,0,1 };
+        float minDistSq = FLT_MAX;
+        bool enemyFound = false;
+
+        if (enemyManager_) {
+            for (auto& enemy : enemyManager_->GetEnemies()) {
+                if (!enemy->IsActive()) continue;
+
+                Vector3 ePos = enemy->GetPosition();
+                Vector3 pPos = worldTransform_.translation_;
+                float dx = ePos.x - pPos.x;
+                float dz = ePos.z - pPos.z;
+                float distSq = dx * dx + dz * dz;
+
+                if (distSq < minDistSq) {
+                    minDistSq = distSq;
+                    nearestDir = { dx, 0, dz };
+                    enemyFound = true;
+                }
+            }
         }
 
-        auto bullet = std::make_unique<Bullet>();
-        bullet->Initialize(worldTransform_.translation_, nearestDir, 0.5f);
-        bullet->SetDamage(bulletPower_);
-        bullets_.push_back(std::move(bullet));
-        bulletTimer_ = 0.0f;
+        if (enemyFound) {
+            float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
+            if (len > 0.0f) {
+                nearestDir.x /= len;
+                nearestDir.z /= len;
+            }
+
+            AddNormalBullet(nearestDir);
+            bulletTimer_ = 0.0f;
+        }
     }
 
-    // --- 通常弾更新 ---
-    for (auto it = bullets_.begin(); it != bullets_.end();) {
-        (*it)->Update(worldTransform_.translation_);
-        if (!(*it)->IsActive()) {
-            it = bullets_.erase(it);
-        }
-        else {
-            ++it;
-        }
+    for (auto& b : bullets_) {
+        b->Update(worldTransform_.translation_);
     }
+    bullets_.erase(
+        std::remove_if(bullets_.begin(), bullets_.end(),
+            [](const std::unique_ptr<Bullet>& b) { return !b->IsActive(); }),
+        bullets_.end()
+    );
 
     // --- エフェクト更新 ---
     for (auto it = effects_.begin(); it != effects_.end();) {
@@ -139,18 +127,6 @@ void Player::Update() {
         else {
             ++it;
         }
-    }
-
-    // --- 周囲弾更新 ---
-    if (hasOrbitBullets_) {
-        for (auto& orb : orbitBullets_) {
-            orb->Update(worldTransform_.translation_);
-        }
-    }
-
-    // --- ダメージフィールド更新 ---
-    if (hasDamageField_ && damageField_) {
-        damageField_->Update(worldTransform_.translation_);
     }
 
     // --- カメラ追従 ---
@@ -167,22 +143,20 @@ void Player::Draw() {
         playerModel_->Draw(worldTransform_, camera_);
     }
 
-    for (auto& bullet : bullets_) {
-        bullet->Draw(&camera_);
-    }
-
     for (auto& e : effects_) {
         e->Draw(&camera_);
     }
+
+    if (hasNormalBullet_) {
+        for (auto& b : bullets_) {
+            b->Draw(&camera_);
+        }
+	}
 
     if (hasOrbitBullets_) {
         for (auto& orb : orbitBullets_) {
             orb->Draw(&camera_);
         }
-    }
-
-    if (hasDamageField_ && damageField_) {
-        damageField_->Draw(&camera_);
     }
 }
 
@@ -206,21 +180,17 @@ void Player::AddEXP(int32_t amount) {
     }
 }
 
-// --- 通常弾強化（攻撃力アップ & クールタイム短縮） ---
-void Player::UpgradeNormalBullet() {
-    bulletPower_ += 1;
-    bulletCooldown_ -= 0.1f;
-    if (bulletCooldown_ < 0.2f) { // 下限値
-        bulletCooldown_ = 0.2f;
-    }
+void Player::AddNormalBullet(const Vector3& dir) {
+    hasNormalBullet_ = true;
+    auto b = std::make_unique<Bullet>();
+    b->Initialize(worldTransform_.translation_, dir, bulletPower_);
+    bullets_.push_back(std::move(b));
 }
 
-// --- HP回復 ---
-void Player::RecoverHP() {
-    lifeStock_ += 1;
-    if (lifeStock_ > maxLifeStock_) {
-        lifeStock_ = maxLifeStock_;
-    }
+void Player::UpgradeNormalBullet() {
+    bulletPower_++;
+    bulletCooldown_ -= 0.2f;
+    if (bulletCooldown_ < 0.2f) bulletCooldown_ = 0.2f;
 }
 
 // --- 周囲弾追加（初期は1発） ---
@@ -260,16 +230,10 @@ void Player::UpgradeOrbitBullets() {
     orbitBullets_ = std::move(newOrbs);
 }
 
-// --- ダメージフィールド追加・強化 ---
-void Player::AddDamageField() {
-    hasDamageField_ = true;
-    damageField_ = std::make_unique<DamageField>();
-    damageField_->Initialize(3.0f, 1);
-}
-
-void Player::UpgradeDamageField() {
-    if (damageField_) {
-        damageField_->UpgradeDamage();
-        damageField_->IncreaseRadius(1.0f);
+// --- HP回復 ---
+void Player::RecoverHP() {
+    lifeStock_ += 1;
+    if (lifeStock_ > maxLifeStock_) {
+        lifeStock_ = maxLifeStock_;
     }
 }

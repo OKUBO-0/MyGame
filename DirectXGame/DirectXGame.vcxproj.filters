@@ -81,9 +81,6 @@
     <ClCompile Include="player\Player.cpp">
       <Filter>ソース ファイル\player</Filter>
     </ClCompile>
-    <ClCompile Include="player\Bullet.cpp">
-      <Filter>ソース ファイル\player</Filter>
-    </ClCompile>
     <ClCompile Include="enemy\Enemy.cpp">
       <Filter>ソース ファイル\enemy</Filter>
     </ClCompile>
@@ -132,7 +129,7 @@
     <ClCompile Include="player\OrbitBullet.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="player\DamageField.cpp">
+    <ClCompile Include="player\Bullet.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -207,9 +204,6 @@
     <ClInclude Include="player\Player.h">
       <Filter>ヘッダー ファイル\player</Filter>
     </ClInclude>
-    <ClInclude Include="player\Bullet.h">
-      <Filter>ヘッダー ファイル\player</Filter>
-    </ClInclude>
     <ClInclude Include="enemy\Enemy.h">
       <Filter>ヘッダー ファイル\enemy</Filter>
     </ClInclude>
@@ -255,7 +249,7 @@
     <ClInclude Include="player\OrbitBullet.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="player\DamageField.h">
+    <ClInclude Include="player\Bullet.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
