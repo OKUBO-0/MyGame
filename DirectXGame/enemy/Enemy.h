@@ -76,7 +76,7 @@ private:
     KamataEngine::WorldTransform worldTransform_; ///< 敵の位置・回転・スケールを保持するワールドトランスフォーム
     std::unique_ptr<KamataEngine::Model> enemyModel_; ///< 敵モデル（スマートポインタで管理）
 
-    float speed_ = 0.1f; ///< 移動速度
+    float speed_ = 0.15f; ///< 移動速度
 
     int32_t hp_ = 3;     ///< HP値
     int32_t exp_ = 0;    ///< 経験値

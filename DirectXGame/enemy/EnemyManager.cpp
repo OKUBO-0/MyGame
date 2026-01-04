@@ -6,7 +6,6 @@
 using namespace KamataEngine;
 
 void EnemyManager::Initialize(const std::string& csvPath, Player* player) {
-    // プレイヤー参照を保持し、CSVから敵を生成
     player_ = player;
     SpawnEnemiesFromCSV(csvPath);
 }
@@ -28,23 +27,21 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
         int32_t exp = 0;
         float distance = 0.0f;
 
-        // CSVの各列を読み込み（type, distance, count, hp, exp）
         std::getline(ss, value, ','); type = std::stoi(value);
         std::getline(ss, value, ','); distance = std::stof(value);
         std::getline(ss, value, ','); count = std::stoi(value);
         std::getline(ss, value, ','); hp = std::stoi(value);
         std::getline(ss, value, ','); exp = std::stoi(value);
 
-        // 指定された数だけ敵を円形に配置
         for (int32_t i = 0; i < count; ++i) {
-            float angle = (2.0f * 3.14159265f * i) / count;
+            // --- ★ ランダム角度で円周上にスポーン ---
+            float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
             Vector3 pos = {
                 player_->GetWorldPosition().x + std::cos(angle) * distance,
                 0.0f,
                 player_->GetWorldPosition().z + std::sin(angle) * distance
             };
 
-            // 敵インスタンス生成と初期化
             auto enemy = std::make_unique<Enemy>();
             enemy->SetHP(hp);
             enemy->SetEXP(exp);
@@ -60,24 +57,66 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
 }
 
 void EnemyManager::Update() {
-    // 各敵の更新処理
+
+    // --- 敵更新 ---
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
             enemy->Update();
         }
         else if (enemy->GetHP() <= 0 && enemy->JustDied()) {
-            // 死亡直後だけ煙パーティクル生成
+
+            auto orb = std::make_unique<ExpOrb>();
+            orb->Initialize(enemy->GetPosition(), enemy->GetEXP());
+            expOrbs_.push_back(std::move(orb));
+
             const int particleCount = 5;
             for (int i = 0; i < particleCount; ++i) {
                 auto p = std::make_unique<DeathParticle>();
                 p->Initialize(enemy->GetPosition());
                 deathParticles_.push_back(std::move(p));
             }
+
             enemy->ResetJustDied();
         }
     }
 
-    // パーティクル更新
+    // ============================================================
+    // ★ 追加：プレイヤーから離れた敵を円周上に再スポーンさせる
+    // ============================================================
+    {
+        Vector3 pPos = player_->GetWorldPosition();
+
+        float despawnDist = 70.0f;     // これより遠い敵は再スポーン
+        float respawnRadius = 60.0f;   // 再スポーンする円の半径
+
+        for (auto& enemy : enemies_) {
+            if (!enemy->IsActive()) continue;
+
+            Vector3 ePos = enemy->GetPosition();
+            float dx = ePos.x - pPos.x;
+            float dz = ePos.z - pPos.z;
+            float distSq = dx * dx + dz * dz;
+
+            if (distSq > despawnDist * despawnDist) {
+
+                // ランダム角度
+                float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
+
+                // 円周上のランダム位置
+                Vector3 newPos = {
+                    pPos.x + std::cos(angle) * respawnRadius,
+                    0.0f,
+                    pPos.z + std::sin(angle) * respawnRadius
+                };
+
+                enemy->SetPosition(newPos);
+            }
+        }
+    }
+    // ============================================================
+
+
+    // --- パーティクル更新 ---
     for (auto it = deathParticles_.begin(); it != deathParticles_.end();) {
         (*it)->Update();
         if (!(*it)->IsActive()) {
@@ -88,7 +127,19 @@ void EnemyManager::Update() {
         }
     }
 
-    // 敵同士の衝突判定と分離処理
+    // --- 経験値オーブ更新 ---
+    for (auto it = expOrbs_.begin(); it != expOrbs_.end();) {
+        (*it)->Update(player_->GetWorldPosition());
+        if (!(*it)->IsActive()) {
+            player_->AddEXP((*it)->GetEXP());
+            it = expOrbs_.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    // --- 敵同士の衝突処理 ---
     const float kMinDist = 3.0f;
     const float kPushStrength = 1.0f;
 
@@ -127,14 +178,16 @@ void EnemyManager::Update() {
 }
 
 void EnemyManager::Draw(Camera* camera) {
-    // アクティブな敵のみ描画
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
             enemy->Draw(camera);
         }
     }
 
-    // 死亡パーティクル描画
+    for (auto& orb : expOrbs_) {
+        orb->Draw(camera);
+    }
+
     for (auto& p : deathParticles_) {
         p->Draw(camera);
     }

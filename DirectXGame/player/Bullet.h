@@ -1,62 +1,29 @@
 #pragma once
 #include <KamataEngine.h>
-#include <cstdint>
 #include <memory>
 
-/// <summary>
-/// 弾（Bullet）を表すクラス。
-/// 初期化・更新・描画を行い、攻撃力や速度、方向などの状態を管理する。
-/// </summary>
 class Bullet {
 public:
-    /// <summary>
-    /// 弾を初期化する
-    /// </summary>
-    /// <param name="startPos">弾の開始位置</param>
-    /// <param name="direction">弾の進行方向</param>
-    /// <param name="speed">弾の速度（デフォルト0.5f）</param>
     void Initialize(const KamataEngine::Vector3& startPos,
         const KamataEngine::Vector3& direction,
-        float speed = kDefaultSpeed);
+        int32_t damage);
 
-    /// <summary>
-    /// 毎フレーム更新処理
-    /// 弾の移動やプレイヤーとの関連処理を行う
-    /// </summary>
-    /// <param name="playerPos">プレイヤーの座標</param>
     void Update(const KamataEngine::Vector3& playerPos);
-
-    /// <summary>
-    /// 描画処理
-    /// 弾モデルをカメラに基づいて描画する
-    /// </summary>
-    /// <param name="camera">描画に使用するカメラ</param>
     void Draw(KamataEngine::Camera* camera);
 
-    /// <summary>弾がアクティブかどうかを判定する</summary>
     bool IsActive() const { return active_; }
-
-    /// <summary>弾を非アクティブ状態にする</summary>
     void Deactivate() { active_ = false; }
 
-    /// <summary>弾の現在位置を取得する</summary>
+    int32_t GetDamage() const { return damage_; }
     KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
 
-    /// <summary>弾の攻撃力を設定する</summary>
-    void SetDamage(int32_t value) { damage_ = value; }
-
-    /// <summary>弾の攻撃力を取得する</summary>
-    int32_t GetDamage() const { return damage_; }
-
 private:
-    KamataEngine::WorldTransform worldTransform_; ///< 弾のワールドトランスフォーム
-    std::unique_ptr<KamataEngine::Model> model_;  ///< 弾モデル（スマートポインタで管理）
+    KamataEngine::WorldTransform worldTransform_;
+    std::unique_ptr<KamataEngine::Model> model_;
 
-    KamataEngine::Vector3 direction_{ 0.0f, 0.0f, 0.0f }; ///< 弾の進行方向
-    float speed_ = kDefaultSpeed;     ///< 弾の速度
-
-    bool active_ = false;             ///< アクティブ状態フラグ
-    int32_t damage_ = 1;              ///< 弾の攻撃力
-
-    static constexpr float kDefaultSpeed = 0.5f; ///< 弾のデフォルト速度
+    KamataEngine::Vector3 direction_{ 0,0,0 };
+    float speed_ = 0.6f;
+    float range_ = 50.0f;
+    int32_t damage_ = 1;
+    bool active_ = true;
 };

@@ -2,25 +2,21 @@
 using namespace KamataEngine;
 
 void Player::Initialize() {
-    // 入力・カメラ初期化
     input_ = Input::GetInstance();
     camera_.Initialize();
 
-    // プレイヤーモデル生成（タコモデル）
     playerModel_ = std::unique_ptr<Model>(Model::CreateFromOBJ("octopus"));
 
-    // ワールドトランスフォーム初期化（位置・回転・スケール）
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
 
-    // 初期ステータス設定
     level_ = 1;
-    nextLevelExp_ = 50;
-    bulletPower_ = 1;
-    bulletCooldown_ = 1.0f;
+    nextLevelExp_ = 10;
     maxLifeStock_ = 3;
     exp_ = 0;
     totalExp_ = 0;
+
+    AddOrbitBullets();
 }
 
 void Player::Update() {
@@ -54,8 +50,6 @@ void Player::Update() {
         }
     }
 
-    bulletTimer_ += kDeltaTime;
-
     // --- 無敵状態の処理（点滅演出） ---
     if (invincible_) {
         invincibleTimer_ -= kDeltaTime;
@@ -69,74 +63,66 @@ void Player::Update() {
         }
     }
 
-    // --- 敵探索（最も近い敵を狙う） ---
-    Vector3 nearestDir = { 0.0f, 0.0f, 1.0f };
-    float minDistSq = FLT_MAX;
-    bool enemyInRange = false;
+    // --- 周囲弾更新 ---
+    if (hasOrbitBullets_) {
+        for (auto& orb : orbitBullets_) {
+            orb->Update(worldTransform_.translation_);
+        }
+    }
 
-    if (enemyManager_) {
-        for (auto& enemy : enemyManager_->GetEnemies()) {
-            if (!enemy->IsActive()) continue;
+    // --- 通常弾発射処理 ---
+    bulletTimer_ += kDeltaTime;
 
-            Vector3 ePos = enemy->GetPosition();
-            Vector3 pPos = worldTransform_.translation_;
-            float dx = ePos.x - pPos.x;
-            float dz = ePos.z - pPos.z;
-            float distSq = dx * dx + dz * dz;
+    if (hasNormalBullet_ && bulletTimer_ >= bulletCooldown_) {
 
-            if (distSq <= range_ * range_) {
-                enemyInRange = true;
+        Vector3 nearestDir = { 0,0,1 };
+        float minDistSq = FLT_MAX;
+        bool enemyFound = false;
+
+        if (enemyManager_) {
+            for (auto& enemy : enemyManager_->GetEnemies()) {
+                if (!enemy->IsActive()) continue;
+
+                Vector3 ePos = enemy->GetPosition();
+                Vector3 pPos = worldTransform_.translation_;
+                float dx = ePos.x - pPos.x;
+                float dz = ePos.z - pPos.z;
+                float distSq = dx * dx + dz * dz;
+
                 if (distSq < minDistSq) {
                     minDistSq = distSq;
-                    nearestDir = { dx, 0.0f, dz };
+                    nearestDir = { dx, 0, dz };
+                    enemyFound = true;
                 }
             }
         }
-    }
 
-    if (enemyInRange) {
-        float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
-        if (len > 0.0f) {
-            nearestDir.x /= len;
-            nearestDir.z /= len;
-            worldTransform_.rotation_.y = std::atan2(nearestDir.x, nearestDir.z);
+        if (enemyFound) {
+            float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
+            if (len > 0.0f) {
+                nearestDir.x /= len;
+                nearestDir.z /= len;
+            }
+
+            AddNormalBullet(nearestDir);
+            bulletTimer_ = 0.0f;
         }
     }
-    else if (move.x != 0.0f || move.z != 0.0f) {
-        worldTransform_.rotation_.y = std::atan2(move.x, move.z);
-    }
 
-    // --- 弾発射処理 ---
-    if (bulletTimer_ >= bulletCooldown_ && enemyInRange) {
-        float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
-        if (len > 0.0f) {
-            nearestDir.x /= len;
-            nearestDir.z /= len;
-        }
-
-        auto bullet = std::make_unique<Bullet>();
-        bullet->Initialize(worldTransform_.translation_, nearestDir, 0.5f);
-        bullet->SetDamage(bulletPower_);
-        bullets_.push_back(std::move(bullet));
-        bulletTimer_ = 0.0f;
+    for (auto& b : bullets_) {
+        b->Update(worldTransform_.translation_);
     }
-
-    // --- 弾更新 ---
-    for (auto it = bullets_.begin(); it != bullets_.end();) {
-        (*it)->Update(worldTransform_.translation_);
-        if (!(*it)->IsActive()) {
-            it = bullets_.erase(it); // unique_ptr により自動解放
-        }
-        else {
-            ++it;
-        }
-    }
+    bullets_.erase(
+        std::remove_if(bullets_.begin(), bullets_.end(),
+            [](const std::unique_ptr<Bullet>& b) { return !b->IsActive(); }),
+        bullets_.end()
+    );
 
     // --- エフェクト更新 ---
     for (auto it = effects_.begin(); it != effects_.end();) {
         (*it)->Update();
         if (!(*it)->IsActive()) {
-            it = effects_.erase(it); // unique_ptr により自動解放
+            it = effects_.erase(it);
         }
         else {
             ++it;
@@ -153,34 +139,37 @@ void Player::Update() {
 }
 
 void Player::Draw() {
-    // --- プレイヤーモデル描画 ---
     if (visible_ && playerModel_) {
         playerModel_->Draw(worldTransform_, camera_);
     }
 
-    // --- 弾描画 ---
-    for (auto& bullet : bullets_) {
-        bullet->Draw(&camera_);
-    }
-
-    // --- エフェクト描画 ---
     for (auto& e : effects_) {
         e->Draw(&camera_);
+    }
+
+    if (hasNormalBullet_) {
+        for (auto& b : bullets_) {
+            b->Draw(&camera_);
+        }
+	}
+
+    if (hasOrbitBullets_) {
+        for (auto& orb : orbitBullets_) {
+            orb->Draw(&camera_);
+        }
     }
 }
 
 void Player::TakeDamage() {
     if (invincible_) return;
 
-    // --- ダメージ処理 ---
     lifeStock_--;
     invincible_ = true;
-    invincibleTimer_ = 1.0f; // 無敵時間（定数化可能）
+    invincibleTimer_ = 1.0f;
     visible_ = false;
 }
 
 void Player::AddEXP(int32_t amount) {
-    // --- 経験値加算処理 ---
     exp_ += amount;
     totalExp_ += amount;
     while (exp_ >= nextLevelExp_) {
@@ -191,16 +180,59 @@ void Player::AddEXP(int32_t amount) {
     }
 }
 
-void Player::UpgradeBulletPower() {
-    bulletPower_ += 1; // 弾攻撃力強化
+void Player::AddNormalBullet(const Vector3& dir) {
+    hasNormalBullet_ = true;
+    auto b = std::make_unique<Bullet>();
+    b->Initialize(worldTransform_.translation_, dir, bulletPower_);
+    bullets_.push_back(std::move(b));
 }
 
-void Player::UpgradeBulletCooldown() {
-    bulletCooldown_ -= 0.1f; // 弾発射間隔短縮
+void Player::UpgradeNormalBullet() {
+    bulletPower_++;
+    bulletCooldown_ -= 0.2f;
+    if (bulletCooldown_ < 0.2f) bulletCooldown_ = 0.2f;
 }
 
+// --- 周囲弾追加（初期は1発） ---
+void Player::AddOrbitBullets() {
+    hasOrbitBullets_ = true;
+    const int bulletCount = 1; // 初期は1発
+    orbitBullets_.clear();     // 念のためクリア
+
+    for (int i = 0; i < bulletCount; ++i) {
+        float angle = (2.0f * 3.14159265f * i) / bulletCount;
+        auto orb = std::make_unique<OrbitBullet>();
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle, 1);
+        orbitBullets_.push_back(std::move(orb));
+    }
+}
+
+// --- 周囲弾強化（弾数を増やし均等配置を再計算） ---
+void Player::UpgradeOrbitBullets() {
+    // 既存弾の強化
+    for (auto& orb : orbitBullets_) {
+        orb->UpgradeDamage();
+    }
+
+    // 新しい弾数（既存＋1）
+    int newCount = static_cast<int>(orbitBullets_.size()) + 1;
+
+    // 均等配置し直す
+    std::vector<std::unique_ptr<OrbitBullet>> newOrbs;
+    for (int i = 0; i < newCount; ++i) {
+        float angle = (2.0f * 3.14159265f * i) / newCount;
+        auto orb = std::make_unique<OrbitBullet>();
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle, 1);
+        newOrbs.push_back(std::move(orb));
+    }
+
+    // 新しいリストに差し替え
+    orbitBullets_ = std::move(newOrbs);
+}
+
+// --- HP回復 ---
 void Player::RecoverHP() {
-    lifeStock_ += 1; // HP回復
+    lifeStock_ += 1;
     if (lifeStock_ > maxLifeStock_) {
         lifeStock_ = maxLifeStock_;
     }

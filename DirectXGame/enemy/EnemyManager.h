@@ -8,6 +8,7 @@
 #include "Enemy.h"
 #include "Player.h"
 #include "DeathParticle.h"
+#include "ExpOrb.h"
 
 class Player;
 class Enemy;
@@ -52,4 +53,5 @@ private:
     Player* player_ = nullptr;                    ///< プレイヤー参照
 
     std::list<std::unique_ptr<DeathParticle>> deathParticles_; ///< 死亡パーティクルリスト
+    std::list<std::unique_ptr<ExpOrb>> expOrbs_;               ///< 経験値オーブリスト
 };
