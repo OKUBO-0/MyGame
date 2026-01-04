@@ -48,8 +48,6 @@ public:
     /// </summary>
     void SpawnEnemiesFromCSV(const std::string& filePath);
 
-    float RandomFloat(float min, float max);
-
 private:
     std::vector<std::unique_ptr<Enemy>> enemies_; ///< 敵リスト（スマートポインタで管理）
     Player* player_ = nullptr;                    ///< プレイヤー参照

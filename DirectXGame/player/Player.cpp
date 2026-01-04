@@ -20,7 +20,7 @@ void Player::Initialize() {
 }
 
 void Player::Update() {
-    const float kMoveSpeed = 0.9f;
+    const float kMoveSpeed = 0.2f;
     const float kDeltaTime = 0.016f;
 
     Vector3 move = { 0.0f, 0.0f, 0.0f };
