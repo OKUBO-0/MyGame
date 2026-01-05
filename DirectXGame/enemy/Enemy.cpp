@@ -29,12 +29,21 @@ void Enemy::SetPlayer(Player* player) {
 }
 
 void Enemy::SetModelByType(int32_t type) {
+    enemyType_ = type; // ★ 行動タイプをセット
+
     switch (type) {
     case 0: enemyModel_.reset(Model::CreateFromOBJ("Enemy1")); break;
     case 1: enemyModel_.reset(Model::CreateFromOBJ("Enemy2")); break;
     case 2: enemyModel_.reset(Model::CreateFromOBJ("Enemy3")); break;
     case 3: enemyModel_.reset(Model::CreateFromOBJ("Enemy4")); break;
     default: enemyModel_.reset(Model::CreateFromOBJ("octopus")); break;
+    }
+
+    // ★ type1 は純粋に速度を上げる 
+    if (type == 1) { 
+        speedMultiplier_ = 2.0f; // 通常の2倍速 
+    } else { 
+        speedMultiplier_ = 1.0f; 
     }
 
     if (!objectColor_) {
@@ -126,9 +135,11 @@ void Enemy::Update() {
                 // 進行方向に応じてY軸回転を設定
                 worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
 
+                float moveSpeed = speed_ * speedMultiplier_;
+
                 // プレイヤーに向かって移動
-                worldTransform_.translation_.x += dir.x * speed_;
-                worldTransform_.translation_.z += dir.z * speed_;
+                worldTransform_.translation_.x += dir.x * moveSpeed;
+                worldTransform_.translation_.z += dir.z * moveSpeed;
             }
         }
     }

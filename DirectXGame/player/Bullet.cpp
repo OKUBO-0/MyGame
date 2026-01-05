@@ -4,6 +4,7 @@ using namespace KamataEngine;
 void Bullet::Initialize(const Vector3& startPos,
     const Vector3& direction,
     int32_t damage) {
+
     worldTransform_.Initialize();
     worldTransform_.translation_ = startPos;
     direction_ = direction;
@@ -37,4 +38,43 @@ void Bullet::Update(const Vector3& playerPos) {
 void Bullet::Draw(Camera* camera) {
     if (!active_ || !model_) return;
     model_->Draw(worldTransform_, *camera);
+}
+
+// ★ Player が使う「最も近い敵の方向を取得する」関数
+bool Bullet::GetDirectionToNearestEnemy(
+    EnemyManager* enemyManager,
+    const Vector3& playerPos,
+    float range,
+    Vector3& outDir)
+{
+    if (!enemyManager) return false;
+
+    float minDistSq = range * range;
+    bool found = false;
+
+    for (auto& enemy : enemyManager->GetEnemies()) {
+        if (!enemy->IsActive()) continue;
+
+        Vector3 ePos = enemy->GetPosition();
+        float dx = ePos.x - playerPos.x;
+        float dz = ePos.z - playerPos.z;
+        float distSq = dx * dx + dz * dz;
+
+        if (distSq < minDistSq) {
+            minDistSq = distSq;
+            outDir = { dx, 0, dz };
+            found = true;
+        }
+    }
+
+    if (!found) return false;
+
+    // 正規化
+    float len = std::sqrt(outDir.x * outDir.x + outDir.z * outDir.z);
+    if (len > 0.0f) {
+        outDir.x /= len;
+        outDir.z /= len;
+    }
+
+    return true;
 }

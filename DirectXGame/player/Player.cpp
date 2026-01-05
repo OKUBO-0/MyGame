@@ -40,7 +40,7 @@ void Player::Update() {
         worldTransform_.translation_.z += move.z;
         worldTransform_.rotation_.y = std::atan2(move.x, move.z);
 
-        // --- 移動時のエフェクト生成 ---
+        // --- 移動時のエフェクト ---
         effectTimer_ += kDeltaTime;
         if (effectTimer_ >= kEffectInterval) {
             auto e = std::make_unique<RippleEffect>();
@@ -50,7 +50,7 @@ void Player::Update() {
         }
     }
 
-    // --- 無敵状態の処理（点滅演出） ---
+    // --- 無敵処理 ---
     if (invincible_) {
         invincibleTimer_ -= kDeltaTime;
         if (invincibleTimer_ <= 0.0f) {
@@ -70,45 +70,24 @@ void Player::Update() {
         }
     }
 
-    // --- 通常弾発射処理 ---
+    // --- 通常弾発射処理（超スッキリ版） ---
     bulletTimer_ += kDeltaTime;
 
     if (hasNormalBullet_ && bulletTimer_ >= bulletCooldown_) {
 
-        Vector3 nearestDir = { 0,0,1 };
-        float minDistSq = FLT_MAX;
-        bool enemyFound = false;
+        // ★ Bullet の射程を参照
+        float attackRange = bullets_.empty() ? 30.0f : bullets_.front()->GetRange();
 
-        if (enemyManager_) {
-            for (auto& enemy : enemyManager_->GetEnemies()) {
-                if (!enemy->IsActive()) continue;
+        Vector3 dir;
 
-                Vector3 ePos = enemy->GetPosition();
-                Vector3 pPos = worldTransform_.translation_;
-                float dx = ePos.x - pPos.x;
-                float dz = ePos.z - pPos.z;
-                float distSq = dx * dx + dz * dz;
-
-                if (distSq < minDistSq) {
-                    minDistSq = distSq;
-                    nearestDir = { dx, 0, dz };
-                    enemyFound = true;
-                }
-            }
-        }
-
-        if (enemyFound) {
-            float len = std::sqrt(nearestDir.x * nearestDir.x + nearestDir.z * nearestDir.z);
-            if (len > 0.0f) {
-                nearestDir.x /= len;
-                nearestDir.z /= len;
-            }
-
-            AddNormalBullet(nearestDir);
+        // ★ Bullet に「射程内の敵探索＋方向計算」を任せる
+        if (Bullet::GetDirectionToNearestEnemy(enemyManager_, worldTransform_.translation_, attackRange, dir)) {
+            AddNormalBullet(dir);
             bulletTimer_ = 0.0f;
         }
     }
 
+    // --- 弾更新 ---
     for (auto& b : bullets_) {
         b->Update(worldTransform_.translation_);
     }
@@ -151,7 +130,7 @@ void Player::Draw() {
         for (auto& b : bullets_) {
             b->Draw(&camera_);
         }
-	}
+    }
 
     if (hasOrbitBullets_) {
         for (auto& orb : orbitBullets_) {
@@ -193,44 +172,35 @@ void Player::UpgradeNormalBullet() {
     if (bulletCooldown_ < 0.2f) bulletCooldown_ = 0.2f;
 }
 
-// --- 周囲弾追加（初期は1発） ---
 void Player::AddOrbitBullets() {
     hasOrbitBullets_ = true;
-    const int bulletCount = 1; // 初期は1発
-    orbitBullets_.clear();     // 念のためクリア
+    const int bulletCount = 1;
+    orbitBullets_.clear();
 
     for (int i = 0; i < bulletCount; ++i) {
         float angle = (2.0f * 3.14159265f * i) / bulletCount;
         auto orb = std::make_unique<OrbitBullet>();
-        orb->Initialize(worldTransform_.translation_, 10.0f, angle, 1);
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle, orbitBulletPower_);
         orbitBullets_.push_back(std::move(orb));
     }
 }
 
-// --- 周囲弾強化（弾数を増やし均等配置を再計算） ---
 void Player::UpgradeOrbitBullets() {
-    // 既存弾の強化
-    for (auto& orb : orbitBullets_) {
-        orb->UpgradeDamage();
-    }
+    orbitBulletPower_++;
 
-    // 新しい弾数（既存＋1）
     int newCount = static_cast<int>(orbitBullets_.size()) + 1;
 
-    // 均等配置し直す
     std::vector<std::unique_ptr<OrbitBullet>> newOrbs;
     for (int i = 0; i < newCount; ++i) {
         float angle = (2.0f * 3.14159265f * i) / newCount;
         auto orb = std::make_unique<OrbitBullet>();
-        orb->Initialize(worldTransform_.translation_, 10.0f, angle, 1);
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle, orbitBulletPower_);
         newOrbs.push_back(std::move(orb));
     }
 
-    // 新しいリストに差し替え
     orbitBullets_ = std::move(newOrbs);
 }
 
-// --- HP回復 ---
 void Player::RecoverHP() {
     lifeStock_ += 1;
     if (lifeStock_ > maxLifeStock_) {
