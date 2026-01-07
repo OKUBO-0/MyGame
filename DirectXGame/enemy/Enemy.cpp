@@ -92,18 +92,18 @@ void Enemy::ResetJustDied() {
 void Enemy::Update() {
     if (!active_) return;
 
-    const float kDeltaTime = 0.016f; // 60FPS前提
+    const float kDeltaTime = 0.016f;
 
-    // ヒット点滅処理
+    // --- ヒット点滅処理 ---
     if (hitFlashTimer_ > 0.0f) {
         hitFlashTimer_ -= kDeltaTime;
         if (hitFlashTimer_ <= 0.0f) {
             hitFlashTimer_ = 0.0f;
-            if (objectColor_) objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+            if (objectColor_) objectColor_->SetColor({ 1,1,1,1 });
         }
     }
 
-    // ノックバック処理
+    // --- ノックバック処理 ---
     if (knockbackTimer_ > 0.0f) {
         worldTransform_.translation_.x += knockbackVelocity_.x;
         worldTransform_.translation_.z += knockbackVelocity_.z;
@@ -114,38 +114,84 @@ void Enemy::Update() {
         knockbackTimer_ -= kDeltaTime;
         if (knockbackTimer_ <= 0.0f) {
             knockbackTimer_ = 0.0f;
-            knockbackVelocity_ = { 0.0f, 0.0f, 0.0f };
+            knockbackVelocity_ = { 0,0,0 };
         }
     }
     else {
-        // プレイヤー追尾処理
-        if (player_) {
-            const Vector3& playerPos = player_->GetWorldPosition();
-            Vector3 dir = {
-                playerPos.x - worldTransform_.translation_.x,
-                0.0f,
-                playerPos.z - worldTransform_.translation_.z
-            };
+        // ★★★ type2 だけ特別な動き（円軌道AI） ★★★
+        if (enemyType_ == 2) {
+            UpdateType2();
+        }
+        else {
+            // ★ 既存の追尾処理（type0, type1, type3）
+            if (player_) {
+                const Vector3& playerPos = player_->GetWorldPosition();
+                Vector3 dir = {
+                    playerPos.x - worldTransform_.translation_.x,
+                    0.0f,
+                    playerPos.z - worldTransform_.translation_.z
+                };
 
-            float len = std::sqrt(dir.x * dir.x + dir.z * dir.z);
-            if (len > 0.0f) {
-                dir.x /= len;
-                dir.z /= len;
+                float len = std::sqrt(dir.x * dir.x + dir.z * dir.z);
+                if (len > 0.0f) {
+                    dir.x /= len;
+                    dir.z /= len;
 
-                // 進行方向に応じてY軸回転を設定
-                worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
+                    worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
 
-                float moveSpeed = speed_ * speedMultiplier_;
-
-                // プレイヤーに向かって移動
-                worldTransform_.translation_.x += dir.x * moveSpeed;
-                worldTransform_.translation_.z += dir.z * moveSpeed;
+                    float moveSpeed = speed_ * speedMultiplier_;
+                    worldTransform_.translation_.x += dir.x * moveSpeed;
+                    worldTransform_.translation_.z += dir.z * moveSpeed;
+                }
             }
         }
     }
 
-    // 行列更新
     worldTransform_.UpdateMatrix();
+}
+
+void Enemy::UpdateType2() {
+    if (!player_) return;
+
+    const Vector3& playerPos = player_->GetWorldPosition();
+
+    // プレイヤー方向
+    Vector3 toPlayer = {
+        playerPos.x - worldTransform_.translation_.x,
+        0.0f,
+        playerPos.z - worldTransform_.translation_.z
+    };
+
+    float dist = std::sqrt(toPlayer.x * toPlayer.x + toPlayer.z * toPlayer.z);
+    if (dist > 0.001f) {
+        toPlayer.x /= dist;
+        toPlayer.z /= dist;
+    }
+
+    // 横方向（円軌道）
+    Vector3 side = { -toPlayer.z, 0.0f, toPlayer.x };
+
+    // ★ 速度を個別に適用
+    Vector3 finalDir = {
+        toPlayer.x * approachSpeed_ + side.x * circleSpeed_,
+        0.0f,
+        toPlayer.z * approachSpeed_ + side.z * circleSpeed_
+    };
+
+    // 正規化
+    float len = std::sqrt(finalDir.x * finalDir.x + finalDir.z * finalDir.z);
+    if (len > 0.001f) {
+        finalDir.x /= len;
+        finalDir.z /= len;
+    }
+
+    // ★ 最終移動速度
+    float moveSpeed = speed_ * speedMultiplier_;
+
+    worldTransform_.translation_.x += finalDir.x * moveSpeed;
+    worldTransform_.translation_.z += finalDir.z * moveSpeed;
+
+    worldTransform_.rotation_.y = std::atan2(finalDir.x, finalDir.z);
 }
 
 void Enemy::Draw(Camera* camera) {

@@ -110,10 +110,10 @@
     <ClCompile Include="3d\GridPlane.cpp" />
     <ClCompile Include="3d\DeathParticle.cpp" />
     <ClCompile Include="3d\ExpOrb.cpp" />
-    <ClCompile Include="player\Bullet.cpp" />
     <ClCompile Include="GameData.cpp" />
     <ClCompile Include="3d\RippleEffect.cpp" />
     <ClCompile Include="3d\HitParticle.cpp" />
+    <ClCompile Include="player\NormalBullet.cpp" />
     <ClCompile Include="player\OrbitBullet.cpp" />
     <ClCompile Include="ui\HpGauge.cpp" />
     <ClCompile Include="ui\ExpGauge.cpp" />
@@ -212,6 +212,7 @@
     <ClInclude Include="3d\GridPlane.h" />
     <ClInclude Include="3d\DeathParticle.h" />
     <ClInclude Include="3d\ExpOrb.h" />
+    <ClInclude Include="player\NormalBullet.h" />
     <ClInclude Include="player\Bullet.h" />
     <ClInclude Include="GameData.h" />
     <ClInclude Include="3d\RippleEffect.h" />

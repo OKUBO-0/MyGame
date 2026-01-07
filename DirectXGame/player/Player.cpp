@@ -1,6 +1,9 @@
 #include "Player.h"
 using namespace KamataEngine;
 
+//==================================================
+//  初期化
+//==================================================
 void Player::Initialize() {
     input_ = Input::GetInstance();
     camera_.Initialize();
@@ -15,22 +18,28 @@ void Player::Initialize() {
     maxLifeStock_ = 3;
     exp_ = 0;
     totalExp_ = 0;
-
-    AddOrbitBullets();
 }
 
+//==================================================
+//  更新
+//==================================================
 void Player::Update() {
     const float kMoveSpeed = 0.2f;
     const float kDeltaTime = 0.016f;
 
     Vector3 move = { 0.0f, 0.0f, 0.0f };
 
-    // --- 入力による移動処理 ---
-    if (input_->PushKey(DIK_W)) { move.z += kMoveSpeed; }
-    if (input_->PushKey(DIK_S)) { move.z -= kMoveSpeed; }
-    if (input_->PushKey(DIK_A)) { move.x -= kMoveSpeed; }
-    if (input_->PushKey(DIK_D)) { move.x += kMoveSpeed; }
+    // -------------------------
+    // 入力処理
+    // -------------------------
+    if (input_->PushKey(DIK_W)) move.z += kMoveSpeed;
+    if (input_->PushKey(DIK_S)) move.z -= kMoveSpeed;
+    if (input_->PushKey(DIK_A)) move.x -= kMoveSpeed;
+    if (input_->PushKey(DIK_D)) move.x += kMoveSpeed;
 
+    // -------------------------
+    // 移動処理
+    // -------------------------
     float moveLen = std::sqrt(move.x * move.x + move.z * move.z);
     if (moveLen > 0.0f) {
         move.x = (move.x / moveLen) * kMoveSpeed;
@@ -40,7 +49,7 @@ void Player::Update() {
         worldTransform_.translation_.z += move.z;
         worldTransform_.rotation_.y = std::atan2(move.x, move.z);
 
-        // --- 移動時のエフェクト ---
+        // 移動エフェクト
         effectTimer_ += kDeltaTime;
         if (effectTimer_ >= kEffectInterval) {
             auto e = std::make_unique<RippleEffect>();
@@ -50,7 +59,9 @@ void Player::Update() {
         }
     }
 
-    // --- 無敵処理 ---
+    // -------------------------
+    // 無敵処理
+    // -------------------------
     if (invincible_) {
         invincibleTimer_ -= kDeltaTime;
         if (invincibleTimer_ <= 0.0f) {
@@ -63,41 +74,65 @@ void Player::Update() {
         }
     }
 
-    // --- 周囲弾更新 ---
+    // -------------------------
+    // 通常弾（NormalBullet）
+    // -------------------------
+    if (hasNormalBullets_) {
+        normalBulletTimer_ += kDeltaTime;
+
+        // 敵探索
+        Enemy* nearest = nullptr;
+        float nearestDistSq = 999999.0f;
+
+        for (auto& e : enemyManager_->GetEnemies()) {
+            if (!e->IsActive()) continue;
+
+            Vector3 ePos = e->GetPosition();
+            Vector3 pPos = worldTransform_.translation_;
+
+            float dx = ePos.x - pPos.x;
+            float dz = ePos.z - pPos.z;
+            float distSq = dx * dx + dz * dz;
+
+            if (distSq < nearestDistSq && distSq < 30.0f * 30.0f) {
+                nearestDistSq = distSq;
+                nearest = e.get();
+            }
+        }
+
+        // 発射
+        if (nearest && normalBulletTimer_ >= normalBulletInterval_) {
+            auto b = std::make_unique<NormalBullet>();
+            b->Initialize(worldTransform_.translation_, nearest->GetPosition(), normalBulletPower_);
+            normalBullets_.push_back(std::move(b));
+            normalBulletTimer_ = 0.0f;
+        }
+
+        // 更新
+        for (auto& b : normalBullets_) {
+            b->Update(worldTransform_.translation_);
+        }
+
+        // 削除
+        normalBullets_.erase(
+            std::remove_if(normalBullets_.begin(), normalBullets_.end(),
+                [](const std::unique_ptr<NormalBullet>& b) { return !b->IsActive(); }),
+            normalBullets_.end()
+        );
+    }
+
+    // -------------------------
+    // 周囲弾（OrbitBullet）
+    // -------------------------
     if (hasOrbitBullets_) {
         for (auto& orb : orbitBullets_) {
             orb->Update(worldTransform_.translation_);
         }
     }
 
-    // --- 通常弾発射処理（超スッキリ版） ---
-    bulletTimer_ += kDeltaTime;
-
-    if (hasNormalBullet_ && bulletTimer_ >= bulletCooldown_) {
-
-        // ★ Bullet の射程を参照
-        float attackRange = bullets_.empty() ? 30.0f : bullets_.front()->GetRange();
-
-        Vector3 dir;
-
-        // ★ Bullet に「射程内の敵探索＋方向計算」を任せる
-        if (Bullet::GetDirectionToNearestEnemy(enemyManager_, worldTransform_.translation_, attackRange, dir)) {
-            AddNormalBullet(dir);
-            bulletTimer_ = 0.0f;
-        }
-    }
-
-    // --- 弾更新 ---
-    for (auto& b : bullets_) {
-        b->Update(worldTransform_.translation_);
-    }
-    bullets_.erase(
-        std::remove_if(bullets_.begin(), bullets_.end(),
-            [](const std::unique_ptr<Bullet>& b) { return !b->IsActive(); }),
-        bullets_.end()
-    );
-
-    // --- エフェクト更新 ---
+    // -------------------------
+    // エフェクト更新
+    // -------------------------
     for (auto it = effects_.begin(); it != effects_.end();) {
         (*it)->Update();
         if (!(*it)->IsActive()) {
@@ -108,15 +143,22 @@ void Player::Update() {
         }
     }
 
-    // --- カメラ追従 ---
+    // -------------------------
+    // カメラ追従
+    // -------------------------
     camera_.translation_.x = worldTransform_.translation_.x;
     camera_.translation_.z = worldTransform_.translation_.z;
     camera_.UpdateMatrix();
 
-    // --- 行列更新 ---
+    // -------------------------
+    // 行列更新
+    // -------------------------
     worldTransform_.UpdateMatrix();
 }
 
+//==================================================
+//  描画
+//==================================================
 void Player::Draw() {
     if (visible_ && playerModel_) {
         playerModel_->Draw(worldTransform_, camera_);
@@ -126,12 +168,12 @@ void Player::Draw() {
         e->Draw(&camera_);
     }
 
-    if (hasNormalBullet_) {
-        for (auto& b : bullets_) {
-            b->Draw(&camera_);
-        }
+    // 通常弾描画
+    for (auto& b : normalBullets_) {
+        b->Draw(&camera_);
     }
 
+    // 周囲弾描画
     if (hasOrbitBullets_) {
         for (auto& orb : orbitBullets_) {
             orb->Draw(&camera_);
@@ -139,6 +181,9 @@ void Player::Draw() {
     }
 }
 
+//==================================================
+//  ダメージ処理
+//==================================================
 void Player::TakeDamage() {
     if (invincible_) return;
 
@@ -148,9 +193,13 @@ void Player::TakeDamage() {
     visible_ = false;
 }
 
+//==================================================
+//  経験値処理
+//==================================================
 void Player::AddEXP(int32_t amount) {
     exp_ += amount;
     totalExp_ += amount;
+
     while (exp_ >= nextLevelExp_) {
         exp_ -= nextLevelExp_;
         level_++;
@@ -159,51 +208,61 @@ void Player::AddEXP(int32_t amount) {
     }
 }
 
-void Player::AddNormalBullet(const Vector3& dir) {
-    hasNormalBullet_ = true;
-    auto b = std::make_unique<Bullet>();
-    b->Initialize(worldTransform_.translation_, dir, bulletPower_);
-    bullets_.push_back(std::move(b));
+//==================================================
+//  HP回復
+//==================================================
+void Player::RecoverHP() {
+    lifeStock_++;
+    if (lifeStock_ > maxLifeStock_) {
+        lifeStock_ = maxLifeStock_;
+    }
 }
 
-void Player::UpgradeNormalBullet() {
-    bulletPower_++;
-    bulletCooldown_ -= 0.2f;
-    if (bulletCooldown_ < 0.2f) bulletCooldown_ = 0.2f;
+void Player::UpgradeNormalBullets() {
+    normalBulletPower_++;
+
+    // 発射間隔短縮
+    normalBulletInterval_ *= 0.5f;
 }
 
+//==================================================
+//  周囲弾生成
+//==================================================
 void Player::AddOrbitBullets() {
     hasOrbitBullets_ = true;
+
     const int bulletCount = 1;
     orbitBullets_.clear();
 
     for (int i = 0; i < bulletCount; ++i) {
         float angle = (2.0f * 3.14159265f * i) / bulletCount;
+
         auto orb = std::make_unique<OrbitBullet>();
         orb->Initialize(worldTransform_.translation_, 10.0f, angle, orbitBulletPower_);
+
         orbitBullets_.push_back(std::move(orb));
     }
 }
 
+//==================================================
+//  周囲弾強化（数を増やす）
+//==================================================
 void Player::UpgradeOrbitBullets() {
     orbitBulletPower_++;
 
     int newCount = static_cast<int>(orbitBullets_.size()) + 1;
 
     std::vector<std::unique_ptr<OrbitBullet>> newOrbs;
+    newOrbs.reserve(newCount);
+
     for (int i = 0; i < newCount; ++i) {
         float angle = (2.0f * 3.14159265f * i) / newCount;
+
         auto orb = std::make_unique<OrbitBullet>();
         orb->Initialize(worldTransform_.translation_, 10.0f, angle, orbitBulletPower_);
+
         newOrbs.push_back(std::move(orb));
     }
 
     orbitBullets_ = std::move(newOrbs);
-}
-
-void Player::RecoverHP() {
-    lifeStock_ += 1;
-    if (lifeStock_ > maxLifeStock_) {
-        lifeStock_ = maxLifeStock_;
-    }
 }

@@ -53,8 +53,11 @@ void GameScene::Initialize() {
     // レベルアップ演出用スプライト生成
     uint32_t levelUpTex = TextureManager::Load("levelUp.png");
     levelUpOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(levelUpTex, { 0, 0 }));
-    levelUpOverlay_->SetSize({ 1280, 720 });
     levelUpOverlay_->SetColor({ 1, 1, 1, 1 });
+
+    // 矢印スプライト生成
+    uint32_t arrowTex = TextureManager::Load("arrow.png");
+    arrowSprite_ = std::unique_ptr<Sprite>(Sprite::Create(arrowTex, { 0, 0 }));
 
     // 各種UI生成
     expGauge_ = std::make_unique<ExpGauge>();
@@ -73,10 +76,6 @@ void GameScene::Initialize() {
 
     skyDome_ = std::make_unique<SkyDome>();
     skyDome_->Initialize();
-
-    // 矢印スプライト生成
-    uint32_t arrowTex = TextureManager::Load("arrow.png");
-    arrowSprite_ = std::unique_ptr<Sprite>(Sprite::Create(arrowTex, { 500, 300 }));
 }
 
 void GameScene::Update() {
@@ -176,17 +175,6 @@ void GameScene::Update() {
     if (gridPlane_) { gridPlane_->Update(); }
     if (skyDome_) { skyDome_->Update(); }
 
-    // --- ヒットパーティクル更新 ---
-    for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
-        (*it)->Update();
-        if (!(*it)->IsActive()) {
-            it = hitParticles_.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
-
     // --- プレイヤー死亡演出 ---
     if (player_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
         deathFadeInStarted_ = true;
@@ -233,22 +221,17 @@ void GameScene::Update() {
             levelUpSelection_ = std::max<int32_t>(0, levelUpSelection_ - 1);
         }
         else if (input_->TriggerKey(DIK_S)) {
-            levelUpSelection_ = std::min<int32_t>(2, levelUpSelection_ + 1);
+            levelUpSelection_ = std::min<int32_t>(1, levelUpSelection_ + 1);
         }
         switch (levelUpSelection_) {
-        case 0: arrowSprite_->SetPosition({ 100, 100 }); break;
-        case 1: arrowSprite_->SetPosition({ 100, 200 }); break;
-        case 2: arrowSprite_->SetPosition({ 100, 300 }); break;
+        case 0: arrowSprite_->SetPosition({ 0, 0 }); break;
+        case 1: arrowSprite_->SetPosition({ 0, 140 }); break;
+        case 2: arrowSprite_->SetPosition({ 0, 280 }); break;
         }
         if (input_->TriggerKey(DIK_RETURN) || input_->TriggerKey(DIK_SPACE)) {
             switch (levelUpSelection_) {
             case 0: // 通常弾
-                if (!player_->HasNormalBullet()) {
-                    player_->AddNormalBullet({ 0,0,1 }); // 初回解禁
-                }
-                else {
-                    player_->UpgradeNormalBullet();    // 強化
-                }
+                player_->UpgradeNormalBullets();    // 強化
                 break;
             case 1: // 周囲弾
                 if (!player_->HasOrbitBullets()) {
@@ -270,116 +253,8 @@ void GameScene::Update() {
     player_->Update();
     enemyManager_.Update();
 
-    // --- 通常弾と敵の当たり判定 ---
-    for (auto& bullet : player_->GetBullets()) {
-        if (!bullet->IsActive()) continue;
-
-        for (auto& enemy : enemyManager_.GetEnemies()) {
-            if (!enemy->IsActive()) continue;
-
-            Vector3 bPos = bullet->GetPosition();
-            Vector3 ePos = enemy->GetPosition();
-            float dx = bPos.x - ePos.x;
-            float dz = bPos.z - ePos.z;
-            float distSq = dx * dx + dz * dz;
-
-            if (distSq < 4.0f) {
-
-                // --- ノックバック処理 ---
-                Vector3 knockDir = { ePos.x - bPos.x, 0, ePos.z - bPos.z };
-                float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
-                if (len > 0.0f) {
-                    knockDir.x /= len;
-                    knockDir.z /= len;
-                }
-
-                float knockStrength = 0.6f + bullet->GetDamage() * 0.15f;
-                enemy->TakeDamage(bullet->GetDamage(), knockDir, knockStrength);
-
-                // --- ★ ヒットパーティクル生成（追加部分） ---
-                static constexpr int32_t kSparkCount = 4;
-                for (int32_t i = 0; i < kSparkCount; ++i) {
-                    auto spark = std::make_unique<HitParticle>();
-                    spark->Initialize(bPos);
-                    hitParticles_.push_back(std::move(spark));
-                }
-
-                // --- 弾を消す ---
-                bullet->Deactivate();
-            }
-        }
-    }
-
-    // --- 周囲弾と敵の当たり判定 ---
-    for (auto& orb : player_->GetOrbitBullets()) {
-        if (!orb->IsActive()) continue;
-        for (auto& enemy : enemyManager_.GetEnemies()) {
-            if (!enemy->IsActive()) continue;
-
-            Vector3 oPos = orb->GetPosition();
-            Vector3 ePos = enemy->GetPosition();
-            float dx = oPos.x - ePos.x;
-            float dz = oPos.z - ePos.z;
-            float distSq = dx * dx + dz * dz;
-
-            if (distSq < 5.0f) {
-                // --- 追加: ヒットクールタイム判定 ---
-                if (!orb->CanHitEnemy(enemy.get())) continue;
-
-                orb->RegisterHit(enemy.get());
-
-                Vector3 knockDir = { ePos.x - oPos.x, 0.0f, ePos.z - oPos.z };
-                float knockLen = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
-                if (knockLen > 0.0001f) {
-                    knockDir.x /= knockLen;
-                    knockDir.z /= knockLen;
-                }
-                float knockStrength = 0.5f + static_cast<float>(orb->GetDamage()) * 0.1f;
-                enemy->TakeDamage(orb->GetDamage(), knockDir, knockStrength);
-
-                // ヒット演出
-                Vector3 hitPos = oPos;
-                static constexpr int32_t kSparkCount = 4;
-                for (int32_t i = 0; i < kSparkCount; ++i) {
-                    hitParticles_.push_back(std::make_unique<HitParticle>());
-                    hitParticles_.back()->Initialize(hitPos);
-                }
-            }
-        }
-    }
-
-    // --- プレイヤーと敵の接触判定 ---
-    for (auto& enemy : enemyManager_.GetEnemies()) {
-        if (!enemy->IsActive()) continue;
-
-        Vector3 ePos = enemy->GetPosition();
-        Vector3 pPos = player_->GetWorldPosition();
-        float dx = ePos.x - pPos.x;
-        float dz = ePos.z - pPos.z;
-        float distSq = dx * dx + dz * dz;
-
-        const float minDist = 3.0f;       // 最低限保つべき距離
-        const float pushStrength = 1.0f;  // 押し戻しの強さ
-
-        if (distSq < minDist * minDist && distSq > 0.0001f) {
-            float dist = std::sqrt(distSq);
-            float overlap = minDist - dist;
-
-            // 正規化ベクトル（押し戻す方向）
-            float nx = dx / dist;
-            float nz = dz / dist;
-
-            // 敵を押し戻す
-            ePos.x += nx * overlap * pushStrength;
-            ePos.z += nz * overlap * pushStrength;
-            enemy->SetPosition(ePos);
-
-            // プレイヤーが無敵でなければダメージを受ける
-            if (!player_->IsInvincible()) {
-                player_->TakeDamage();
-            }
-        }
-    }
+    // --- 当たり判定（EnemyManager に委譲） --- 
+    enemyManager_.CheckCollisions(player_.get());
 }
 
 void GameScene::Draw() {
@@ -401,11 +276,6 @@ void GameScene::Draw() {
         skyDome_->Draw(); // 天球背景
     }
 
-    // --- ヒットパーティクル描画 ---
-    for (auto& particle : hitParticles_) {
-        particle->Draw(&player_->GetCamera());
-    }
-
     // --- プレイヤー描画 ---
     if (player_) {
         player_->Draw();
@@ -415,6 +285,8 @@ void GameScene::Draw() {
     if (startState_ == StartState::Play) {
         enemyManager_.Draw(&player_->GetCamera());
     }
+
+    enemyManager_.DrawHitParticles(&player_->GetCamera());
 
     // --- モデル描画の後処理 ---
     Model::PostDraw();

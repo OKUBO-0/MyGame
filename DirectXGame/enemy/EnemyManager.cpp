@@ -177,6 +177,137 @@ void EnemyManager::Update() {
     }
 }
 
+void EnemyManager::CheckCollisions(Player* player)
+{
+    // ============================
+    // NormalBullet と敵の当たり判定
+    // ============================
+    for (auto& bullet : player->GetNormalBullets()) {
+        if (!bullet->IsActive()) continue;
+
+        for (auto& enemy : enemies_) {
+            if (!enemy->IsActive()) continue;
+
+            Vector3 bPos = bullet->GetPosition();
+            Vector3 ePos = enemy->GetPosition();
+
+            float dx = bPos.x - ePos.x;
+            float dz = bPos.z - ePos.z;
+            float distSq = dx * dx + dz * dz;
+
+            if (distSq < 4.0f) {
+
+                if (!bullet->CanHitEnemy(enemy.get())) continue;
+                bullet->RegisterHit(enemy.get());
+
+                Vector3 knockDir = { ePos.x - bPos.x, 0, ePos.z - bPos.z };
+                float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
+                if (len > 0.0f) {
+                    knockDir.x /= len;
+                    knockDir.z /= len;
+                }
+
+                float knockStrength = 0.6f + bullet->GetDamage() * 0.15f;
+                enemy->TakeDamage(bullet->GetDamage(), knockDir, knockStrength);
+
+                for (int i = 0; i < 4; ++i) {
+                    auto spark = std::make_unique<HitParticle>();
+                    spark->Initialize(bPos);
+                    hitParticles_.push_back(std::move(spark));
+                }
+
+                bullet->Deactivate();
+            }
+        }
+    }
+
+    // ============================
+    // OrbitBullet と敵の当たり判定
+    // ============================
+    for (auto& orb : player->GetOrbitBullets()) {
+        if (!orb->IsActive()) continue;
+
+        for (auto& enemy : enemies_) {
+            if (!enemy->IsActive()) continue;
+
+            Vector3 oPos = orb->GetPosition();
+            Vector3 ePos = enemy->GetPosition();
+
+            float dx = oPos.x - ePos.x;
+            float dz = oPos.z - ePos.z;
+            float distSq = dx * dx + dz * dz;
+
+            if (distSq < 25.0f) {
+
+                if (!orb->CanHitEnemy(enemy.get())) continue;
+                orb->RegisterHit(enemy.get());
+
+                Vector3 knockDir = { ePos.x - oPos.x, 0, ePos.z - oPos.z };
+                float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
+                if (len > 0.0f) {
+                    knockDir.x /= len;
+                    knockDir.z /= len;
+                }
+
+                float knockStrength = 0.5f + orb->GetDamage() * 0.1f;
+                enemy->TakeDamage(orb->GetDamage(), knockDir, knockStrength);
+
+                for (int i = 0; i < 4; ++i) {
+                    auto spark = std::make_unique<HitParticle>();
+                    spark->Initialize(oPos);
+                    hitParticles_.push_back(std::move(spark));
+                }
+            }
+        }
+    }
+
+    // ============================
+    // プレイヤーと敵の接触判定
+    // ============================
+    Vector3 pPos = player->GetWorldPosition();
+
+    for (auto& enemy : enemies_) {
+        if (!enemy->IsActive()) continue;
+
+        Vector3 ePos = enemy->GetPosition();
+        float dx = ePos.x - pPos.x;
+        float dz = ePos.z - pPos.z;
+        float distSq = dx * dx + dz * dz;
+
+        const float minDist = 3.0f;
+
+        if (distSq < minDist * minDist && distSq > 0.0001f) {
+
+            float dist = std::sqrt(distSq);
+            float overlap = minDist - dist;
+
+            float nx = dx / dist;
+            float nz = dz / dist;
+
+            ePos.x += nx * overlap;
+            ePos.z += nz * overlap;
+            enemy->SetPosition(ePos);
+
+            if (!player->IsInvincible()) {
+                player->TakeDamage();
+            }
+        }
+    }
+
+    // ============================
+    // ヒットパーティクル更新
+    // ============================
+    for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
+        (*it)->Update();
+        if (!(*it)->IsActive()) {
+            it = hitParticles_.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
 void EnemyManager::Draw(Camera* camera) {
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
@@ -189,6 +320,12 @@ void EnemyManager::Draw(Camera* camera) {
     }
 
     for (auto& p : deathParticles_) {
+        p->Draw(camera);
+    }
+}
+
+void EnemyManager::DrawHitParticles(Camera* camera) {
+    for (auto& p : hitParticles_) {
         p->Draw(camera);
     }
 }

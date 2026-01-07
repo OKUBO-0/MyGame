@@ -7,11 +7,10 @@
 
 #include "EnemyManager.h"
 #include "RippleEffect.h"
+#include "NormalBullet.h"
 #include "OrbitBullet.h"
-#include "Bullet.h"
 
 class EnemyManager;
-class Bullet;
 
 class Player {
 public:
@@ -43,16 +42,21 @@ public:
     int32_t GetHP() const { return lifeStock_; }
     int32_t GetMaxHP() const { return maxLifeStock_; }
 
-    // 通常弾
-    void AddNormalBullet(const KamataEngine::Vector3& dir);
-    void UpgradeNormalBullet();
-    bool HasNormalBullet() const { return hasNormalBullet_; }
-    const std::vector<std::unique_ptr<Bullet>>& GetBullets() const { return bullets_; }
+    void UpgradeNormalBullets();
 
-    // 周囲弾
+    // 通常弾（NormalBullet）のリストを取得
+    const std::vector<std::unique_ptr<NormalBullet>>& GetNormalBullets() const { return normalBullets_; }
+
+    // 周囲弾を追加
     void AddOrbitBullets();
+
+    // 周囲弾を強化（数を増やす）
     void UpgradeOrbitBullets();
+
+    // 周囲弾を持っているか？
     bool HasOrbitBullets() const { return hasOrbitBullets_; }
+
+    // 周囲弾の参照
     const std::vector<std::unique_ptr<OrbitBullet>>& GetOrbitBullets() const { return orbitBullets_; }
 
 private:
@@ -84,15 +88,19 @@ private:
     float effectTimer_ = 0.0f;
     static constexpr float kEffectInterval = 0.2f;
 
-    // 通常弾
-    std::vector<std::unique_ptr<Bullet>> bullets_;
-    bool hasNormalBullet_ = false;
-    float bulletCooldown_ = 1.0f;
-    float bulletTimer_ = 0.0f;
-    int32_t bulletPower_ = 1;
-
-    // 周囲弾
+    // 周囲弾のリスト
     std::vector<std::unique_ptr<OrbitBullet>> orbitBullets_;
+
+    // 周囲弾を持っているか？
     bool hasOrbitBullets_ = false;
+
+    // 周囲弾の攻撃力
     int32_t orbitBulletPower_ = 1;
+
+    std::vector<std::unique_ptr<NormalBullet>> normalBullets_;
+    bool hasNormalBullets_ = true;
+
+    float normalBulletInterval_ = 1.0f;
+    float normalBulletTimer_ = 0.0f;
+    int32_t normalBulletPower_ = 1;
 };
