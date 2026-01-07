@@ -24,6 +24,8 @@ public:
     /// </summary>
     void Update();
 
+    void UpdateType2();
+
     /// <summary>
     /// 描画処理
     /// 敵モデルをカメラに基づいて描画する
@@ -96,4 +98,9 @@ private:
     static constexpr float kKnockbackDuration = 0.18f; ///< ノックバック継続時間
 
     bool justDied_ = false; ///< 死亡直後フラグ
+
+    int enemyType_ = 0;
+    float speedMultiplier_ = 1.0f; // type1 のとき 2.0f などにする
+    float approachSpeed_ = 1.0f; // プレイヤーに近づく速度 
+    float circleSpeed_ = 1.0f; // 円軌道の速度（横方向）
 };

@@ -2,18 +2,23 @@
 using namespace KamataEngine;
 
 void OrbitBullet::Initialize(const Vector3& center, float radius, float angle, int32_t damage) {
-    worldTransform_.Initialize();
+    // Bullet の基本初期化（worldTransform_, power_, active_）
+    Bullet::Initialize(center, damage);
+
     orbitRadius_ = radius;
     angle_ = angle;
-    damage_ = damage;
+
+    // モデル読み込み（以前の "Bullet" を使用）
     model_ = std::unique_ptr<Model>(Model::CreateFromOBJ("Bullet"));
 
-    // 初期位置を設定
+    // 初期位置
     worldTransform_.translation_ = {
         center.x + std::cos(angle_) * orbitRadius_,
         center.y,
         center.z + std::sin(angle_) * orbitRadius_
     };
+
+    worldTransform_.UpdateMatrix();
 }
 
 bool OrbitBullet::CanHitEnemy(void* enemyPtr) {
@@ -32,7 +37,7 @@ void OrbitBullet::Update(const Vector3& center) {
     // 角度を進める
     angle_ += angularSpeed_;
 
-    // プレイヤー中心からの位置を更新
+    // プレイヤー中心からの位置更新
     worldTransform_.translation_ = {
         center.x + std::cos(angle_) * orbitRadius_,
         center.y,

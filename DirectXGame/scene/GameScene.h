@@ -5,7 +5,6 @@
 #include "../enemy/EnemyManager.h"
 #include "../3d/GridPlane.h"
 #include "../3d/SkyDome.h"
-#include "../3d/HitParticle.h"
 #include "../2d/Fade.h"
 #include "../ui/ExpGauge.h"
 #include "../ui/HpGauge.h"
@@ -97,8 +96,6 @@ private:
     std::unique_ptr<WaveUI> waveUI_;     ///< Wave表示UI
     std::unique_ptr<GridPlane> gridPlane_; ///< グリッド背景
     std::unique_ptr<SkyDome> skyDome_;     ///< 天球背景
-
-    std::list<std::unique_ptr<HitParticle>> hitParticles_; ///< ヒットパーティクルリスト
 
     std::unique_ptr<KamataEngine::Sprite> arrowSprite_; ///< レベルアップ選択用矢印
     int32_t levelUpSelection_ = 0;                      ///< 現在の選択インデックス
