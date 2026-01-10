@@ -76,6 +76,11 @@ void GameScene::Initialize() {
 
     skyDome_ = std::make_unique<SkyDome>();
     skyDome_->Initialize();
+
+    // ★ ゲーム開始時にスコア系をリセット 
+    GameData::totalExp = 0; 
+    GameData::finalLevel = 1;
+    GameData::totalKillCount = 0;
 }
 
 void GameScene::Update() {
@@ -121,6 +126,7 @@ void GameScene::Update() {
 
         if (fadeOutStarted_ && fade_.IsFinished()) {
             GameData::totalExp = player_->GetTotalEXP();
+            GameData::finalLevel = player_->GetLevel();
             finished_ = true;
         }
         return;
@@ -147,6 +153,7 @@ void GameScene::Update() {
             }
             if (fadeOutStarted_ && fade_.IsFinished()) {
                 GameData::totalExp = player_->GetTotalEXP();
+                GameData::finalLevel = player_->GetLevel();
                 finished_ = true;
             }
             return;
@@ -197,6 +204,7 @@ void GameScene::Update() {
         }
         if (fadeOutStarted_ && fade_.IsFinished()) {
             GameData::totalExp = player_->GetTotalEXP();
+            GameData::finalLevel = player_->GetLevel();  // ★追加
             finished_ = true;
         }
         return;

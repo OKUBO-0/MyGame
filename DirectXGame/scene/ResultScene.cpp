@@ -22,16 +22,40 @@ void ResultScene::Initialize() {
     resultUI_ = std::unique_ptr<Sprite>(Sprite::Create(uiTex, { 0,0 }));
     resultUI_->SetSize({ 1280, 720 });
 
-    // --- スコアUI生成（数値表示用） ---
-    scoreUI_ = std::make_unique<Score>();
-    scoreUI_->Initialize();
-    scoreUI_->SetNumber(0);
-    scoreUI_->SetPosition({ 500, 200 });
-    scoreUI_->SetScale(2.0f);
+    // 経験値
+    expUI_ = std::make_unique<Score>();
+    expUI_->Initialize();
+    expUI_->SetNumber(0);
+    expUI_->SetPosition({ 500, 200 });
+    expUI_->SetScale(2.0f);
+
+    // レベル
+    levelUI_ = std::make_unique<Score>();
+    levelUI_->Initialize();
+    levelUI_->SetNumber(GameData::finalLevel);
+    levelUI_->SetPosition({ 500, 300 });
+    levelUI_->SetScale(2.0f);
+
+    // キル数
+    killUI_ = std::make_unique<Score>();
+    killUI_->Initialize();
+    killUI_->SetNumber(GameData::totalKillCount);
+    killUI_->SetPosition({ 500, 400 });
+    killUI_->SetScale(2.0f);
 
     // --- スコア演出用変数 ---
-    currentScore_ = 0;
-    targetScore_ = GameData::totalExp;
+    currentExp_ = 0;
+    targetExp_ = GameData::totalExp;
+
+    currentLevel_ = 0;
+    targetLevel_ = GameData::finalLevel;
+
+    currentKill_ = 0;
+    targetKill_ = GameData::totalKillCount;
+
+    expUI_->SetNumber(0);
+    levelUI_->SetNumber(0);
+    killUI_->SetNumber(0);
 
     // --- フェード初期化 ---
     fade_.Initialize();
@@ -43,11 +67,26 @@ void ResultScene::Update() {
     fade_.Update();
 
     // --- スコア加算演出（徐々に最終スコアまで増加させる） ---
-    if (currentScore_ < targetScore_) {
-        currentScore_ += 1;
-        scoreUI_->SetNumber(currentScore_);
+    if (currentExp_ < targetExp_) {
+        currentExp_ += 1;
+        expUI_->SetNumber(currentExp_);
     }
-    scoreUI_->Update();
+
+    // --- レベル加算演出 ---
+    if (currentLevel_ < targetLevel_) {
+        currentLevel_ += 1;
+        levelUI_->SetNumber(currentLevel_);
+    }
+
+    // --- キル数加算演出 ---
+    if (currentKill_ < targetKill_) {
+        currentKill_ += 1;
+        killUI_->SetNumber(currentKill_);
+    }
+
+    expUI_->Update();
+    levelUI_->Update();
+    killUI_->Update();
 
     // --- Enterキーでタイトルへ戻る（フェードアウト開始） ---
     if (input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::kStay) {
@@ -74,8 +113,14 @@ void ResultScene::Draw() {
     resultUI_->Draw();
 
     // --- スコア描画（加算演出で更新された値を表示） ---
-    if (scoreUI_) {
-        scoreUI_->Draw();
+    if (expUI_) {
+        expUI_->Draw();
+    }
+    if (levelUI_) {
+        levelUI_->Draw();
+	}
+    if (killUI_) {
+		killUI_->Draw();
     }
 
     // --- フェード描画（シーン遷移演出） ---
