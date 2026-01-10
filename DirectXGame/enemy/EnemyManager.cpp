@@ -65,6 +65,9 @@ void EnemyManager::Update() {
         }
         else if (enemy->GetHP() <= 0 && enemy->JustDied()) {
 
+            // ★ キル数加算 
+            GameData::totalKillCount++;
+
             auto orb = std::make_unique<ExpOrb>();
             orb->Initialize(enemy->GetPosition(), enemy->GetEXP());
             expOrbs_.push_back(std::move(orb));
@@ -133,6 +136,19 @@ void EnemyManager::Update() {
         if (!(*it)->IsActive()) {
             player_->AddEXP((*it)->GetEXP());
             it = expOrbs_.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    // ============================
+    // ヒットパーティクル更新
+    // ============================
+    for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
+        (*it)->Update();
+        if (!(*it)->IsActive()) {
+            it = hitParticles_.erase(it);
         }
         else {
             ++it;
@@ -291,19 +307,6 @@ void EnemyManager::CheckCollisions(Player* player)
             if (!player->IsInvincible()) {
                 player->TakeDamage();
             }
-        }
-    }
-
-    // ============================
-    // ヒットパーティクル更新
-    // ============================
-    for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
-        (*it)->Update();
-        if (!(*it)->IsActive()) {
-            it = hitParticles_.erase(it);
-        }
-        else {
-            ++it;
         }
     }
 }

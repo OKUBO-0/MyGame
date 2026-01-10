@@ -10,6 +10,7 @@
 #include "DeathParticle.h"
 #include "ExpOrb.h"
 #include "HitParticle.h"
+#include "../GameData.h"
 
 class Player;
 class Enemy;

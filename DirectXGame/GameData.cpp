@@ -1,6 +1,5 @@
 #include "GameData.h"
 
-/// <summary>
-/// プレイヤーが獲得した総経験値の初期値を設定
-/// </summary>
 int32_t GameData::totalExp = 0;
+int32_t GameData::finalLevel = 1;
+int32_t GameData::totalKillCount = 0;
