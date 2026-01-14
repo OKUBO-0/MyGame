@@ -103,4 +103,7 @@ private:
     float speedMultiplier_ = 1.0f; // type1 のとき 2.0f などにする
     float approachSpeed_ = 1.0f; // プレイヤーに近づく速度 
     float circleSpeed_ = 1.0f; // 円軌道の速度（横方向）
+
+    KamataEngine::Audio* audio_ = nullptr;
+    uint32_t deathSEHandle_ = 0;
 };

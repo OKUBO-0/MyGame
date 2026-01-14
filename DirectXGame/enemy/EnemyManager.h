@@ -40,4 +40,7 @@ private:
 
     // ★ GameScene から移動
     std::list<std::unique_ptr<HitParticle>> hitParticles_;
+
+    KamataEngine::Audio* audio_ = nullptr;
+    uint32_t hitSEHandle_ = 0;
 };

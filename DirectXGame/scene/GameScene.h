@@ -66,6 +66,7 @@ private:
 
     std::unique_ptr<KamataEngine::Sprite> readyOverlay_; ///< "Ready"表示用スプライト
     std::unique_ptr<KamataEngine::Sprite> goOverlay_;    ///< "Go"表示用スプライト
+	std::unique_ptr<KamataEngine::Sprite> guide_; ///< "Guide"表示用スプライト
 
     std::unique_ptr<Player> player_;           ///< プレイヤー
     EnemyManager enemyManager_;                ///< 敵管理

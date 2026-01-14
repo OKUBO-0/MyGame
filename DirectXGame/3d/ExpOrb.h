@@ -19,4 +19,7 @@ private:
     int32_t expValue_ = 0;
 
     KamataEngine::Vector3 velocity_{ 0, 0, 0 };
+
+    KamataEngine::Audio* audio_ = nullptr;
+    uint32_t pickupSEHandle_ = 0;
 };

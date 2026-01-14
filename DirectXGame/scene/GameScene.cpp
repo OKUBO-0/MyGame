@@ -19,6 +19,10 @@ void GameScene::Initialize() {
     goOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(goTex, { 0, 0 }));
     goOverlay_->SetSize({ 1280, 720 });
 
+    uint32_t guideTex = TextureManager::Load("guide.png");
+	guide_ = std::unique_ptr<Sprite>(Sprite::Create(guideTex, {0, 0}));
+	guide_->SetSize({1280, 720});
+
     // スタート演出の初期状態
     startState_ = StartState::Ready;
     startTimer_ = 0;
@@ -314,6 +318,11 @@ void GameScene::Draw() {
     else if (startState_ == StartState::Go && goOverlay_) {
         goOverlay_->Draw();
     }
+
+    // --- ガイド表示 ---
+	if (startState_ == StartState::Play && guide_) {
+		guide_->Draw();
+	}
 
     // --- レベルアップ選択画面の描画 ---
     if (levelUpActive_) {
