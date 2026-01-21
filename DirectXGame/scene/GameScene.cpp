@@ -63,6 +63,21 @@ void GameScene::Initialize() {
     uint32_t arrowTex = TextureManager::Load("arrow.png");
     arrowSprite_ = std::unique_ptr<Sprite>(Sprite::Create(arrowTex, { 0, 0 }));
 
+    uint32_t keyTexW = TextureManager::Load("key_w.png");
+    uint32_t keyTexA = TextureManager::Load("key_a.png");
+    uint32_t keyTexS = TextureManager::Load("key_s.png");
+    uint32_t keyTexD = TextureManager::Load("key_d.png");
+
+    keyW_ = std::unique_ptr<Sprite>(Sprite::Create(keyTexW, { 0, 0 }));
+    keyA_ = std::unique_ptr<Sprite>(Sprite::Create(keyTexA, { 0, 0 }));
+    keyS_ = std::unique_ptr<Sprite>(Sprite::Create(keyTexS, { 0, 0 }));
+    keyD_ = std::unique_ptr<Sprite>(Sprite::Create(keyTexD, { 0, 0 }));
+
+    keyW_->SetSize({1280, 720});
+	keyA_->SetSize({1280, 720});
+	keyS_->SetSize({1280, 720});
+	keyD_->SetSize({1280, 720});
+
     // 各種UI生成
     expGauge_ = std::make_unique<ExpGauge>();
     expGauge_->Initialize();
@@ -117,12 +132,7 @@ void GameScene::Update() {
 
     if (paused_) {
         // ポーズ中のシーン遷移選択
-        if (input_->TriggerKey(DIK_1)) {
-            fade_.StartFadeOut();
-            fadeOutStarted_ = true;
-            SetSceneNo(Scene::Title);
-        }
-        else if (input_->TriggerKey(DIK_2)) {
+        if (input_->TriggerKey(DIK_SPACE)) {
             fade_.StartFadeOut();
             fadeOutStarted_ = true;
             SetSceneNo(Scene::Result);
@@ -146,7 +156,7 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        static constexpr int32_t kMaxWave = 3;
+        static constexpr int32_t kMaxWave = 1;
 
         if (currentWave_ >= kMaxWave) {
             // 最終Wave終了 → ResultSceneへ遷移
@@ -265,6 +275,22 @@ void GameScene::Update() {
     player_->Update();
     enemyManager_.Update();
 
+    auto setKeyColor = [&](Sprite* key, bool pressed) {
+        if (pressed) {
+            // 押している間は黄色
+            key->SetColor({ 1.0f, 1.0f, 0.0f, 1.0f });
+        }
+        else {
+            // 押していないときは通常色（白）
+            key->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+        }
+        };
+
+    setKeyColor(keyW_.get(), input_->PushKey(DIK_W));
+    setKeyColor(keyA_.get(), input_->PushKey(DIK_A));
+    setKeyColor(keyS_.get(), input_->PushKey(DIK_S));
+    setKeyColor(keyD_.get(), input_->PushKey(DIK_D));
+
     // --- 当たり判定（EnemyManager に委譲） --- 
     enemyManager_.CheckCollisions(player_.get());
 }
@@ -321,7 +347,12 @@ void GameScene::Draw() {
 
     // --- ガイド表示 ---
 	if (startState_ == StartState::Play && guide_) {
-		guide_->Draw();
+		//guide_->Draw();
+
+        keyW_->Draw();
+        keyA_->Draw();
+        keyS_->Draw();
+        keyD_->Draw();
 	}
 
     // --- レベルアップ選択画面の描画 ---
@@ -353,6 +384,70 @@ void GameScene::Draw() {
     if (paused_ && pauseOverlay_) {
         Sprite::PreDraw(dxCommon->GetCommandList());
         pauseOverlay_->Draw();
+
+        // ミニマップの中心（画面中央）
+        Vector2 mapCenter = { 640, 360 };
+
+        // ミニマップの半サイズ（200×200 を想定）
+        float mapHalf = 180.0f;
+
+        // ミニマップの縮尺（広さ調整）
+        float scale = 3.0f; // 縮尺（ワールド距離 → ミニマップ距離）
+
+        // プレイヤー位置
+        Vector3 pPos = player_->GetWorldPosition();
+
+        // --- 敵アイコン描画（複数対応） ---
+        for (auto& e : enemyManager_.GetEnemies()) {
+            if (!e->IsActive()) continue;
+
+            Vector3 ePos = e->GetPosition();
+            Vector3 rel = { ePos.x - pPos.x, 0, ePos.z - pPos.z };
+
+            float mx = rel.x * scale;
+            float my = -rel.z * scale;
+
+            // ★ 四角形ミニマップの端に固定
+            if (mx > mapHalf) mx = mapHalf;
+            if (mx < -mapHalf) mx = -mapHalf;
+            if (my > mapHalf) my = mapHalf;
+            if (my < -mapHalf) my = -mapHalf;
+
+            Vector2 drawPos = {
+                mapCenter.x + mx,
+                mapCenter.y + my
+            };
+
+            auto icon = Sprite::Create(TextureManager::Load("minimap_enemy.png"), drawPos);
+            icon->SetSize({ 20, 20 });
+            icon->Draw();
+        }
+
+        // --- 経験値オーブ描画（複数対応） ---
+        for (auto& orb : enemyManager_.GetExpOrbs()) {
+            if (!orb->IsActive()) continue;
+
+            Vector3 oPos = orb->GetPosition();
+            Vector3 rel = { oPos.x - pPos.x, 0, oPos.z - pPos.z };
+
+            float mx = rel.x * scale;
+            float my = -rel.z * scale;
+
+            // ★ 四角形ミニマップの端に固定
+            if (mx > mapHalf) mx = mapHalf;
+            if (mx < -mapHalf) mx = -mapHalf;
+            if (my > mapHalf) my = mapHalf;
+            if (my < -mapHalf) my = -mapHalf;
+
+            Vector2 drawPos = {
+                mapCenter.x + mx,
+                mapCenter.y + my
+            };
+
+            auto icon = Sprite::Create(TextureManager::Load("minimap_orb.png"), drawPos);
+            icon->SetSize({ 16, 16 });
+            icon->Draw();
+        }
         Sprite::PostDraw();
     }
 

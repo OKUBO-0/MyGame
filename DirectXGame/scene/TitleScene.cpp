@@ -49,7 +49,7 @@ void TitleScene::Update() {
 
     // --- BGM再生（ループ再生、未再生なら開始） ---
     if (!audio_->IsPlaying(titleBGMHandle_)) {
-        titleBGMHandle_ = audio_->PlayWave(titleBGMHandle_, true, 0.3f);
+        titleBGMHandle_ = audio_->PlayWave(titleBGMHandle_, true, 0.1f);
     }
 
     // --- モデル移動（奥から手前へ移動） ---
