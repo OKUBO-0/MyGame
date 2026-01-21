@@ -18,6 +18,9 @@ void Enemy::Initialize() {
 
     // 白テクスチャをロード（ヒット時のフラッシュ用）
     whiteTextureHandle_ = TextureManager::Load("color/white.png");
+
+    audio_ = Audio::GetInstance();
+    deathSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_death.wav");
 }
 
 void Enemy::SetPosition(const Vector3& pos) {
@@ -217,6 +220,7 @@ void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) 
 
     // HPが0以下なら死亡処理
     if (hp_ <= 0) {
+        Audio::GetInstance()->PlayWave(deathSEHandle_, false, 1.0f);
         Deactivate();
         justDied_ = true;
         return;

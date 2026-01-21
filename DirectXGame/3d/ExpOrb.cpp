@@ -19,6 +19,9 @@ void ExpOrb::Initialize(const Vector3& pos, int32_t expValue) {
         0.05f,
         dist(rng) * 0.05f
     };
+
+    audio_ = Audio::GetInstance();
+	pickupSEHandle_ = audio_->LoadWave("Sounds/se_exp.wav");
 }
 
 void ExpOrb::Update(const Vector3& playerPos) {
@@ -52,6 +55,7 @@ void ExpOrb::Update(const Vector3& playerPos) {
 
     // 拾われ判定（近距離）
     if (distSq < 4.0f) { // 半径2.0以内
+        Audio::GetInstance()->PlayWave(pickupSEHandle_, false, 1.0f);
         active_ = false;
     }
 

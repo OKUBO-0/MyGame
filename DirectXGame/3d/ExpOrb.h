@@ -12,6 +12,8 @@ public:
     int32_t GetEXP() const { return expValue_; }
     void Deactivate() { active_ = false; }
 
+    KamataEngine::Vector3 GetPosition() const { return worldTransform_.translation_; }
+
 private:
     KamataEngine::WorldTransform worldTransform_;
     std::unique_ptr<KamataEngine::Model> model_; ///< 経験値オーブ用モデル
@@ -19,4 +21,7 @@ private:
     int32_t expValue_ = 0;
 
     KamataEngine::Vector3 velocity_{ 0, 0, 0 };
+
+    KamataEngine::Audio* audio_ = nullptr;
+    uint32_t pickupSEHandle_ = 0;
 };

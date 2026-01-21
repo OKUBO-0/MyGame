@@ -7,6 +7,8 @@ void ResultScene::Initialize() {
     input_ = Input::GetInstance();
     audio_ = Audio::GetInstance();
 
+    selectSEHandle_ = audio_->LoadWave("Sounds/se_select.wav");
+
     // --- 背景スプライト生成（黒背景） ---
     uint32_t blackTex = TextureManager::Load("color/black.png");
     backgroundSprite_ = std::unique_ptr<Sprite>(Sprite::Create(blackTex, { 0,0 }));
@@ -90,6 +92,7 @@ void ResultScene::Update() {
 
     // --- Enterキーでタイトルへ戻る（フェードアウト開始） ---
     if (input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::kStay) {
+        selectSEHandle_ = audio_->PlayWave(selectSEHandle_, false, 1.0f);
         fade_.StartFadeOut();
         fadeOutStarted_ = true;
         SetSceneNo(Scene::Title);

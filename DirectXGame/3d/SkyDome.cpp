@@ -10,11 +10,13 @@ void SkyDome::Initialize() {
 
     // ワールド変換初期化（位置・回転・スケールの基準を設定）
     worldTransform_.Initialize();
+    
+    // スケール拡大（大きさを増加させる）
+    worldTransform_.scale_ = { 100.0f, 100.0f, 100.0f };
 }
 
 void SkyDome::Update() {
-    // 背景なので特別な更新は不要
-    // 必要に応じて回転や動きを加える場合はここに処理を追加
+    worldTransform_.UpdateMatrix();
 }
 
 void SkyDome::Draw() {

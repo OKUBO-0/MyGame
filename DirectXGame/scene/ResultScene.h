@@ -53,4 +53,5 @@ private:
     int32_t currentKill_ = 0;      // ★追加
     int32_t targetKill_ = 0;       // ★追加
 
+    uint32_t selectSEHandle_ = 0; ///< 選択SEハンドル
 };

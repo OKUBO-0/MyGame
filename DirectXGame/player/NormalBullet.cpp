@@ -6,6 +6,14 @@ void NormalBullet::Initialize(const Vector3& startPos,
     int power)
 {
     Bullet::Initialize(startPos, power);
+	audio_ = Audio::GetInstance();
+
+    if (shotSEHandle_ == 0) {
+        shotSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_shot.wav");
+    }
+
+    // ★ 発射SE再生
+    Audio::GetInstance()->PlayWave(shotSEHandle_, false, 1.0f);
 
     // モデル読み込み
     model_ = std::unique_ptr<Model>(Model::CreateFromOBJ("Bullet"));

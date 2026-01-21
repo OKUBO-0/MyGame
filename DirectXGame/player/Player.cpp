@@ -147,7 +147,8 @@ void Player::Update() {
     // カメラ追従
     // -------------------------
     camera_.translation_.x = worldTransform_.translation_.x;
-    camera_.translation_.z = worldTransform_.translation_.z;
+    camera_.translation_.z = worldTransform_.translation_.z - 45.0f;
+    camera_.rotation_.x = 1.0f;
     camera_.UpdateMatrix();
 
     // -------------------------

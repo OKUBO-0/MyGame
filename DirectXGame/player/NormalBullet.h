@@ -33,4 +33,7 @@ private:
 
     std::unordered_map<void*, float> hitCooldowns_;
     static constexpr float kHitInterval = 0.5f;
+
+    KamataEngine::Audio* audio_ = nullptr;
+    uint32_t shotSEHandle_ = 0;
 };

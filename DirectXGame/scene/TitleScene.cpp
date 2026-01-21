@@ -10,8 +10,8 @@ void TitleScene::Initialize() {
     audio_ = Audio::GetInstance();
 
     // --- タイトル画面用BGMと効果音を読み込み ---
-    titleBGMHandle_ = audio_->LoadWave("Sounds/title.wav");
-    selectSEHandle_ = audio_->LoadWave("Sounds/select.wav");
+    titleBGMHandle_ = audio_->LoadWave("Sounds/bgm_title.wav");
+    selectSEHandle_ = audio_->LoadWave("Sounds/se_select.wav");
 
     // --- 背景スプライト生成（黒背景） ---
     uint32_t blackTex = TextureManager::Load("color/black.png");
@@ -49,7 +49,7 @@ void TitleScene::Update() {
 
     // --- BGM再生（ループ再生、未再生なら開始） ---
     if (!audio_->IsPlaying(titleBGMHandle_)) {
-        titleBGMHandle_ = audio_->PlayWave(titleBGMHandle_, true, 0.5f);
+        titleBGMHandle_ = audio_->PlayWave(titleBGMHandle_, true, 0.1f);
     }
 
     // --- モデル移動（奥から手前へ移動） ---

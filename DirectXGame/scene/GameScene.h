@@ -66,6 +66,7 @@ private:
 
     std::unique_ptr<KamataEngine::Sprite> readyOverlay_; ///< "Ready"表示用スプライト
     std::unique_ptr<KamataEngine::Sprite> goOverlay_;    ///< "Go"表示用スプライト
+	std::unique_ptr<KamataEngine::Sprite> guide_; ///< "Guide"表示用スプライト
 
     std::unique_ptr<Player> player_;           ///< プレイヤー
     EnemyManager enemyManager_;                ///< 敵管理
@@ -99,4 +100,11 @@ private:
 
     std::unique_ptr<KamataEngine::Sprite> arrowSprite_; ///< レベルアップ選択用矢印
     int32_t levelUpSelection_ = 0;                      ///< 現在の選択インデックス
+    std::unique_ptr<KamataEngine::Sprite> keyW_;
+    std::unique_ptr<KamataEngine::Sprite> keyA_;
+    std::unique_ptr<KamataEngine::Sprite> keyS_;
+    std::unique_ptr<KamataEngine::Sprite> keyD_;
+
+    std::unique_ptr<KamataEngine::Sprite> enemyIcon_;
+    std::unique_ptr<KamataEngine::Sprite> orbIcon_;
 };

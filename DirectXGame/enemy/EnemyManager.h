@@ -31,6 +31,8 @@ public:
     // ★ ヒットパーティクル描画
     void DrawHitParticles(KamataEngine::Camera* camera);
 
+    const std::list<std::unique_ptr<ExpOrb>>& GetExpOrbs() const { return expOrbs_; }
+
 private:
     std::vector<std::unique_ptr<Enemy>> enemies_;
     Player* player_ = nullptr;
@@ -40,4 +42,7 @@ private:
 
     // ★ GameScene から移動
     std::list<std::unique_ptr<HitParticle>> hitParticles_;
+
+    KamataEngine::Audio* audio_ = nullptr;
+    uint32_t hitSEHandle_ = 0;
 };

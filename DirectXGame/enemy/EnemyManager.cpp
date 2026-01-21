@@ -8,6 +8,9 @@ using namespace KamataEngine;
 void EnemyManager::Initialize(const std::string& csvPath, Player* player) {
     player_ = player;
     SpawnEnemiesFromCSV(csvPath);
+
+    audio_ = Audio::GetInstance();
+    hitSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_hit.wav");
 }
 
 void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
@@ -214,6 +217,8 @@ void EnemyManager::CheckCollisions(Player* player)
             if (distSq < 4.0f) {
 
                 if (!bullet->CanHitEnemy(enemy.get())) continue;
+                // ★ ヒットSE再生
+                Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
                 bullet->RegisterHit(enemy.get());
 
                 Vector3 knockDir = { ePos.x - bPos.x, 0, ePos.z - bPos.z };
@@ -256,6 +261,8 @@ void EnemyManager::CheckCollisions(Player* player)
             if (distSq < 25.0f) {
 
                 if (!orb->CanHitEnemy(enemy.get())) continue;
+                // ★ ヒットSE再生
+                Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
                 orb->RegisterHit(enemy.get());
 
                 Vector3 knockDir = { ePos.x - oPos.x, 0, ePos.z - oPos.z };
@@ -306,6 +313,7 @@ void EnemyManager::CheckCollisions(Player* player)
 
             if (!player->IsInvincible()) {
                 player->TakeDamage();
+                Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
             }
         }
     }
