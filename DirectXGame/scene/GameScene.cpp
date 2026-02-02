@@ -7,6 +7,8 @@ void GameScene::Initialize() {
     input_ = Input::GetInstance();
     audio_ = Audio::GetInstance();
 
+    pauseSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_pause.wav");
+
     // カメラ初期化（メインカメラを準備）
     camera_.Initialize();
 
@@ -72,11 +74,13 @@ void GameScene::Initialize() {
     keyA_ = std::unique_ptr<Sprite>(Sprite::Create(keyTexA, { 0, 0 }));
     keyS_ = std::unique_ptr<Sprite>(Sprite::Create(keyTexS, { 0, 0 }));
     keyD_ = std::unique_ptr<Sprite>(Sprite::Create(keyTexD, { 0, 0 }));
+	ESC_ui_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ESC_ui.png"), {0, 0}));
 
     keyW_->SetSize({1280, 720});
 	keyA_->SetSize({1280, 720});
 	keyS_->SetSize({1280, 720});
 	keyD_->SetSize({1280, 720});
+	ESC_ui_->SetSize({1280, 720});
 
     // 各種UI生成
     expGauge_ = std::make_unique<ExpGauge>();
@@ -128,6 +132,7 @@ void GameScene::Update() {
     // --- ポーズ処理（ESCキーで切り替え、フェード中は無効） ---
     if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::kStay) {
         paused_ = !paused_;
+        Audio::GetInstance()->PlayWave(pauseSEHandle_, false, 0.5f);
     }
 
     if (paused_) {
@@ -156,7 +161,7 @@ void GameScene::Update() {
     }
 
     if (allEnemiesDefeated && !waveLoading_) {
-        static constexpr int32_t kMaxWave = 1;
+        static constexpr int32_t kMaxWave = 3;
 
         if (currentWave_ >= kMaxWave) {
             // 最終Wave終了 → ResultSceneへ遷移
@@ -331,6 +336,8 @@ void GameScene::Draw() {
 
     // --- スプライト描画の前処理（UIや演出を描画する準備） ---
     Sprite::PreDraw(dxCommon->GetCommandList());
+
+    ESC_ui_->Draw();
 
     // --- 死亡演出中のオーバーレイ描画 ---
     if (deathFadeInStarted_ && deathOverlay_) {

@@ -107,4 +107,7 @@ private:
 
     std::unique_ptr<KamataEngine::Sprite> enemyIcon_;
     std::unique_ptr<KamataEngine::Sprite> orbIcon_;
+    std::unique_ptr<KamataEngine::Sprite> ESC_ui_;
+
+    uint32_t pauseSEHandle_ = 0;
 };

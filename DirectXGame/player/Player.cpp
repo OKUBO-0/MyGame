@@ -223,7 +223,7 @@ void Player::UpgradeNormalBullets() {
     normalBulletPower_++;
 
     // 発射間隔短縮
-    normalBulletInterval_ *= 0.5f;
+    normalBulletInterval_ *= 0.8f;
 }
 
 //==================================================

@@ -2,7 +2,7 @@
 
 #include "IScene.h"
 #include "../2d/Fade.h"
-#include "../ui/TitleUI.h"
+#include "../3d/SkyDome.h"
 #include <KamataEngine.h>
 #include <memory>
 
@@ -32,10 +32,10 @@ private:
     KamataEngine::Input* input_ = nullptr;            ///< 入力管理（外部から取得）
     KamataEngine::Audio* audio_ = nullptr;            ///< オーディオ管理（外部から取得）
 
-    std::unique_ptr<KamataEngine::Sprite> backgroundSprite_; ///< 背景スプライト
     std::unique_ptr<KamataEngine::Sprite> titleSprite_;      ///< タイトル文字スプライト
     std::unique_ptr<KamataEngine::Sprite> titleUISprite_;    ///< タイトルUIスプライト
-    std::unique_ptr<TitleUI> titleUI_;                       ///< タイトルUI管理
+    std::unique_ptr<KamataEngine::Sprite> cursorSprite_;
+	std::unique_ptr<KamataEngine::Sprite> guideSprite_;      ///< ガイドUIスプライト
 
     Fade fade_;                   ///< フェード演出
     bool fadeOutStarted_ = false; ///< フェードアウト開始フラグ
@@ -44,11 +44,12 @@ private:
     uint32_t titleBGMHandle_ = 0; ///< タイトルBGMハンドル
     uint32_t selectSEHandle_ = 0; ///< 選択SEハンドル
 
-    bool modelArrived_ = false; ///< モデル演出到達フラグ
-    float modelTargetZ_ = 0.0f; ///< モデルの目標Z座標
-    static constexpr float kModelStartZ = 30.0f; ///< モデルの開始Z座標
-    static constexpr float kModelSpeed = -0.2f;  ///< モデルの移動速度
+    int32_t menuIndex_ = 0;
 
-    bool startRotate_ = false;  ///< 回転演出開始フラグ
-    float blinkTimer_ = 0.0f;   ///< 点滅演出タイマー
+    bool guideActive_ = false;
+
+    KamataEngine::WorldTransform worldTransform_;
+    KamataEngine::Camera camera_;
+    std::unique_ptr<KamataEngine::Model> playerModel_;
+    std::unique_ptr<SkyDome> skyDome_;
 };
