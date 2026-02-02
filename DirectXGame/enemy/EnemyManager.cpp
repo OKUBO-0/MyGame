@@ -92,7 +92,7 @@ void EnemyManager::Update() {
     {
         Vector3 pPos = player_->GetWorldPosition();
 
-        float despawnDist = 70.0f;     // これより遠い敵は再スポーン
+        float despawnDist = 75.0f;     // これより遠い敵は再スポーン
         float respawnRadius = 60.0f;   // 再スポーンする円の半径
 
         for (auto& enemy : enemies_) {

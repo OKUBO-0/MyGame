@@ -75,9 +75,6 @@
     <ClCompile Include="scene\TitleScene.cpp">
       <Filter>ソース ファイル\scene\title</Filter>
     </ClCompile>
-    <ClCompile Include="ui\TitleUI.cpp">
-      <Filter>ソース ファイル\scene\title</Filter>
-    </ClCompile>
     <ClCompile Include="player\Player.cpp">
       <Filter>ソース ファイル\player</Filter>
     </ClCompile>
@@ -196,9 +193,6 @@
       <Filter>ヘッダー ファイル\scene</Filter>
     </ClInclude>
     <ClInclude Include="scene\TitleScene.h">
-      <Filter>ヘッダー ファイル\scene\title</Filter>
-    </ClInclude>
-    <ClInclude Include="ui\TitleUI.h">
       <Filter>ヘッダー ファイル\scene\title</Filter>
     </ClInclude>
     <ClInclude Include="player\Player.h">
