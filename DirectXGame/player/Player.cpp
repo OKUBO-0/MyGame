@@ -18,13 +18,17 @@ void Player::Initialize() {
     maxLifeStock_ = 3;
     exp_ = 0;
     totalExp_ = 0;
+
+    camera_.translation_ = { 0.0f, 80.0f, -45.0f };
+    camera_.rotation_.x = 1.0f;
+    camera_.UpdateMatrix();
 }
 
 //==================================================
 //  更新
 //==================================================
 void Player::Update() {
-    const float kMoveSpeed = 0.2f;
+    const float kMoveSpeed = 0.5f;
     const float kDeltaTime = 0.016f;
 
     Vector3 move = { 0.0f, 0.0f, 0.0f };
@@ -77,43 +81,32 @@ void Player::Update() {
     // -------------------------
     // 通常弾（NormalBullet）
     // -------------------------
+    // --- 通常弾（NormalBullet） ---
+    // --- 通常弾 ---
     if (hasNormalBullets_) {
         normalBulletTimer_ += kDeltaTime;
 
-        // 敵探索
-        Enemy* nearest = nullptr;
-        float nearestDistSq = 999999.0f;
+        if (normalBulletTimer_ >= normalBulletInterval_) {
 
-        for (auto& e : enemyManager_->GetEnemies()) {
-            if (!e->IsActive()) continue;
+            float angle = worldTransform_.rotation_.y;
 
-            Vector3 ePos = e->GetPosition();
-            Vector3 pPos = worldTransform_.translation_;
+            Vector3 forward = {
+                std::sin(angle),
+                0.0f,
+                std::cos(angle)
+            };
 
-            float dx = ePos.x - pPos.x;
-            float dz = ePos.z - pPos.z;
-            float distSq = dx * dx + dz * dz;
-
-            if (distSq < nearestDistSq && distSq < 30.0f * 30.0f) {
-                nearestDistSq = distSq;
-                nearest = e.get();
-            }
-        }
-
-        // 発射
-        if (nearest && normalBulletTimer_ >= normalBulletInterval_) {
             auto b = std::make_unique<NormalBullet>();
-            b->Initialize(worldTransform_.translation_, nearest->GetPosition(), normalBulletPower_);
+            b->InitializeForward(worldTransform_.translation_, forward);
             normalBullets_.push_back(std::move(b));
+
             normalBulletTimer_ = 0.0f;
         }
 
-        // 更新
         for (auto& b : normalBullets_) {
             b->Update(worldTransform_.translation_);
         }
 
-        // 削除
         normalBullets_.erase(
             std::remove_if(normalBullets_.begin(), normalBullets_.end(),
                 [](const std::unique_ptr<NormalBullet>& b) { return !b->IsActive(); }),
@@ -219,9 +212,10 @@ void Player::RecoverHP() {
     }
 }
 
+//==================================================
+//  通常弾強化
+//==================================================
 void Player::UpgradeNormalBullets() {
-    normalBulletPower_++;
-
     // 発射間隔短縮
     normalBulletInterval_ *= 0.8f;
 }
@@ -239,7 +233,7 @@ void Player::AddOrbitBullets() {
         float angle = (2.0f * 3.14159265f * i) / bulletCount;
 
         auto orb = std::make_unique<OrbitBullet>();
-        orb->Initialize(worldTransform_.translation_, 10.0f, angle, orbitBulletPower_);
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle);
 
         orbitBullets_.push_back(std::move(orb));
     }
@@ -249,8 +243,6 @@ void Player::AddOrbitBullets() {
 //  周囲弾強化（数を増やす）
 //==================================================
 void Player::UpgradeOrbitBullets() {
-    orbitBulletPower_++;
-
     int newCount = static_cast<int>(orbitBullets_.size()) + 1;
 
     std::vector<std::unique_ptr<OrbitBullet>> newOrbs;
@@ -260,7 +252,7 @@ void Player::UpgradeOrbitBullets() {
         float angle = (2.0f * 3.14159265f * i) / newCount;
 
         auto orb = std::make_unique<OrbitBullet>();
-        orb->Initialize(worldTransform_.translation_, 10.0f, angle, orbitBulletPower_);
+        orb->Initialize(worldTransform_.translation_, 10.0f, angle);
 
         newOrbs.push_back(std::move(orb));
     }

@@ -23,6 +23,10 @@ public:
     KamataEngine::Camera& GetCamera() { return camera_; }
     void SetEnemyManager(EnemyManager* manager) { enemyManager_ = manager; }
 
+    // 攻撃力
+    int32_t GetAttackPower() const { return attackPower_; }
+    void UpgradeAttackPower() { attackPower_++; }
+
     // 状態
     bool IsInvincible() const { return invincible_; }
     bool IsDead() const { return lifeStock_ <= 0; }
@@ -42,32 +46,26 @@ public:
     int32_t GetHP() const { return lifeStock_; }
     int32_t GetMaxHP() const { return maxLifeStock_; }
 
-    void UpgradeNormalBullets();
-
-    // 通常弾（NormalBullet）のリストを取得
+    // 通常弾
+    void UpgradeNormalBullets(); // 発射間隔短縮のみ
     const std::vector<std::unique_ptr<NormalBullet>>& GetNormalBullets() const { return normalBullets_; }
 
-    // 周囲弾を追加
+    // 周囲弾
     void AddOrbitBullets();
-
-    // 周囲弾を強化（数を増やす）
-    void UpgradeOrbitBullets();
-
-    // 周囲弾を持っているか？
+    void UpgradeOrbitBullets(); // 弾数増加のみ
     bool HasOrbitBullets() const { return hasOrbitBullets_; }
-
-    // 周囲弾の参照
     const std::vector<std::unique_ptr<OrbitBullet>>& GetOrbitBullets() const { return orbitBullets_; }
 
 private:
-    // 入力・描画
     KamataEngine::Input* input_ = nullptr;
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Camera camera_;
     std::unique_ptr<KamataEngine::Model> playerModel_;
 
-    // 敵管理
     EnemyManager* enemyManager_ = nullptr;
+
+    // 攻撃力（弾はこれを参照）
+    int32_t attackPower_ = 1;
 
     // HP
     int32_t lifeStock_ = 3;
@@ -88,19 +86,14 @@ private:
     float effectTimer_ = 0.0f;
     static constexpr float kEffectInterval = 0.2f;
 
-    // 周囲弾のリスト
+    // 周囲弾
     std::vector<std::unique_ptr<OrbitBullet>> orbitBullets_;
-
-    // 周囲弾を持っているか？
     bool hasOrbitBullets_ = false;
 
-    // 周囲弾の攻撃力
-    int32_t orbitBulletPower_ = 1;
-
+    // 通常弾
     std::vector<std::unique_ptr<NormalBullet>> normalBullets_;
     bool hasNormalBullets_ = true;
 
     float normalBulletInterval_ = 1.0f;
     float normalBulletTimer_ = 0.0f;
-    int32_t normalBulletPower_ = 1;
 };

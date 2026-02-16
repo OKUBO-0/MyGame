@@ -13,6 +13,14 @@
 #include <cstdint>
 #include <memory>
 #include <list>
+#include <functional> // 追加: std::function を使うために必要
+#include <numeric> // 追加: std::iotaを使うために必要
+
+struct LevelUpOption {
+    std::string name;                     // UI表示用の名前
+    std::function<void(Player*)> action;  // 実行する処理
+    uint32_t textureHandle;               // スプライト画像
+};
 
 /// <summary>
 /// ゲームプレイ全体を管理するシーン。
@@ -110,4 +118,8 @@ private:
     std::unique_ptr<KamataEngine::Sprite> ESC_ui_;
 
     uint32_t pauseSEHandle_ = 0;
+
+    std::vector<LevelUpOption> levelUpOptions_;   // 全候補
+    std::vector<LevelUpOption> currentChoices_;   // 今回の3つ
+    std::unique_ptr<KamataEngine::Sprite> choiceSprite_[3];
 };

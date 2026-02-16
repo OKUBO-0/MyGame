@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include <random> // 追加: std::mt19937, std::random_device, std::shuffle 用
 using namespace KamataEngine;
 
 void GameScene::Initialize() {
@@ -59,7 +60,6 @@ void GameScene::Initialize() {
     // レベルアップ演出用スプライト生成
     uint32_t levelUpTex = TextureManager::Load("levelUp.png");
     levelUpOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(levelUpTex, { 0, 0 }));
-    levelUpOverlay_->SetColor({ 1, 1, 1, 1 });
 
     // 矢印スプライト生成
     uint32_t arrowTex = TextureManager::Load("arrow.png");
@@ -104,11 +104,43 @@ void GameScene::Initialize() {
     GameData::totalExp = 0; 
     GameData::finalLevel = 1;
     GameData::totalKillCount = 0;
+
+    // ★ レベルアップ選択肢の登録（画像を読み込む）
+    levelUpOptions_.push_back({
+        "通常弾強化",
+        [](Player* p) { p->UpgradeNormalBullets(); },
+        TextureManager::Load("lvup_normal.png")
+        });
+
+    levelUpOptions_.push_back({
+        "周囲弾強化",
+        [](Player* p) {
+            if (!p->HasOrbitBullets()) p->AddOrbitBullets();
+            else p->UpgradeOrbitBullets();
+        },
+        TextureManager::Load("lvup_orbit.png")
+        });
+
+    levelUpOptions_.push_back({
+        "攻撃力 +1",
+        [](Player* p) { p->UpgradeAttackPower(); },
+        TextureManager::Load("lvup_attack.png")
+        });
+
+    levelUpOptions_.push_back({
+        "HP回復",
+        [](Player* p) { p->RecoverHP(); },
+        TextureManager::Load("lvup_heal.png")
+        });
 }
 
 void GameScene::Update() {
     // フェード更新（最優先で処理）
     fade_.Update();
+
+    // --- 背景更新 ---
+    if (gridPlane_) { gridPlane_->Update(); }
+    if (skyDome_) { skyDome_->Update(); }
 
     // --- 開始演出処理（Ready → Go → Play） ---
     if (startState_ != StartState::Play) {
@@ -148,6 +180,55 @@ void GameScene::Update() {
             GameData::finalLevel = player_->GetLevel();
             finished_ = true;
         }
+        return;
+    }
+
+    // --- レベルアップ開始 ---
+    if (player_->IsLevelUpRequested()) {
+
+        currentChoices_.clear();
+
+        std::vector<int> indices(levelUpOptions_.size());
+        std::iota(indices.begin(), indices.end(), 0);
+        std::shuffle(indices.begin(), indices.end(), std::mt19937(std::random_device{}()));
+
+        for (int i = 0; i < 3; i++) {
+            currentChoices_.push_back(levelUpOptions_[indices[i]]);
+        }
+
+        // ★ スプライト生成
+        for (int i = 0; i < 3; i++) {
+            choiceSprite_[i] = std::unique_ptr<Sprite>(
+                Sprite::Create(currentChoices_[i].textureHandle, { 0.0f, 0.0f + static_cast<float>(i) * 140.0f })
+            );
+            choiceSprite_[i]->SetSize({ 1280, 720 });
+        }
+
+        levelUpActive_ = true;
+        levelUpSelection_ = 0;
+        player_->ClearLevelUpRequest();
+        return;
+    }
+    if (levelUpActive_) {
+
+        if (input_->TriggerKey(DIK_W)) {
+            levelUpSelection_ = std::max<int32_t>(0, levelUpSelection_ - 1);
+        }
+        else if (input_->TriggerKey(DIK_S)) {
+            levelUpSelection_ = std::min<int32_t>(2, levelUpSelection_ + 1);
+        }
+
+        // 矢印位置
+        arrowSprite_->SetPosition({ 0.0f, 0.0f + levelUpSelection_ * 140 });
+
+        if (input_->TriggerKey(DIK_RETURN) || input_->TriggerKey(DIK_SPACE)) {
+
+            // ★ 選択されたアクションを実行
+            currentChoices_[levelUpSelection_].action(player_.get());
+
+            levelUpActive_ = false;
+        }
+
         return;
     }
 
@@ -197,10 +278,6 @@ void GameScene::Update() {
         waveUI_->Update();
     }
 
-    // --- 背景更新 ---
-    if (gridPlane_) { gridPlane_->Update(); }
-    if (skyDome_) { skyDome_->Update(); }
-
     // --- プレイヤー死亡演出 ---
     if (player_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
         deathFadeInStarted_ = true;
@@ -236,49 +313,12 @@ void GameScene::Update() {
         expGauge_->Update();
     }
 
-    // --- レベルアップ選択処理 ---
-    if (player_->IsLevelUpRequested()) {
-        levelUpActive_ = true;
-        levelUpSelection_ = 0;
-        player_->ClearLevelUpRequest();
-        return;
-    }
-    if (levelUpActive_) {
-        if (input_->TriggerKey(DIK_W)) {
-            levelUpSelection_ = std::max<int32_t>(0, levelUpSelection_ - 1);
-        }
-        else if (input_->TriggerKey(DIK_S)) {
-            levelUpSelection_ = std::min<int32_t>(1, levelUpSelection_ + 1);
-        }
-        switch (levelUpSelection_) {
-        case 0: arrowSprite_->SetPosition({ 0, 0 }); break;
-        case 1: arrowSprite_->SetPosition({ 0, 140 }); break;
-        case 2: arrowSprite_->SetPosition({ 0, 280 }); break;
-        }
-        if (input_->TriggerKey(DIK_RETURN) || input_->TriggerKey(DIK_SPACE)) {
-            switch (levelUpSelection_) {
-            case 0: // 通常弾
-                player_->UpgradeNormalBullets();    // 強化
-                break;
-            case 1: // 周囲弾
-                if (!player_->HasOrbitBullets()) {
-                    player_->AddOrbitBullets();
-                }
-                else {
-                    player_->UpgradeOrbitBullets();
-                }
-                break;
-            case 2:
-                break;
-            }
-            levelUpActive_ = false;
-        }
-        return;
-    }
-
     // --- プレイヤーと敵の更新 ---
     player_->Update();
     enemyManager_.Update();
+
+    // --- 当たり判定（EnemyManager に委譲） --- 
+    enemyManager_.CheckCollisions(player_.get());
 
     auto setKeyColor = [&](Sprite* key, bool pressed) {
         if (pressed) {
@@ -295,9 +335,6 @@ void GameScene::Update() {
     setKeyColor(keyA_.get(), input_->PushKey(DIK_A));
     setKeyColor(keyS_.get(), input_->PushKey(DIK_S));
     setKeyColor(keyD_.get(), input_->PushKey(DIK_D));
-
-    // --- 当たり判定（EnemyManager に委譲） --- 
-    enemyManager_.CheckCollisions(player_.get());
 }
 
 void GameScene::Draw() {
@@ -364,12 +401,19 @@ void GameScene::Draw() {
 
     // --- レベルアップ選択画面の描画 ---
     if (levelUpActive_) {
-        if (levelUpOverlay_) {
-            levelUpOverlay_->Draw();
+
+        // 背景
+        levelUpOverlay_->Draw();
+
+        // ★ 選択肢スプライト描画
+        for (int i = 0; i < 3; i++) {
+            if (choiceSprite_[i]) {
+                choiceSprite_[i]->Draw();
+            }
         }
-        if (arrowSprite_) {
-            arrowSprite_->Draw();
-        }
+
+        // 矢印
+        arrowSprite_->Draw();
     }
 
     // --- 経験値ゲージ描画 ---

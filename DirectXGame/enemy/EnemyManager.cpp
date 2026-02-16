@@ -198,6 +198,8 @@ void EnemyManager::Update() {
 
 void EnemyManager::CheckCollisions(Player* player)
 {
+    int damage = player->GetAttackPower();  // ★ プレイヤー攻撃力を参照
+
     // ============================
     // NormalBullet と敵の当たり判定
     // ============================
@@ -217,10 +219,12 @@ void EnemyManager::CheckCollisions(Player* player)
             if (distSq < 4.0f) {
 
                 if (!bullet->CanHitEnemy(enemy.get())) continue;
-                // ★ ヒットSE再生
+
+                // ★ ヒットSE
                 Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
                 bullet->RegisterHit(enemy.get());
 
+                // ノックバック方向
                 Vector3 knockDir = { ePos.x - bPos.x, 0, ePos.z - bPos.z };
                 float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
                 if (len > 0.0f) {
@@ -228,9 +232,12 @@ void EnemyManager::CheckCollisions(Player* player)
                     knockDir.z /= len;
                 }
 
-                float knockStrength = 0.6f + bullet->GetDamage() * 0.15f;
-                enemy->TakeDamage(bullet->GetDamage(), knockDir, knockStrength);
+                // ★ プレイヤー攻撃力を使用
+                float knockStrength = 0.6f + damage * 0.15f;
 
+                enemy->TakeDamage(damage, knockDir, knockStrength);
+
+                // ヒットパーティクル
                 for (int i = 0; i < 4; ++i) {
                     auto spark = std::make_unique<HitParticle>();
                     spark->Initialize(bPos);
@@ -261,7 +268,7 @@ void EnemyManager::CheckCollisions(Player* player)
             if (distSq < 25.0f) {
 
                 if (!orb->CanHitEnemy(enemy.get())) continue;
-                // ★ ヒットSE再生
+
                 Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
                 orb->RegisterHit(enemy.get());
 
@@ -272,8 +279,10 @@ void EnemyManager::CheckCollisions(Player* player)
                     knockDir.z /= len;
                 }
 
-                float knockStrength = 0.5f + orb->GetDamage() * 0.1f;
-                enemy->TakeDamage(orb->GetDamage(), knockDir, knockStrength);
+                // ★ プレイヤー攻撃力を使用
+                float knockStrength = 0.5f + damage * 0.1f;
+
+                enemy->TakeDamage(damage, knockDir, knockStrength);
 
                 for (int i = 0; i < 4; ++i) {
                     auto spark = std::make_unique<HitParticle>();
