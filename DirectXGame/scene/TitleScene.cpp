@@ -98,9 +98,11 @@ void TitleScene::Update() {
     if (input_->TriggerKey(DIK_SPACE)) {
         switch (menuIndex_) {
         case 0: // Play
-            fade_.StartFadeOut();
-            fadeOutStarted_ = true;
-            SetSceneNo(Scene::Game);
+            if (fade_.GetState() == Fade::State::kStay) {
+                fade_.StartFadeOut();
+                fadeOutStarted_ = true;
+                SetSceneNo(Scene::Game);
+            }
             break;
 
         case 1: // Guide

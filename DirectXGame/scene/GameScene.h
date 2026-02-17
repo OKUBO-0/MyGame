@@ -2,6 +2,7 @@
 
 #include "IScene.h"
 #include "../player/Player.h"
+#include "../player/PlayerManager.h"
 #include "../enemy/EnemyManager.h"
 #include "../3d/GridPlane.h"
 #include "../3d/SkyDome.h"
@@ -13,13 +14,13 @@
 #include <cstdint>
 #include <memory>
 #include <list>
-#include <functional> // 追加: std::function を使うために必要
-#include <numeric> // 追加: std::iotaを使うために必要
+#include <functional>
+#include <numeric>
 
 struct LevelUpOption {
-    std::string name;                     // UI表示用の名前
-    std::function<void(Player*)> action;  // 実行する処理
-    uint32_t textureHandle;               // スプライト画像
+    std::string name;
+    std::function<void(PlayerManager*)> action;
+    uint32_t textureHandle;
 };
 
 /// <summary>
@@ -77,6 +78,7 @@ private:
 	std::unique_ptr<KamataEngine::Sprite> guide_; ///< "Guide"表示用スプライト
 
     std::unique_ptr<Player> player_;           ///< プレイヤー
+    std::unique_ptr<PlayerManager> playerManager_; ///< プレイヤーマネージャー
     EnemyManager enemyManager_;                ///< 敵管理
 
     Fade fade_;                                ///< フェード演出
@@ -98,28 +100,25 @@ private:
 
     bool levelUpActive_ = false; ///< レベルアップ演出フラグ
     std::unique_ptr<KamataEngine::Sprite> levelUpOverlay_; ///< レベルアップ演出スプライト
-
-    std::unique_ptr<ExpGauge> expGauge_; ///< 経験値ゲージ
-    std::unique_ptr<HpGauge> hpGauge_;   ///< HPゲージ
-    bool isGameOver_ = false;            ///< ゲームオーバーフラグ
-    std::unique_ptr<WaveUI> waveUI_;     ///< Wave表示UI
-    std::unique_ptr<GridPlane> gridPlane_; ///< グリッド背景
-    std::unique_ptr<SkyDome> skyDome_;     ///< 天球背景
-
     std::unique_ptr<KamataEngine::Sprite> arrowSprite_; ///< レベルアップ選択用矢印
-    int32_t levelUpSelection_ = 0;                      ///< 現在の選択インデックス
+
     std::unique_ptr<KamataEngine::Sprite> keyW_;
     std::unique_ptr<KamataEngine::Sprite> keyA_;
     std::unique_ptr<KamataEngine::Sprite> keyS_;
     std::unique_ptr<KamataEngine::Sprite> keyD_;
-
-    std::unique_ptr<KamataEngine::Sprite> enemyIcon_;
-    std::unique_ptr<KamataEngine::Sprite> orbIcon_;
     std::unique_ptr<KamataEngine::Sprite> ESC_ui_;
+
+    std::unique_ptr<ExpGauge> expGauge_; ///< 経験値ゲージ
+    std::unique_ptr<HpGauge> hpGauge_;   ///< HPゲージ
+    std::unique_ptr<WaveUI> waveUI_;     ///< Wave表示UI
+
+    std::unique_ptr<GridPlane> gridPlane_; ///< グリッド背景
+    std::unique_ptr<SkyDome> skyDome_;     ///< 天球背景
 
     uint32_t pauseSEHandle_ = 0;
 
     std::vector<LevelUpOption> levelUpOptions_;   // 全候補
     std::vector<LevelUpOption> currentChoices_;   // 今回の3つ
     std::unique_ptr<KamataEngine::Sprite> choiceSprite_[3];
+    int32_t levelUpSelection_ = 0;
 };
