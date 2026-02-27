@@ -11,20 +11,11 @@ void GameScene::Initialize() {
 
     camera_.Initialize();
 
-    uint32_t readyTex = TextureManager::Load("ready.png");
-    readyOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(readyTex, { 0, 0 }));
-    readyOverlay_->SetSize({ 1280, 720 });
+    uint32_t startTex = TextureManager::Load("start.png");
+    startOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(startTex, { 0, 0 }));
+    startOverlay_->SetSize({ 1280, 720 });
 
-    uint32_t goTex = TextureManager::Load("go.png");
-    goOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(goTex, { 0, 0 }));
-    goOverlay_->SetSize({ 1280, 720 });
-
-    uint32_t guideTex = TextureManager::Load("guide.png");
-    guide_ = std::unique_ptr<Sprite>(Sprite::Create(guideTex, { 0, 0 }));
-    guide_->SetSize({ 1280, 720 });
-
-    startState_ = StartState::Ready;
-    startTimer_ = 0;
+    startState_ = StartState::Wait;
 
     player_ = std::make_unique<Player>();
     player_->Initialize();
@@ -37,13 +28,9 @@ void GameScene::Initialize() {
     std::string csvPath = "Resources/csv/wave" + std::to_string(currentWave_) + ".csv";
     enemyManager_.Initialize(csvPath, player_.get(), playerManager_.get());
 
-    fade_.Initialize();
-    fadeOutStarted_ = false;
-
-    uint32_t pauseTex = TextureManager::Load("pause.png");
-    pauseOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(pauseTex, { 0, 0 }));
-    pauseOverlay_->SetSize({ 1280, 720 });
-    pauseOverlay_->SetColor({ 1, 1, 1, 1 });
+    curtain_.Initialize();
+    curtain_.StartOpen(20.0f); // ゲーム開始時にカーテンを開く
+    curtainOpening_ = true;
 
     uint32_t deathTex = TextureManager::Load("death.png");
     deathOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(deathTex, { 0, 0 }));
@@ -79,15 +66,14 @@ void GameScene::Initialize() {
     hpGauge_ = std::make_unique<HpGauge>();
     hpGauge_->Initialize();
 
-    waveUI_ = std::make_unique<WaveUI>();
-    waveUI_->Initialize();
-    waveUI_->SetWave(currentWave_);
-
     gridPlane_ = std::make_unique<GridPlane>();
     gridPlane_->Initialize();
 
     skyDome_ = std::make_unique<SkyDome>();
     skyDome_->Initialize();
+
+    pause_ = std::make_unique<Pause>();
+    pause_->Initialize();
 
     GameData::totalExp = 0;
     GameData::finalLevel = 1;
@@ -131,46 +117,65 @@ void GameScene::Initialize() {
 }
 
 void GameScene::Update() {
-    fade_.Update();
+    curtain_.Update();
 
-    if (gridPlane_) { gridPlane_->Update(); }
-    if (skyDome_) { skyDome_->Update(); }
-
-    if (startState_ != StartState::Play) {
-        startTimer_++;
-        switch (startState_) {
-        case StartState::Ready:
-            if (startTimer_ > 60) {
-                startState_ = StartState::Go;
-                startTimer_ = 0;
-            }
-            break;
-        case StartState::Go:
-            if (startTimer_ > 60) {
-                startState_ = StartState::Play;
-            }
-            break;
+    // カーテン開き中はゲーム開始待ち
+    if (curtainOpening_) {
+        if (curtain_.GetState() == CurtainTransition::State::kNone) {
+            curtainOpening_ = false;
         }
         return;
     }
 
-    if (input_->TriggerKey(DIK_ESCAPE) && fade_.GetState() == Fade::State::kStay) {
+    if (gridPlane_) { gridPlane_->Update(); }
+    if (skyDome_) { skyDome_->Update(); }
+
+    // --- ゲーム開始待ち ---
+    if (startState_ == StartState::Wait) {
+
+        // 何かキーが押されたら開始
+        for (int key = 0; key < 256; key++) {
+            if (input_->TriggerKey(static_cast<BYTE>(key))) {
+                startState_ = StartState::Play;
+                break;
+            }
+        }
+        return; // プレイ開始前は他の処理を止める
+    }
+
+    // ESC でポーズ切り替え
+    if (input_->TriggerKey(DIK_ESCAPE) && curtain_.GetState() == CurtainTransition::State::kNone) {
         paused_ = !paused_;
+        pause_->SetActive(paused_);
+        pause_->ResetFlags();
         Audio::GetInstance()->PlayWave(pauseSEHandle_, false, 0.5f);
     }
 
-    if (paused_) {
-        if (input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::kStay) {
-            fade_.StartFadeOut();
-            fadeOutStarted_ = true;
-            SetSceneNo(Scene::Result);
+    // ポーズ中
+    if (pause_->IsActive()) {
+
+        pause_->Update(player_.get(), enemyManager_, input_);
+
+        // ガイド中はゲーム停止
+        if (pause_->IsGuideActive()) {
+            return;
         }
 
-        if (fadeOutStarted_ && fade_.IsFinished()) {
+        // リザルトへ
+        if (pause_->ShouldGoResult()) {
+            if (curtain_.GetState() == CurtainTransition::State::kNone) {
+                curtain_.StartClose();
+                curtainCloseStarted_ = true;
+                SetSceneNo(Scene::Result);
+            }
+        }
+
+        if (curtainCloseStarted_ && curtain_.IsFinished()) {
             GameData::totalExp = playerManager_->GetTotalEXP();
             GameData::finalLevel = playerManager_->GetLevel();
             finished_ = true;
         }
+
         return;
     }
 
@@ -230,12 +235,15 @@ void GameScene::Update() {
         static constexpr int32_t kMaxWave = 3;
 
         if (currentWave_ >= kMaxWave) {
-            if (!fadeOutStarted_ && fade_.GetState() == Fade::State::kStay) {
-                fade_.StartFadeOut();
-                fadeOutStarted_ = true;
+            if (!curtainCloseStarted_ &&
+                curtain_.GetState() == CurtainTransition::State::kNone) {
+
+                curtain_.StartClose();
+                curtainCloseStarted_ = true;
                 SetSceneNo(Scene::Result);
             }
-            if (fadeOutStarted_ && fade_.IsFinished()) {
+
+            if (curtainCloseStarted_ && curtain_.IsFinished()) {
                 GameData::totalExp = playerManager_->GetTotalEXP();
                 GameData::finalLevel = playerManager_->GetLevel();
                 finished_ = true;
@@ -255,11 +263,6 @@ void GameScene::Update() {
         hpGauge_->Update();
     }
 
-    if (waveUI_) {
-        waveUI_->SetWave(currentWave_);
-        waveUI_->Update();
-    }
-
     if (playerManager_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
         deathFadeInStarted_ = true;
         deathAlpha_ = 0.0f;
@@ -275,12 +278,16 @@ void GameScene::Update() {
             }
             deathOverlay_->SetColor({ 1, 1, 1, deathAlpha_ });
         }
-        if (deathFadeInComplete_ && input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::kStay) {
-            fade_.StartFadeOut();
-            fadeOutStarted_ = true;
+        if (deathFadeInComplete_ &&
+            input_->TriggerKey(DIK_SPACE) &&
+            curtain_.GetState() == CurtainTransition::State::kNone) {
+
+            curtain_.StartClose();
+            curtainCloseStarted_ = true;
             SetSceneNo(Scene::Result);
         }
-        if (fadeOutStarted_ && fade_.IsFinished()) {
+
+        if (curtainCloseStarted_ && curtain_.IsFinished()) {
             GameData::totalExp = playerManager_->GetTotalEXP();
             GameData::finalLevel = playerManager_->GetLevel();
             finished_ = true;
@@ -342,6 +349,7 @@ void GameScene::Draw() {
     enemyManager_.DrawHitParticles(&player_->GetCamera());
     playerManager_->Draw(&player_->GetCamera());
 
+
     Model::PostDraw();
 
     Sprite::PreDraw(dxCommon->GetCommandList());
@@ -352,14 +360,11 @@ void GameScene::Draw() {
         deathOverlay_->Draw();
     }
 
-    if (startState_ == StartState::Ready && readyOverlay_) {
-        readyOverlay_->Draw();
-    }
-    else if (startState_ == StartState::Go && goOverlay_) {
-        goOverlay_->Draw();
+    if (startState_ == StartState::Wait && startOverlay_) {
+        startOverlay_->Draw();
     }
 
-    if (startState_ == StartState::Play && guide_) {
+    if (startState_ == StartState::Play) {
         keyW_->Draw();
         keyA_->Draw();
         keyS_->Draw();
@@ -386,71 +391,20 @@ void GameScene::Draw() {
         hpGauge_->Draw();
     }
 
-    if (waveUI_) {
-        waveUI_->Draw();
-    }
-
-    if (paused_ && pauseOverlay_) {
+    // ポーズ中
+    if (pause_->IsActive()) {
         Sprite::PreDraw(dxCommon->GetCommandList());
-        pauseOverlay_->Draw();
-
-        Vector2 mapCenter = { 640, 360 };
-        float mapHalf = 180.0f;
-        float scale = 3.0f;
-
-        Vector3 pPos = player_->GetWorldPosition();
-
-        for (auto& e : enemyManager_.GetEnemies()) {
-            if (!e->IsActive()) continue;
-
-            Vector3 ePos = e->GetPosition();
-            Vector3 rel = { ePos.x - pPos.x, 0, ePos.z - pPos.z };
-
-            float mx = rel.x * scale;
-            float my = -rel.z * scale;
-
-            if (mx > mapHalf) mx = mapHalf;
-            if (mx < -mapHalf) mx = -mapHalf;
-            if (my > mapHalf) my = mapHalf;
-            if (my < -mapHalf) my = -mapHalf;
-
-            Vector2 drawPos = { mapCenter.x + mx, mapCenter.y + my };
-
-            auto icon = Sprite::Create(TextureManager::Load("minimap_enemy.png"), drawPos);
-            icon->SetSize({ 20, 20 });
-            icon->Draw();
-        }
-
-        for (auto& orb : enemyManager_.GetExpOrbs()) {
-            if (!orb->IsActive()) continue;
-
-            Vector3 oPos = orb->GetPosition();
-            Vector3 rel = { oPos.x - pPos.x, 0, oPos.z - pPos.z };
-
-            float mx = rel.x * scale;
-            float my = -rel.z * scale;
-
-            if (mx > mapHalf) mx = mapHalf;
-            if (mx < -mapHalf) mx = -mapHalf;
-            if (my > mapHalf) my = mapHalf;
-            if (my < -mapHalf) my = -mapHalf;
-
-            Vector2 drawPos = { mapCenter.x + mx, mapCenter.y + my };
-
-            auto icon = Sprite::Create(TextureManager::Load("minimap_orb.png"), drawPos);
-            icon->SetSize({ 16, 16 });
-            icon->Draw();
-        }
+        pause_->Draw();
         Sprite::PostDraw();
+        return;
     }
 
-    fade_.Draw();
+    curtain_.Draw();
 
     Sprite::PostDraw();
 }
 
 void GameScene::Finalize() {
-    fadeOutStarted_ = false;
     finished_ = false;
     paused_ = false;
     deathFadeInStarted_ = false;

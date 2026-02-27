@@ -51,9 +51,10 @@ void TitleScene::Initialize() {
     // 行列更新
     worldTransform_.UpdateMatrix();
 
-    // --- フェードや演出用変数の初期化 ---
-    fade_.Initialize();
-    fadeOutStarted_ = false;
+    // --- 遷移演出用変数の初期化 ---
+    curtain_.Initialize();
+    curtain_.StartOpen(20.0f);
+    curtainOpening_ = true;
 
     // --- カメラ設定 --- 
     camera_.Initialize();
@@ -63,8 +64,16 @@ void TitleScene::Initialize() {
 }
 
 void TitleScene::Update() {
-    // --- フェード更新（常に先頭で処理） ---
-    fade_.Update();
+    // --- 遷移演出更新（常に先頭で処理） ---
+    curtain_.Update();
+
+    // ★ カーテン開き中は操作禁止
+    if (curtainOpening_) {
+        if (curtain_.GetState() == CurtainTransition::State::kNone) {
+            curtainOpening_ = false; // 開き終わった
+        }
+        return; // 入力処理を止める
+    }
 
     // --- BGM再生（ループ再生、未再生なら開始） ---
     if (!audio_->IsPlaying(titleBGMHandle_)) {
@@ -98,9 +107,9 @@ void TitleScene::Update() {
     if (input_->TriggerKey(DIK_SPACE)) {
         switch (menuIndex_) {
         case 0: // Play
-            if (fade_.GetState() == Fade::State::kStay) {
-                fade_.StartFadeOut();
-                fadeOutStarted_ = true;
+            if (curtain_.GetState() == CurtainTransition::State::kNone) {
+                curtain_.StartClose();
+                curtainStarted_ = true;
                 SetSceneNo(Scene::Game);
             }
             break;
@@ -115,8 +124,8 @@ void TitleScene::Update() {
         }
     }
 
-    // --- フェード完了 → シーン終了処理 ---
-    if (fadeOutStarted_ && fade_.IsFinished()) {
+    // --- 遷移演出完了 → シーン終了処理 ---
+    if (curtainStarted_ && curtain_.IsFinished()) {
         audio_->StopWave(titleBGMHandle_);
         finished_ = true;
     }
@@ -150,7 +159,7 @@ void TitleScene::Draw() {
         return;
     }
     cursorSprite_->Draw();
-    fade_.Draw();
+    curtain_.Draw();
     Sprite::PostDraw();
 }
 

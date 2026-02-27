@@ -1,0 +1,73 @@
+#include "Pause.h"
+using namespace KamataEngine;
+
+void Pause::Initialize() {
+    pauseTex_ = TextureManager::Load("pause.png");
+    pauseOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(pauseTex_, { 0, 0 }));
+    pauseOverlay_->SetSize({ 1280, 720 });
+
+    guideTex_ = TextureManager::Load("title/guideUI.png");
+    guideSprite_ = std::unique_ptr<Sprite>(Sprite::Create(guideTex_, { 0, 0 }));
+    guideSprite_->SetSize({ 1280, 720 });
+
+    cursorTex_ = TextureManager::Load("arrow.png");
+    cursorSprite_ = std::unique_ptr<Sprite>(Sprite::Create(cursorTex_, { 0, 0 }));
+    cursorSprite_->SetSize({ 1280, 720 });
+
+    miniMap_ = std::make_unique<MiniMap>();
+    miniMap_->Initialize();
+}
+
+void Pause::Update(const Player* player, const EnemyManager& enemyManager, Input* input) {
+    if (!active_) return;
+
+    // ガイド中は ESC で閉じる
+    if (guideActive_) {
+        if (input->TriggerKey(DIK_ESCAPE)) {
+            guideActive_ = false;
+        }
+        return;
+    }
+
+    miniMap_->Update(player, enemyManager);
+
+    // --- メニュー操作（TitleScene と同じ方式） ---
+    if (input->TriggerKey(DIK_W)) {
+        menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
+    }
+    if (input->TriggerKey(DIK_S)) {
+        menuIndex_ = std::min<int32_t>(1, menuIndex_ + 1);
+    }
+
+    // カーソル位置
+    switch (menuIndex_) {
+    case 0: cursorSprite_->SetPosition({ 0, 0 }); break;     // Guide
+    case 1: cursorSprite_->SetPosition({ 0, 120 }); break;   // ToResult
+    }
+
+    // --- 決定 ---
+    if (input->TriggerKey(DIK_SPACE) || input->TriggerKey(DIK_RETURN)) {
+        if (menuIndex_ == 0) {
+            guideActive_ = true;
+        }
+        else if (menuIndex_ == 1) {
+            goResult_ = true;
+        }
+    }
+}
+
+void Pause::Draw() {
+    if (!active_) return;
+
+    pauseOverlay_->Draw();
+    miniMap_->Draw();
+
+    // ガイド中
+    if (guideActive_) {
+        guideSprite_->Draw();
+        return;
+    }
+
+    // メニューUI
+    cursorSprite_->Draw();
+}

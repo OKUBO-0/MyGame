@@ -111,6 +111,9 @@
     <ClCompile Include="3d\GridPlane.cpp" />
     <ClCompile Include="3d\DeathParticle.cpp" />
     <ClCompile Include="3d\ExpOrb.cpp" />
+    <ClCompile Include="2d\CurtainTransition.cpp" />
+    <ClCompile Include="ui\Pause.cpp" />
+    <ClCompile Include="ui\MiniMap.cpp" />
     <ClCompile Include="player\Drone.cpp" />
     <ClCompile Include="GameData.cpp" />
     <ClCompile Include="3d\RippleEffect.cpp" />
@@ -214,6 +217,9 @@
     <ClInclude Include="3d\GridPlane.h" />
     <ClInclude Include="3d\DeathParticle.h" />
     <ClInclude Include="3d\ExpOrb.h" />
+    <ClInclude Include="2d\CurtainTransition.h" />
+    <ClInclude Include="ui\Pause.h" />
+    <ClInclude Include="ui\MiniMap.h" />
     <ClInclude Include="player\Drone.h" />
     <ClInclude Include="player\NormalBullet.h" />
     <ClInclude Include="player\Bullet.h" />
