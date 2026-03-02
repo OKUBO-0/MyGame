@@ -1,16 +1,23 @@
 #include "EnemyManager.h"
+#include "../player/PlayerManager.h"
 #include <fstream>
 #include <sstream>
 #include <cmath>
 
 using namespace KamataEngine;
 
-void EnemyManager::Initialize(const std::string& csvPath, Player* player) {
+void EnemyManager::Initialize(const std::string& csvPath, Player* player, PlayerManager* playerManager) {
     player_ = player;
+    playerManager_ = playerManager;
     SpawnEnemiesFromCSV(csvPath);
 
     audio_ = Audio::GetInstance();
     hitSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_hit.wav");
+
+    // 追加: PlayerManager 側に this を登録して相互参照を完成させる
+    if (playerManager_) {
+        playerManager_->SetEnemyManager(this);
+    }
 }
 
 void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
@@ -37,7 +44,6 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
         std::getline(ss, value, ','); exp = std::stoi(value);
 
         for (int32_t i = 0; i < count; ++i) {
-            // --- ★ ランダム角度で円周上にスポーン ---
             float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
             Vector3 pos = {
                 player_->GetWorldPosition().x + std::cos(angle) * distance,
@@ -61,14 +67,12 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
 
 void EnemyManager::Update() {
 
-    // --- 敵更新 ---
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
             enemy->Update();
         }
         else if (enemy->GetHP() <= 0 && enemy->JustDied()) {
 
-            // ★ キル数加算 
             GameData::totalKillCount++;
 
             auto orb = std::make_unique<ExpOrb>();
@@ -86,14 +90,11 @@ void EnemyManager::Update() {
         }
     }
 
-    // ============================================================
-    // ★ 追加：プレイヤーから離れた敵を円周上に再スポーンさせる
-    // ============================================================
     {
         Vector3 pPos = player_->GetWorldPosition();
 
-        float despawnDist = 75.0f;     // これより遠い敵は再スポーン
-        float respawnRadius = 60.0f;   // 再スポーンする円の半径
+        float despawnDist = 75.0f;
+        float respawnRadius = 60.0f;
 
         for (auto& enemy : enemies_) {
             if (!enemy->IsActive()) continue;
@@ -105,10 +106,8 @@ void EnemyManager::Update() {
 
             if (distSq > despawnDist * despawnDist) {
 
-                // ランダム角度
                 float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
 
-                // 円周上のランダム位置
                 Vector3 newPos = {
                     pPos.x + std::cos(angle) * respawnRadius,
                     0.0f,
@@ -119,10 +118,8 @@ void EnemyManager::Update() {
             }
         }
     }
-    // ============================================================
 
 
-    // --- パーティクル更新 ---
     for (auto it = deathParticles_.begin(); it != deathParticles_.end();) {
         (*it)->Update();
         if (!(*it)->IsActive()) {
@@ -133,11 +130,10 @@ void EnemyManager::Update() {
         }
     }
 
-    // --- 経験値オーブ更新 ---
     for (auto it = expOrbs_.begin(); it != expOrbs_.end();) {
         (*it)->Update(player_->GetWorldPosition());
         if (!(*it)->IsActive()) {
-            player_->AddEXP((*it)->GetEXP());
+            playerManager_->AddEXP((*it)->GetEXP());
             it = expOrbs_.erase(it);
         }
         else {
@@ -145,9 +141,6 @@ void EnemyManager::Update() {
         }
     }
 
-    // ============================
-    // ヒットパーティクル更新
-    // ============================
     for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
         (*it)->Update();
         if (!(*it)->IsActive()) {
@@ -158,7 +151,6 @@ void EnemyManager::Update() {
         }
     }
 
-    // --- 敵同士の衝突処理 ---
     const float kMinDist = 3.0f;
     const float kPushStrength = 1.0f;
 
@@ -196,12 +188,14 @@ void EnemyManager::Update() {
     }
 }
 
-void EnemyManager::CheckCollisions(Player* player)
+void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
 {
+    int damage = playerManager->GetAttackPower();
+
     // ============================
     // NormalBullet と敵の当たり判定
     // ============================
-    for (auto& bullet : player->GetNormalBullets()) {
+    for (auto& bullet : playerManager->GetNormalBullets()) {
         if (!bullet->IsActive()) continue;
 
         for (auto& enemy : enemies_) {
@@ -217,7 +211,7 @@ void EnemyManager::CheckCollisions(Player* player)
             if (distSq < 4.0f) {
 
                 if (!bullet->CanHitEnemy(enemy.get())) continue;
-                // ★ ヒットSE再生
+
                 Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
                 bullet->RegisterHit(enemy.get());
 
@@ -228,8 +222,9 @@ void EnemyManager::CheckCollisions(Player* player)
                     knockDir.z /= len;
                 }
 
-                float knockStrength = 0.6f + bullet->GetDamage() * 0.15f;
-                enemy->TakeDamage(bullet->GetDamage(), knockDir, knockStrength);
+                float knockStrength = 0.6f + damage * 0.15f;
+
+                enemy->TakeDamage(damage, knockDir, knockStrength);
 
                 for (int i = 0; i < 4; ++i) {
                     auto spark = std::make_unique<HitParticle>();
@@ -245,7 +240,7 @@ void EnemyManager::CheckCollisions(Player* player)
     // ============================
     // OrbitBullet と敵の当たり判定
     // ============================
-    for (auto& orb : player->GetOrbitBullets()) {
+    for (auto& orb : playerManager->GetOrbitBullets()) {
         if (!orb->IsActive()) continue;
 
         for (auto& enemy : enemies_) {
@@ -261,7 +256,7 @@ void EnemyManager::CheckCollisions(Player* player)
             if (distSq < 25.0f) {
 
                 if (!orb->CanHitEnemy(enemy.get())) continue;
-                // ★ ヒットSE再生
+
                 Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
                 orb->RegisterHit(enemy.get());
 
@@ -272,13 +267,52 @@ void EnemyManager::CheckCollisions(Player* player)
                     knockDir.z /= len;
                 }
 
-                float knockStrength = 0.5f + orb->GetDamage() * 0.1f;
-                enemy->TakeDamage(orb->GetDamage(), knockDir, knockStrength);
+                float knockStrength = 0.5f + damage * 0.1f;
+
+                enemy->TakeDamage(damage, knockDir, knockStrength);
 
                 for (int i = 0; i < 4; ++i) {
                     auto spark = std::make_unique<HitParticle>();
                     spark->Initialize(oPos);
                     hitParticles_.push_back(std::move(spark));
+                }
+            }
+        }
+    }
+
+    // ===========================
+	// ドローンの弾と敵の当たり判定
+    // ============================
+    if (playerManager->HasDrone()) {
+        auto& drone = playerManager->GetDrone();
+
+        for (auto& bullet : drone->GetBullets()) {
+            if (!bullet->IsActive()) continue;
+
+            for (auto& enemy : enemies_) {
+                if (!enemy->IsActive()) continue;
+
+                Vector3 bPos = bullet->GetPosition();
+                Vector3 ePos = enemy->GetPosition();
+
+                float dx = bPos.x - ePos.x;
+                float dz = bPos.z - ePos.z;
+                float distSq = dx * dx + dz * dz;
+
+                if (distSq < 4.0f) {
+
+                    Vector3 knockDir = { ePos.x - bPos.x, 0, ePos.z - bPos.z };
+                    float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
+                    if (len > 0.0f) {
+                        knockDir.x /= len;
+                        knockDir.z /= len;
+                    }
+
+                    int droneDamage = playerManager->GetAttackPower() / 2;
+
+                    enemy->TakeDamage(droneDamage, knockDir, 0.5f);
+
+                    bullet->Deactivate();
                 }
             }
         }
@@ -311,8 +345,8 @@ void EnemyManager::CheckCollisions(Player* player)
             ePos.z += nz * overlap;
             enemy->SetPosition(ePos);
 
-            if (!player->IsInvincible()) {
-                player->TakeDamage();
+            if (!playerManager->IsInvincible()) {
+                playerManager->TakeDamage();
                 Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
             }
         }

@@ -4,32 +4,36 @@
 using namespace KamataEngine;
 
 void HitParticle::Initialize(const Vector3& pos) {
-    // モデル生成（火花の見た目を表現する立方体モデルを読み込み）
+    // モデル生成（火花の見た目）
     model_.reset(Model::CreateFromOBJ("cube"));
 
-    // ワールド変換初期化（位置・回転・スケールの基準を設定）
+    // ワールド変換初期化
     worldTransform_.Initialize();
-    worldTransform_.translation_ = pos;                 // 火花の生成位置を設定
-    worldTransform_.scale_ = { 0.2f, 0.2f, 0.2f };        // 初期サイズを小さめに設定
+    worldTransform_.translation_ = pos;
 
-    // 初期状態の設定
-    age_ = 0.0f;        // 経過時間リセット
-    alpha_ = 1.0f;      // 完全不透明から開始
-    active_ = true;     // 有効状態に設定
+    // 初期スケールをやや大きめにしてから徐々に縮むようにする
+    initialScale_ = 0.2f;
+    enlargedScale_ = 0.6f;
+    worldTransform_.scale_ = { enlargedScale_, enlargedScale_, enlargedScale_ };
 
-    // ランダム方向に速度を与える処理
-    // 意図: 火花が自然に拡散するように、XZ平面方向にランダムな速度を付与し、
-    //       少しだけY方向にも上昇成分を加える
+    // 初期状態
+    age_ = 0.0f;
+    alpha_ = 1.0f;
+    active_ = true;
+    bounceCount_ = 0;
+
+    // ランダムな水平成分と強めの上向き成分を与える（はじけて上に飛ぶ）
     float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.14159f;
-    float speed = 0.1f + static_cast<float>(rand()) / RAND_MAX * 0.2f;
-    velocity_ = { cos(angle) * speed, 0.05f, sin(angle) * speed };
+    float horizSpeed = 0.08f + static_cast<float>(rand()) / RAND_MAX * 0.12f;
+    float upSpeed = 0.18f + static_cast<float>(rand()) / RAND_MAX * 0.12f; // 上向き速度を大きめに
+    velocity_ = { cos(angle) * horizSpeed, upSpeed, sin(angle) * horizSpeed };
 
-    // 行列更新（設定した位置・スケールを反映）
+    // 行列更新
     worldTransform_.UpdateMatrix();
 }
 
 void HitParticle::Update() {
-    constexpr float kDeltaTime = 0.016f; // 1フレーム時間（60FPS前提）
+    constexpr float kDeltaTime = 0.016f; // 60FPS 前提
     age_ += kDeltaTime;
 
     // --- 寿命判定 ---
@@ -39,18 +43,47 @@ void HitParticle::Update() {
         return;
     }
 
-    // --- 移動処理 ---
-    // 意図: 初期速度に基づいて位置を更新し、火花が拡散する動きを表現する
+    // 重力を適用（y方向速度に逐次加算）
+    velocity_.y += gravity_;
+
+    // 位置更新
     worldTransform_.translation_.x += velocity_.x;
     worldTransform_.translation_.y += velocity_.y;
     worldTransform_.translation_.z += velocity_.z;
 
-    // --- 透明度減少処理 ---
-    // 意図: 時間経過に応じて透明度を減少させ、火花が消えていく演出を行う
-    alpha_ = 1.0f - (age_ / kLifetime);
-    if (model_) {
-        model_->SetAlpha(alpha_);
+    // 地面との衝突（地面より下に行ったらバウンド）
+    if (worldTransform_.translation_.y <= kGroundY) {
+        // 地面にめり込ませない
+        worldTransform_.translation_.y = kGroundY;
+
+        if (bounceCount_ < kMaxBounces) {
+            // 反発（y速度を反転して減衰）
+            velocity_.y = -velocity_.y * 0.45f;
+            // 水平成分も減衰させる
+            velocity_.x *= 0.6f;
+            velocity_.z *= 0.6f;
+            bounceCount_++;
+        }
+        else {
+            // バウンドが終わったら徐々にフェードアウトさせる
+            alpha_ = 1.0f - (age_ / kLifetime);
+            if (alpha_ <= 0.01f) {
+                active_ = false;
+                return;
+            }
+            if (model_) model_->SetAlpha(alpha_);
+        }
     }
+    else {
+        // 空中では時間経過により透明度を下げる（オプション）
+        alpha_ = 1.0f - (age_ / kLifetime) * 0.6f;
+        if (model_) model_->SetAlpha(alpha_);
+    }
+
+    // スケール変化：生成時に大きく、時間で元に戻す（または縮小）
+    float t = age_ / kLifetime;
+    float curScale = (1.0f - t) * enlargedScale_ + t * initialScale_;
+    worldTransform_.scale_ = { curScale, curScale, curScale };
 
     worldTransform_.UpdateMatrix();
 }

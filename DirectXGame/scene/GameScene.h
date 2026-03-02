@@ -2,17 +2,26 @@
 
 #include "IScene.h"
 #include "../player/Player.h"
+#include "../player/PlayerManager.h"
 #include "../enemy/EnemyManager.h"
 #include "../3d/GridPlane.h"
 #include "../3d/SkyDome.h"
-#include "../2d/Fade.h"
+#include "../2d/CurtainTransition.h"
 #include "../ui/ExpGauge.h"
 #include "../ui/HpGauge.h"
-#include "../ui/WaveUI.h"
+#include "../ui/Pause.h"
 #include <KamataEngine.h>
 #include <cstdint>
 #include <memory>
 #include <list>
+#include <functional>
+#include <numeric>
+
+struct LevelUpOption {
+    std::string name;
+    std::function<void(PlayerManager*)> action;
+    uint32_t textureHandle;
+};
 
 /// <summary>
 /// ゲームプレイ全体を管理するシーン。
@@ -59,25 +68,21 @@ private:
     /// ゲーム開始演出の状態
     /// Ready: 準備表示 / Go: 開始表示 / Play: プレイ中
     /// </summary>
-    enum class StartState { Ready, Go, Play };
-
-    StartState startState_ = StartState::Ready; ///< 開始演出状態
-    int32_t startTimer_ = 0;                    ///< 開始演出タイマー
-
-    std::unique_ptr<KamataEngine::Sprite> readyOverlay_; ///< "Ready"表示用スプライト
-    std::unique_ptr<KamataEngine::Sprite> goOverlay_;    ///< "Go"表示用スプライト
-	std::unique_ptr<KamataEngine::Sprite> guide_; ///< "Guide"表示用スプライト
+    enum class StartState { Wait, Play };
+    StartState startState_ = StartState::Wait;
+    std::unique_ptr<KamataEngine::Sprite> startOverlay_;
 
     std::unique_ptr<Player> player_;           ///< プレイヤー
+    std::unique_ptr<PlayerManager> playerManager_; ///< プレイヤーマネージャー
     EnemyManager enemyManager_;                ///< 敵管理
 
-    Fade fade_;                                ///< フェード演出
-    bool fadeOutStarted_ = false;              ///< フェードアウト開始フラグ
-    bool finished_ = false;                    ///< シーン終了フラグ
+    CurtainTransition curtain_;
+    bool curtainCloseStarted_ = false;
+    bool curtainOpening_ = true;
+    bool finished_ = false;
 
     bool paused_ = false; ///< ポーズ状態
-    std::unique_ptr<KamataEngine::Sprite> pauseOverlay_; ///< ポーズ背景
-    std::unique_ptr<KamataEngine::Sprite> pauseText_;    ///< ポーズ文字
+    std::unique_ptr<Pause> pause_;
 
     int32_t currentWave_ = 1;   ///< 現在のWave番号
     bool waveLoading_ = false;  ///< Wave読み込み中フラグ
@@ -90,24 +95,24 @@ private:
 
     bool levelUpActive_ = false; ///< レベルアップ演出フラグ
     std::unique_ptr<KamataEngine::Sprite> levelUpOverlay_; ///< レベルアップ演出スプライト
-
-    std::unique_ptr<ExpGauge> expGauge_; ///< 経験値ゲージ
-    std::unique_ptr<HpGauge> hpGauge_;   ///< HPゲージ
-    bool isGameOver_ = false;            ///< ゲームオーバーフラグ
-    std::unique_ptr<WaveUI> waveUI_;     ///< Wave表示UI
-    std::unique_ptr<GridPlane> gridPlane_; ///< グリッド背景
-    std::unique_ptr<SkyDome> skyDome_;     ///< 天球背景
-
     std::unique_ptr<KamataEngine::Sprite> arrowSprite_; ///< レベルアップ選択用矢印
-    int32_t levelUpSelection_ = 0;                      ///< 現在の選択インデックス
+
     std::unique_ptr<KamataEngine::Sprite> keyW_;
     std::unique_ptr<KamataEngine::Sprite> keyA_;
     std::unique_ptr<KamataEngine::Sprite> keyS_;
     std::unique_ptr<KamataEngine::Sprite> keyD_;
-
-    std::unique_ptr<KamataEngine::Sprite> enemyIcon_;
-    std::unique_ptr<KamataEngine::Sprite> orbIcon_;
     std::unique_ptr<KamataEngine::Sprite> ESC_ui_;
 
+    std::unique_ptr<ExpGauge> expGauge_; ///< 経験値ゲージ
+    std::unique_ptr<HpGauge> hpGauge_;   ///< HPゲージ
+
+    std::unique_ptr<GridPlane> gridPlane_; ///< グリッド背景
+    std::unique_ptr<SkyDome> skyDome_;     ///< 天球背景
+
     uint32_t pauseSEHandle_ = 0;
+
+    std::vector<LevelUpOption> levelUpOptions_;   // 全候補
+    std::vector<LevelUpOption> currentChoices_;   // 今回の3つ
+    std::unique_ptr<KamataEngine::Sprite> choiceSprite_[3];
+    int32_t levelUpSelection_ = 0;
 };

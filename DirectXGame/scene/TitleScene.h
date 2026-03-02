@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IScene.h"
-#include "../2d/Fade.h"
+#include "../2d/CurtainTransition.h"
 #include "../3d/SkyDome.h"
 #include <KamataEngine.h>
 #include <memory>
@@ -37,8 +37,9 @@ private:
     std::unique_ptr<KamataEngine::Sprite> cursorSprite_;
 	std::unique_ptr<KamataEngine::Sprite> guideSprite_;      ///< ガイドUIスプライト
 
-    Fade fade_;                   ///< フェード演出
-    bool fadeOutStarted_ = false; ///< フェードアウト開始フラグ
+    CurtainTransition curtain_;
+    bool curtainStarted_ = false;
+    bool curtainOpening_ = true;
     bool finished_ = false;       ///< シーン終了フラグ
 
     uint32_t titleBGMHandle_ = 0; ///< タイトルBGMハンドル

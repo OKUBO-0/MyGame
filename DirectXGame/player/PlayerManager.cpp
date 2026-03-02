@@ -1,0 +1,215 @@
+#include "PlayerManager.h"
+#include "EnemyManager.h"
+using namespace KamataEngine;
+
+void PlayerManager::Initialize(Player* player) {
+    player_ = player;
+    level_ = 1;
+    nextLevelExp_ = 10;
+    maxLifeStock_ = 3;
+    lifeStock_ = 3;
+    exp_ = 0;
+    totalExp_ = 0;
+    attackPower_ = 1;
+
+    // Player 側の可視状態と同期
+    if (player_) player_->SetVisible(visible_);
+}
+
+void PlayerManager::Update() {
+
+    UpdateInvincibility();
+    UpdateNormalBullets();
+    UpdateOrbitBullets();
+	UpdateDrone();
+    UpdateEffects();
+}
+
+void PlayerManager::Draw(KamataEngine::Camera* camera) {
+    // エフェクト描画
+    for (auto& e : effects_) {
+        e->Draw(camera);
+    }
+
+    // 通常弾描画
+    if (hasNormalBullets_) {
+        for (auto& b : normalBullets_) {
+            b->Draw(camera);
+        }
+    }
+
+    // 周囲弾描画
+    if (hasOrbitBullets_) {
+        for (auto& orb : orbitBullets_) {
+            orb->Draw(camera);
+        }
+    }
+
+    // ドローン描画
+    if (hasDrone_ && drone_) {
+        drone_->Draw(camera);
+	}
+}
+
+void PlayerManager::TakeDamage() {
+    if (invincible_) return;
+
+    lifeStock_--;
+    invincible_ = true;
+    invincibleTimer_ = 1.0f;
+    visible_ = false;
+
+    // Player の可視状態にも反映
+    if (player_) player_->SetVisible(false);
+}
+
+void PlayerManager::RecoverHP() {
+    lifeStock_++;
+    if (lifeStock_ > maxLifeStock_) {
+        lifeStock_ = maxLifeStock_;
+    }
+}
+
+void PlayerManager::AddEXP(int32_t amount) {
+    exp_ += amount;
+    totalExp_ += amount;
+
+    while (exp_ >= nextLevelExp_) {
+        exp_ -= nextLevelExp_;
+        level_++;
+        nextLevelExp_ = static_cast<int32_t>(nextLevelExp_ * 1.5f);
+        levelUpRequested_ = true;
+    }
+}
+
+void PlayerManager::UpdateInvincibility() {
+    const float kDeltaTime = 0.016f;
+
+    if (invincible_) {
+        invincibleTimer_ -= kDeltaTime;
+        if (invincibleTimer_ <= 0.0f) {
+            invincible_ = false;
+            visible_ = true;
+            if (player_) player_->SetVisible(true);
+        }
+        else {
+            int32_t blinkFrame = static_cast<int32_t>(invincibleTimer_ * 10.0f);
+            visible_ = (blinkFrame % 2 == 0);
+            if (player_) player_->SetVisible(visible_);
+        }
+    }
+}
+
+void PlayerManager::UpdateNormalBullets() {
+    const float kDeltaTime = 0.016f;
+
+    if (hasNormalBullets_ && player_) {
+        normalBulletTimer_ += kDeltaTime;
+
+        if (normalBulletTimer_ >= normalBulletInterval_) {
+            float angle = player_->GetWorldRotationY();
+
+            Vector3 forward = {
+                std::sin(angle),
+                0.0f,
+                std::cos(angle)
+            };
+
+            auto b = std::make_unique<NormalBullet>();
+            b->InitializeForward(player_->GetWorldPosition(), forward);
+            normalBullets_.push_back(std::move(b));
+
+            normalBulletTimer_ = 0.0f;
+        }
+
+        for (auto& b : normalBullets_) {
+            b->Update(player_->GetWorldPosition());
+        }
+
+        normalBullets_.erase(
+            std::remove_if(normalBullets_.begin(), normalBullets_.end(),
+                [](const std::unique_ptr<NormalBullet>& b) { return !b->IsActive(); }),
+            normalBullets_.end()
+        );
+    }
+}
+
+void PlayerManager::UpdateOrbitBullets() {
+    if (hasOrbitBullets_ && player_) {
+        for (auto& orb : orbitBullets_) {
+            orb->Update(player_->GetWorldPosition());
+        }
+    }
+}
+
+void PlayerManager::UpdateDrone() {
+    if (hasDrone_ && drone_) {
+        drone_->Update(
+            player_->GetWorldPosition(),
+            enemyManager_->GetEnemies(),
+            droneTimer_,
+            droneInterval_
+        );
+    }
+}
+
+void PlayerManager::UpdateEffects() {
+
+    for (auto it = effects_.begin(); it != effects_.end();) {
+        (*it)->Update();
+        if (!(*it)->IsActive()) {
+            it = effects_.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+void PlayerManager::UpgradeNormalBullets() {
+    normalBulletInterval_ *= 0.8f;
+}
+
+void PlayerManager::AddOrbitBullets() {
+    hasOrbitBullets_ = true;
+
+    const int bulletCount = 1;
+    orbitBullets_.clear();
+
+    for (int i = 0; i < bulletCount; ++i) {
+        float angle = (2.0f * 3.14159265f * i) / bulletCount;
+
+        auto orb = std::make_unique<OrbitBullet>();
+        orb->Initialize(player_->GetWorldPosition(), 10.0f, angle);
+
+        orbitBullets_.push_back(std::move(orb));
+    }
+}
+
+void PlayerManager::UpgradeOrbitBullets() {
+    int newCount = static_cast<int>(orbitBullets_.size()) + 1;
+
+    std::vector<std::unique_ptr<OrbitBullet>> newOrbs;
+    newOrbs.reserve(newCount);
+
+    for (int i = 0; i < newCount; ++i) {
+        float angle = (2.0f * 3.14159265f * i) / newCount;
+
+        auto orb = std::make_unique<OrbitBullet>();
+        orb->Initialize(player_->GetWorldPosition(), 10.0f, angle);
+
+        newOrbs.push_back(std::move(orb));
+    }
+
+    orbitBullets_ = std::move(newOrbs);
+}
+
+void PlayerManager::AddDrone() {
+    hasDrone_ = true;
+    drone_ = std::make_unique<Drone>();
+    drone_->Initialize({ 3.0f, 2.0f, 0.0f }); // プレイヤー右後ろ
+}
+
+void PlayerManager::UpgradeDrone() {
+    droneInterval_ *= 0.8f;
+}
