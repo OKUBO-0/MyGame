@@ -10,7 +10,7 @@ void Pause::Initialize() {
     guideSprite_ = std::unique_ptr<Sprite>(Sprite::Create(guideTex_, { 0, 0 }));
     guideSprite_->SetSize({ 1280, 720 });
 
-    cursorTex_ = TextureManager::Load("arrow.png");
+    cursorTex_ = TextureManager::Load("pause_arrow.png");
     cursorSprite_ = std::unique_ptr<Sprite>(Sprite::Create(cursorTex_, { 0, 0 }));
     cursorSprite_->SetSize({ 1280, 720 });
 
@@ -42,7 +42,7 @@ void Pause::Update(const Player* player, const EnemyManager& enemyManager, Input
     // カーソル位置
     switch (menuIndex_) {
     case 0: cursorSprite_->SetPosition({ 0, 0 }); break;     // Guide
-    case 1: cursorSprite_->SetPosition({ 0, 120 }); break;   // ToResult
+    case 1: cursorSprite_->SetPosition({ 0, 170 }); break;   // ToResult
     }
 
     // --- 決定 ---

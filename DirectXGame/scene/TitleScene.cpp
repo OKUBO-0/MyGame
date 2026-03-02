@@ -18,11 +18,6 @@ void TitleScene::Initialize() {
     titleSprite_ = std::unique_ptr<Sprite>(Sprite::Create(titleTex, { 0, 0 }));
     titleSprite_->SetSize({ 1280, 720 });
 
-    // --- タイトルUIスプライト生成 ---
-    uint32_t titleUITex = TextureManager::Load("title/titleUI.png");
-    titleUISprite_ = std::unique_ptr<Sprite>(Sprite::Create(titleUITex, { 0, 0 }));
-    titleUISprite_->SetSize({ 1280, 720 });
-
     // --- カーソルスプライト生成 ---
     uint32_t cursorTex = TextureManager::Load("title/cursor.png");
     cursorSprite_ = std::unique_ptr<Sprite>(Sprite::Create(cursorTex, { 0, 0 }));
@@ -130,6 +125,26 @@ void TitleScene::Update() {
         finished_ = true;
     }
 
+    // --- プレイヤーモデルのアニメーション（回転 + 浮遊 + 左右揺れ） ---
+
+    // 時間経過
+    static float time = 0.0f;
+    time += 1.0f;
+
+    // 回転（Y軸）
+    worldTransform_.rotation_.y += 0.01f;
+
+    // 上下浮遊（サイン波）
+    float baseY = -10.0f; // Initialize() で設定した初期位置
+    float floatY = sinf(time * 0.03f) * 1.5f;
+    worldTransform_.translation_.y = baseY + floatY;
+
+    // 左右揺れ（サイン波）
+    float baseX = 20.0f; // Initialize() で設定した初期位置
+    float floatX = sinf(time * 0.02f) * 1.0f;
+    worldTransform_.translation_.x = baseX + floatX;
+
+    // 行列更新
     worldTransform_.UpdateMatrix();
 }
 
@@ -152,7 +167,6 @@ void TitleScene::Draw() {
     // --- UI・フェード描画 ---
     Sprite::PreDraw(dxCommon->GetCommandList());
     titleSprite_->Draw();
-    titleUISprite_->Draw();
     // ガイド画面表示中
     if (guideActive_) {
         guideSprite_->Draw();

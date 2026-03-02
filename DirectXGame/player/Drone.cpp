@@ -4,40 +4,32 @@ using namespace KamataEngine;
 void Drone::Initialize(const Vector3& offset) {
     offset_ = offset;
     worldTransform_.Initialize();
-    worldTransform_.scale_ = { 0.5f, 0.5f, 0.5f }; // ★ ドローンを小さくする
+    worldTransform_.scale_ = { 0.5f, 0.5f, 0.5f };
     model_ = std::unique_ptr<Model>(Model::CreateFromOBJ("octopus"));
 }
 
 void Drone::Update(const Vector3& playerPos,
     const std::vector<std::unique_ptr<Enemy>>& enemies,
-    float& fireTimer, float fireInterval, float playerRotationY)
+    float& fireTimer, float fireInterval)
 {
     const float dt = 0.016f;
 
-    // ★ プレイヤーの向きに合わせて offset を回転させる（ローカル->ワールド変換）
-    // 正しい Y 回転行列を使う:
-    // worldRight  = ( cosθ, 0, -sinθ )
-    // worldForward = ( sinθ, 0,  cosθ )
-    float angle = playerRotationY;
+    // ★ 浮遊アニメーション用の時間
+    static float time = 0.0f;
+    time += dt * 60.0f; // 60fps 基準で増加
 
-    float cosA = std::cos(angle);
-    float sinA = std::sin(angle);
+    // ★ 上下浮遊（サイン波）
+    float floatY = std::sinf(time * 0.05f) * 0.5f;
+    // 振幅0.5、速度0.05 → 自然なふわふわ
 
-    // ローカルオフセット (offset_.x = 右方向, offset_.z = 前方向) をワールド座標へ変換
-    Vector3 rotatedOffset = {
-        offset_.x * cosA + offset_.z * sinA,   // x' = cosθ * x + sinθ * z
-        offset_.y,
-        -offset_.x * sinA + offset_.z * cosA   // z' = -sinθ * x + cosθ * z
-    };
-
-    // ★ プレイヤーに追従（向きに合わせた位置）
+    // ★ プレイヤーの移動には追従するが、回転には追従しない
     worldTransform_.translation_ = {
-        playerPos.x + rotatedOffset.x,
-        playerPos.y + rotatedOffset.y,
-        playerPos.z + rotatedOffset.z
+        playerPos.x + offset_.x,
+        playerPos.y + offset_.y + floatY, // ← 浮遊を加算
+        playerPos.z + offset_.z
     };
 
-    // --- 以下は今まで通り ---
+    // --- 敵探索 ---
     fireTimer += dt;
 
     Enemy* target = nullptr;
@@ -57,6 +49,7 @@ void Drone::Update(const Vector3& playerPos,
         }
     }
 
+    // --- 敵がいる場合は向きを変えて発射 ---
     if (target && fireTimer >= fireInterval) {
 
         Vector3 dir = {
@@ -71,6 +64,11 @@ void Drone::Update(const Vector3& playerPos,
             dir.z /= len;
         }
 
+        // ★ 敵の方向へ向く
+        float angleToTarget = std::atan2(dir.x, dir.z);
+        worldTransform_.rotation_.y = angleToTarget;
+
+        // 弾発射
         auto b = std::make_unique<NormalBullet>();
         b->InitializeForward(worldTransform_.translation_, dir);
         bullets_.push_back(std::move(b));
@@ -78,6 +76,7 @@ void Drone::Update(const Vector3& playerPos,
         fireTimer = 0.0f;
     }
 
+    // --- 弾更新 ---
     for (auto& b : bullets_) {
         b->Update(worldTransform_.translation_);
     }

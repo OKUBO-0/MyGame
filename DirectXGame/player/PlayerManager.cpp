@@ -148,8 +148,7 @@ void PlayerManager::UpdateDrone() {
             player_->GetWorldPosition(),
             enemyManager_->GetEnemies(),
             droneTimer_,
-            droneInterval_,
-            player_->GetWorldRotationY() // ★ 追加
+            droneInterval_
         );
     }
 }
@@ -208,7 +207,7 @@ void PlayerManager::UpgradeOrbitBullets() {
 void PlayerManager::AddDrone() {
     hasDrone_ = true;
     drone_ = std::make_unique<Drone>();
-    drone_->Initialize({ 2.0f, 0.0f, -2.0f }); // プレイヤー右後ろ
+    drone_->Initialize({ 3.0f, 2.0f, 0.0f }); // プレイヤー右後ろ
 }
 
 void PlayerManager::UpgradeDrone() {

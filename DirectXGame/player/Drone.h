@@ -11,8 +11,7 @@ public:
 
     void Update(const KamataEngine::Vector3& playerPos,
         const std::vector<std::unique_ptr<Enemy>>& enemies,
-        float& fireTimer, float fireInterval,
-        float playerRotationY); // ★ 追加
+        float& fireTimer, float fireInterval); // ★ 追加
 
     void Draw(KamataEngine::Camera* camera);
 

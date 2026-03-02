@@ -132,7 +132,6 @@ void GameScene::Update() {
 
     // --- ゲーム開始待ち ---
     if (startState_ == StartState::Wait) {
-
         // 何かキーが押されたら開始
         for (int key = 0; key < 256; key++) {
             if (input_->TriggerKey(static_cast<BYTE>(key))) {
@@ -144,23 +143,21 @@ void GameScene::Update() {
     }
 
     // ESC でポーズ切り替え
-    if (input_->TriggerKey(DIK_ESCAPE) && curtain_.GetState() == CurtainTransition::State::kNone) {
-        paused_ = !paused_;
-        pause_->SetActive(paused_);
-        pause_->ResetFlags();
-        Audio::GetInstance()->PlayWave(pauseSEHandle_, false, 0.5f);
+    if (!pause_->IsGuideActive()) {
+        if (input_->TriggerKey(DIK_ESCAPE) && curtain_.GetState() == CurtainTransition::State::kNone) {
+            paused_ = !paused_;
+            pause_->SetActive(paused_);
+            pause_->ResetFlags();
+            Audio::GetInstance()->PlayWave(pauseSEHandle_, false, 0.5f);
+        }
     }
-
     // ポーズ中
     if (pause_->IsActive()) {
-
         pause_->Update(player_.get(), enemyManager_, input_);
-
         // ガイド中はゲーム停止
         if (pause_->IsGuideActive()) {
             return;
         }
-
         // リザルトへ
         if (pause_->ShouldGoResult()) {
             if (curtain_.GetState() == CurtainTransition::State::kNone) {
@@ -169,13 +166,11 @@ void GameScene::Update() {
                 SetSceneNo(Scene::Result);
             }
         }
-
         if (curtainCloseStarted_ && curtain_.IsFinished()) {
             GameData::totalExp = playerManager_->GetTotalEXP();
             GameData::finalLevel = playerManager_->GetLevel();
             finished_ = true;
         }
-
         return;
     }
 
@@ -396,7 +391,6 @@ void GameScene::Draw() {
         Sprite::PreDraw(dxCommon->GetCommandList());
         pause_->Draw();
         Sprite::PostDraw();
-        return;
     }
 
     curtain_.Draw();
