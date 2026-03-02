@@ -91,4 +91,4 @@ void ExpGauge::Draw() {
 bool ExpGauge::IsFilled() const {
     // 現在EXPが最大値に到達しているか判定
     return displayedExp_ >= maxExp_;
-}
+}　
