@@ -41,17 +41,17 @@ private:
     bool finished_ = false;       ///< シーン終了フラグ
 
     std::unique_ptr<Score> expUI_; ///< スコア表示UI
-    std::unique_ptr<Score> levelUI_;   // ★追加
-    std::unique_ptr<Score> killUI_;    // ★追加
+    std::unique_ptr<Score> levelUI_;   //追加
+    std::unique_ptr<Score> killUI_;    //追加
 
     int32_t currentExp_ = 0;       ///< 現在のスコア
     int32_t targetExp_ = 0;      ///< 目標スコア
 
-    int32_t currentLevel_ = 0;     // ★追加
-    int32_t targetLevel_ = 0;      // ★追加
+    int32_t currentLevel_ = 0;     //追加
+    int32_t targetLevel_ = 0;      //追加
 
-    int32_t currentKill_ = 0;      // ★追加
-    int32_t targetKill_ = 0;       // ★追加
+    int32_t currentKill_ = 0;      //追加
+    int32_t targetKill_ = 0;       //追加
 
     uint32_t selectSEHandle_ = 0; ///< 選択SEハンドル
 };

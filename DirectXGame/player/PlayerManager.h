@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <string>
 
 #include "Player.h"
 #include "RippleEffect.h"
@@ -16,6 +17,8 @@ class EnemyManager;
 class PlayerManager {
 public:
     void Initialize(Player* player);
+    void LoadStatusFromCSV(const std::string& filePath);
+
     void Update();
     void Draw(KamataEngine::Camera* camera);
 
@@ -54,7 +57,7 @@ public:
     void AddDrone();
     void UpgradeDrone();
     bool HasDrone() const { return hasDrone_; }
-	const std::unique_ptr<Drone>& GetDrone() const { return drone_; }
+    const std::unique_ptr<Drone>& GetDrone() const { return drone_; }
 
     void SetEnemyManager(EnemyManager* manager) { enemyManager_ = manager; }
 
@@ -63,21 +66,19 @@ private:
     EnemyManager* enemyManager_ = nullptr;
 
     // HP管理
-    int32_t lifeStock_ = 3;
-    int32_t maxLifeStock_ = 3;
     bool invincible_ = false;
     float invincibleTimer_ = 0.0f;
     bool visible_ = true;
 
     // EXP / レベル
-    int32_t exp_ = 0;
-    int32_t totalExp_ = 0;
-    int32_t level_ = 1;
-    int32_t nextLevelExp_ = 10;
+    int32_t level_;
+    int32_t nextLevelExp_ ;
+    int32_t maxLifeStock_ ;
+    int32_t lifeStock_;
+    int32_t exp_;
+    int32_t totalExp_;
+    int32_t attackPower_;
     bool levelUpRequested_ = false;
-
-    // 攻撃力
-    int32_t attackPower_ = 1;
 
     // エフェクト
     std::vector<std::unique_ptr<RippleEffect>> effects_;
@@ -103,6 +104,6 @@ private:
     void UpdateInvincibility();
     void UpdateNormalBullets();
     void UpdateOrbitBullets();
-	void UpdateDrone();
+    void UpdateDrone();
     void UpdateEffects();
 };

@@ -14,15 +14,15 @@ void Drone::Update(const Vector3& playerPos,
 {
     const float dt = 0.016f;
 
-    // ★ 浮遊アニメーション用の時間
+    // 浮遊アニメーション用の時間
     static float time = 0.0f;
     time += dt * 60.0f; // 60fps 基準で増加
 
-    // ★ 上下浮遊（サイン波）
+    // 上下浮遊（サイン波）
     float floatY = std::sinf(time * 0.05f) * 0.5f;
     // 振幅0.5、速度0.05 → 自然なふわふわ
 
-    // ★ プレイヤーの移動には追従するが、回転には追従しない
+    // プレイヤーの移動には追従するが、回転には追従しない
     worldTransform_.translation_ = {
         playerPos.x + offset_.x,
         playerPos.y + offset_.y + floatY, // ← 浮遊を加算
@@ -64,7 +64,7 @@ void Drone::Update(const Vector3& playerPos,
             dir.z /= len;
         }
 
-        // ★ 敵の方向へ向く
+        // 敵の方向へ向く
         float angleToTarget = std::atan2(dir.x, dir.z);
         worldTransform_.rotation_.y = angleToTarget;
 

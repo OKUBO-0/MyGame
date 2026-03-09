@@ -2,25 +2,20 @@
 using namespace KamataEngine;
 
 void Enemy::Initialize() {
-    // ワールドトランスフォーム初期化（位置・回転・スケールの基準を設定）
     worldTransform_.Initialize();
-    worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f }; // 初期位置は原点
-
-    // 敵をアクティブ状態に設定
+    worldTransform_.translation_ = { 0,0,0 };
     active_ = true;
 
-    // オブジェクトカラー生成（デフォルトは白色）
     if (!objectColor_) {
         objectColor_ = std::make_unique<ObjectColor>();
         objectColor_->Initialize();
-        objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+        objectColor_->SetColor({ 1,1,1,1 });
     }
 
-    // 白テクスチャをロード（ヒット時のフラッシュ用）
     whiteTextureHandle_ = TextureManager::Load("color/white.png");
 
     audio_ = Audio::GetInstance();
-    deathSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_death.wav");
+    deathSEHandle_ = audio_->LoadWave("Sounds/se_death.wav");
 }
 
 void Enemy::SetPosition(const Vector3& pos) {
@@ -32,7 +27,7 @@ void Enemy::SetPlayer(Player* player) {
 }
 
 void Enemy::SetModelByType(int32_t type) {
-    enemyType_ = type; // ★ 行動タイプをセット
+    enemyType_ = type;
 
     switch (type) {
     case 0: enemyModel_.reset(Model::CreateFromOBJ("Enemy1")); break;
@@ -40,19 +35,6 @@ void Enemy::SetModelByType(int32_t type) {
     case 2: enemyModel_.reset(Model::CreateFromOBJ("Enemy3")); break;
     case 3: enemyModel_.reset(Model::CreateFromOBJ("Enemy4")); break;
     default: enemyModel_.reset(Model::CreateFromOBJ("octopus")); break;
-    }
-
-    // ★ type1 は純粋に速度を上げる 
-    if (type == 1) { 
-        speedMultiplier_ = 2.0f; // 通常の2倍速 
-    } else { 
-        speedMultiplier_ = 1.0f; 
-    }
-
-    if (!objectColor_) {
-        objectColor_ = std::make_unique<ObjectColor>();
-        objectColor_->Initialize();
-        objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
     }
 }
 
@@ -95,18 +77,17 @@ void Enemy::ResetJustDied() {
 void Enemy::Update() {
     if (!active_) return;
 
-    const float kDeltaTime = 0.016f;
+    const float dt = 0.016f;
 
-    // --- ヒット点滅処理 ---
+    // --- ヒット点滅 ---
     if (hitFlashTimer_ > 0.0f) {
-        hitFlashTimer_ -= kDeltaTime;
-        if (hitFlashTimer_ <= 0.0f) {
-            hitFlashTimer_ = 0.0f;
-            if (objectColor_) objectColor_->SetColor({ 1,1,1,1 });
+        hitFlashTimer_ -= dt;
+        if (hitFlashTimer_ <= 0.0f && objectColor_) {
+            objectColor_->SetColor({ 1,1,1,1 });
         }
     }
 
-    // --- ノックバック処理 ---
+    // --- ノックバック ---
     if (knockbackTimer_ > 0.0f) {
         worldTransform_.translation_.x += knockbackVelocity_.x;
         worldTransform_.translation_.z += knockbackVelocity_.z;
@@ -114,38 +95,30 @@ void Enemy::Update() {
         knockbackVelocity_.x *= 0.88f;
         knockbackVelocity_.z *= 0.88f;
 
-        knockbackTimer_ -= kDeltaTime;
+        knockbackTimer_ -= dt;
         if (knockbackTimer_ <= 0.0f) {
-            knockbackTimer_ = 0.0f;
             knockbackVelocity_ = { 0,0,0 };
         }
     }
     else {
-        // ★★★ type2 だけ特別な動き（円軌道AI） ★★★
+        // --- 通常行動 ---
         if (enemyType_ == 2) {
             UpdateType2();
         }
-        else {
-            // ★ 既存の追尾処理（type0, type1, type3）
-            if (player_) {
-                const Vector3& playerPos = player_->GetWorldPosition();
-                Vector3 dir = {
-                    playerPos.x - worldTransform_.translation_.x,
-                    0.0f,
-                    playerPos.z - worldTransform_.translation_.z
-                };
+        else if (player_) {
+            Vector3 p = player_->GetWorldPosition();
+            Vector3 dir = { p.x - worldTransform_.translation_.x, 0, p.z - worldTransform_.translation_.z };
 
-                float len = std::sqrt(dir.x * dir.x + dir.z * dir.z);
-                if (len > 0.0f) {
-                    dir.x /= len;
-                    dir.z /= len;
+            float len = std::sqrt(dir.x * dir.x + dir.z * dir.z);
+            if (len > 0.0f) {
+                dir.x /= len;
+                dir.z /= len;
 
-                    worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
+                worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
 
-                    float moveSpeed = speed_ * speedMultiplier_;
-                    worldTransform_.translation_.x += dir.x * moveSpeed;
-                    worldTransform_.translation_.z += dir.z * moveSpeed;
-                }
+                float moveSpeed = speed_;
+                worldTransform_.translation_.x += dir.x * moveSpeed;
+                worldTransform_.translation_.z += dir.z * moveSpeed;
             }
         }
     }
@@ -156,14 +129,8 @@ void Enemy::Update() {
 void Enemy::UpdateType2() {
     if (!player_) return;
 
-    const Vector3& playerPos = player_->GetWorldPosition();
-
-    // プレイヤー方向
-    Vector3 toPlayer = {
-        playerPos.x - worldTransform_.translation_.x,
-        0.0f,
-        playerPos.z - worldTransform_.translation_.z
-    };
+    Vector3 p = player_->GetWorldPosition();
+    Vector3 toPlayer = { p.x - worldTransform_.translation_.x, 0, p.z - worldTransform_.translation_.z };
 
     float dist = std::sqrt(toPlayer.x * toPlayer.x + toPlayer.z * toPlayer.z);
     if (dist > 0.001f) {
@@ -171,26 +138,21 @@ void Enemy::UpdateType2() {
         toPlayer.z /= dist;
     }
 
-    // 横方向（円軌道）
-    Vector3 side = { -toPlayer.z, 0.0f, toPlayer.x };
+    Vector3 side = { -toPlayer.z, 0, toPlayer.x };
 
-    // ★ 速度を個別に適用
     Vector3 finalDir = {
         toPlayer.x * approachSpeed_ + side.x * circleSpeed_,
-        0.0f,
+        0,
         toPlayer.z * approachSpeed_ + side.z * circleSpeed_
     };
 
-    // 正規化
     float len = std::sqrt(finalDir.x * finalDir.x + finalDir.z * finalDir.z);
     if (len > 0.001f) {
         finalDir.x /= len;
         finalDir.z /= len;
     }
 
-    // ★ 最終移動速度
-    float moveSpeed = speed_ * speedMultiplier_;
-
+    float moveSpeed = speed_;
     worldTransform_.translation_.x += finalDir.x * moveSpeed;
     worldTransform_.translation_.z += finalDir.z * moveSpeed;
 
@@ -200,45 +162,32 @@ void Enemy::UpdateType2() {
 void Enemy::Draw(Camera* camera) {
     if (!active_ || !enemyModel_) return;
 
-    // ヒット中は白テクスチャで上書き
     if (hitFlashTimer_ > 0.0f && whiteTextureHandle_ != 0 && objectColor_) {
         enemyModel_->Draw(worldTransform_, *camera, whiteTextureHandle_, objectColor_.get());
     }
     else {
-        if (objectColor_) {
-            enemyModel_->Draw(worldTransform_, *camera, objectColor_.get());
-        }
-        else {
-            enemyModel_->Draw(worldTransform_, *camera);
-        }
+        enemyModel_->Draw(worldTransform_, *camera, objectColor_.get());
     }
 }
 
 void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) {
-    // HP減少
     hp_ -= damage;
 
-    // HPが0以下なら死亡処理
     if (hp_ <= 0) {
-        Audio::GetInstance()->PlayWave(deathSEHandle_, false, 1.0f);
+        audio_->PlayWave(deathSEHandle_, false, 1.0f);
         Deactivate();
         justDied_ = true;
         return;
     }
 
-    // 白フラッシュ開始
     hitFlashTimer_ = kHitFlashDuration;
     if (objectColor_) {
-        objectColor_->SetColor({ 10.0f, 10.0f, 10.0f, 1.0f });
+        objectColor_->SetColor({ 10,10,10,1 });
     }
 
-    // ノックバック適用
     float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
-    if (len > 0.0001f && strength > 0.0f) {
-        Vector3 dir = knockDir;
-        dir.x /= len;
-        dir.z /= len;
-
+    if (len > 0.001f && strength > 0.0f) {
+        Vector3 dir = { knockDir.x / len, 0, knockDir.z / len };
         knockbackVelocity_.x = dir.x * strength;
         knockbackVelocity_.z = dir.z * strength;
         knockbackTimer_ = kKnockbackDuration;

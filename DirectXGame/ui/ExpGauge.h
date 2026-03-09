@@ -42,7 +42,7 @@ private:
     static constexpr int32_t kLvDigits = 2;             ///< レベル表示の最大桁数
     std::array<std::unique_ptr<KamataEngine::Sprite>, kLvDigits> sprite_; ///< レベル数字スプライト
 
-    KamataEngine::Vector2 size_ = { 16.0f, 32.0f }; ///< 数字1桁のサイズ
+    KamataEngine::Vector2 size_ = { 24.0f, 32.0f }; ///< 数字1桁のサイズ
 
     int32_t displayedExp_ = 0; ///< 表示中のEXP値（アニメーション用）
     int32_t targetExp_ = 0;    ///< 設定されたEXP値
