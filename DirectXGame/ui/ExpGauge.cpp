@@ -6,7 +6,7 @@ void ExpGauge::Initialize() {
     // テクスチャ読み込み（白1x1は色付き矩形用）
     dummyTextureHandle_ = TextureManager::Load("white1x1.png");
     lvLabelHandle_ = TextureManager::Load("lv_label.png");
-    lvDigitsHandle_ = TextureManager::Load("number.png");
+    lvDigitsHandle_ = TextureManager::Load("number/numbers.png");
 
     // 外枠（黄色のフレーム）
     yellowFrame_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 0, 1 }));
@@ -24,12 +24,12 @@ void ExpGauge::Initialize() {
     blueGauge_->SetColor({ 0.0f, 0.0f, 1.0f, 1.0f });
 
     // LVラベル（「LV」文字画像）
-    lvLabel_ = std::unique_ptr<Sprite>(Sprite::Create(lvLabelHandle_, { 1200.0f, 10.0f }));
-    lvLabel_->SetSize({ 32, 32 });
+    lvLabel_ = std::unique_ptr<Sprite>(Sprite::Create(lvLabelHandle_, { 1175.0f, 10.0f }));
+    lvLabel_->SetSize({ 48, 32 });
 
     // レベル数字（2桁分を用意）
     for (int32_t i = 0; i < kLvDigits; ++i) {
-        sprite_[i] = std::unique_ptr<Sprite>(Sprite::Create(lvDigitsHandle_, { 1235.0f + size_.x * i, 10.0f }));
+        sprite_[i] = std::unique_ptr<Sprite>(Sprite::Create(lvDigitsHandle_, { 1225.0f + size_.x * i, 10.0f }));
         sprite_[i]->SetSize(size_);
         sprite_[i]->SetTextureRect({ 0.0f, 0.0f }, size_);
     }

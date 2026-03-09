@@ -4,7 +4,7 @@ using namespace KamataEngine;
 
 void Score::Initialize() {
     // 数字表示用テクスチャを読み込み
-    textureHandle_ = TextureManager::Load("number.png");
+    textureHandle_ = TextureManager::Load("number/numbers.png");
 
     // 各桁分のスプライトを生成し、横並びに配置
     for (int32_t i = 0; i < kDigitCount; ++i) {

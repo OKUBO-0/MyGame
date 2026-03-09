@@ -15,15 +15,15 @@ private:
     uint32_t orbTex_ = 0;
     uint32_t bgTex_ = 0;
 
-    // ★ ミニマップの中心（アイコン計算用）
+    // ミニマップの中心（アイコン計算用）
     KamataEngine::Vector2 mapCenter_ = { 320, 360 };
 
     KamataEngine::Vector2 bgPos_ = { 0, 0 };
 
-    // ★ 円形ミニマップの半径（背景画像に合わせる）
+    // 円形ミニマップの半径（背景画像に合わせる）
     float radius_ = 180.0f;
 
-    // ★ ワールド→ミニマップ縮尺
+    // ワールド→ミニマップ縮尺
     float scale_ = 3.0f;
 
     struct Icon {

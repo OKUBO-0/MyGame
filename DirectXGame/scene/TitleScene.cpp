@@ -62,7 +62,7 @@ void TitleScene::Update() {
     // --- 遷移演出更新（常に先頭で処理） ---
     curtain_.Update();
 
-    // ★ カーテン開き中は操作禁止
+    // カーテン開き中は操作禁止
     if (curtainOpening_) {
         if (curtain_.GetState() == CurtainTransition::State::kNone) {
             curtainOpening_ = false; // 開き終わった

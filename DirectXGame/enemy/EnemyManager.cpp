@@ -3,24 +3,28 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <algorithm>
 
 using namespace KamataEngine;
 
 void EnemyManager::Initialize(const std::string& csvPath, Player* player, PlayerManager* playerManager) {
     player_ = player;
     playerManager_ = playerManager;
-    SpawnEnemiesFromCSV(csvPath);
+
+    // 敵タイプ定義を読み込む
+    LoadEnemyTypes(csvPath);
 
     audio_ = Audio::GetInstance();
-    hitSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_hit.wav");
+    hitSEHandle_ = audio_->LoadWave("Sounds/se_hit.wav");
 
-    // 追加: PlayerManager 側に this を登録して相互参照を完成させる
     if (playerManager_) {
         playerManager_->SetEnemyManager(this);
     }
 }
 
-void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
+void EnemyManager::LoadEnemyTypes(const std::string& filePath) {
+    enemyTypes_.clear();
+
     std::ifstream file(filePath);
     if (!file.is_open()) {
         OutputDebugStringA(("CSV読み込み失敗: " + filePath + "\n").c_str());
@@ -29,44 +33,88 @@ void EnemyManager::SpawnEnemiesFromCSV(const std::string& filePath) {
 
     std::string line;
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
         std::stringstream ss(line);
         std::string value;
-        int32_t type = 0;
-        int32_t count = 0;
-        int32_t hp = 3;
-        int32_t exp = 0;
-        float distance = 0.0f;
 
-        std::getline(ss, value, ','); type = std::stoi(value);
-        std::getline(ss, value, ','); distance = std::stof(value);
-        std::getline(ss, value, ','); count = std::stoi(value);
-        std::getline(ss, value, ','); hp = std::stoi(value);
-        std::getline(ss, value, ','); exp = std::stoi(value);
+        EnemyTypeData data{};
 
-        for (int32_t i = 0; i < count; ++i) {
-            float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
-            Vector3 pos = {
-                player_->GetWorldPosition().x + std::cos(angle) * distance,
-                0.0f,
-                player_->GetWorldPosition().z + std::sin(angle) * distance
-            };
+        // CSV: type, baseHP, baseSpeed, baseEXP, spawnCount
+        std::getline(ss, value, ','); data.type = std::stoi(value);
+        std::getline(ss, value, ','); data.baseHP = std::stoi(value);
+        std::getline(ss, value, ','); data.baseSpeed = std::stof(value);
+        std::getline(ss, value, ','); data.baseEXP = std::stoi(value);
+        std::getline(ss, value, ','); data.spawnCount = std::stoi(value);
 
-            auto enemy = std::make_unique<Enemy>();
-            enemy->SetHP(hp);
-            enemy->SetEXP(exp);
-            enemy->Initialize();
-            enemy->SetPlayer(player_);
-            enemy->SetPosition(pos);
-            enemy->SetModelByType(type);
-            enemies_.push_back(std::move(enemy));
-        }
+        enemyTypes_.push_back(data);
     }
 
     file.close();
 }
 
-void EnemyManager::Update() {
+void EnemyManager::SpawnEnemies() {
+    if (enemyTypes_.empty() || !player_) return;
 
+    // 経過時間で解禁される敵タイプを増やす（20秒ごとに1タイプ解禁）
+    int maxIndex = static_cast<int>(elapsedTime_ / 20.0f);
+    maxIndex = std::clamp(maxIndex, 0, (int)enemyTypes_.size() - 1);
+
+    const EnemyTypeData& data = enemyTypes_[rand() % (maxIndex + 1)];
+
+    for (int i = 0; i < data.spawnCount; i++) {
+        SpawnOneEnemy(data);
+    }
+}
+
+void EnemyManager::SpawnOneEnemy(const EnemyTypeData& data) {
+    Vector3 pPos = player_->GetWorldPosition();
+
+    float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
+    float distance = 50.0f;
+
+    Vector3 pos = {
+        pPos.x + std::cos(angle) * distance,
+        0.0f,
+        pPos.z + std::sin(angle) * distance
+    };
+
+    auto enemy = std::make_unique<Enemy>();
+    enemy->Initialize();
+    enemy->SetPlayer(player_);
+    enemy->SetPosition(pos);
+    enemy->SetModelByType(data.type);
+
+    // 時間経過で強化
+    int hp = data.baseHP + (int)(elapsedTime_ / 30.0f);
+    int exp = data.baseEXP + (int)(elapsedTime_ / 40.0f);
+    float speed = data.baseSpeed + elapsedTime_ * 0.002f;
+
+    enemy->SetHP(hp);
+    enemy->SetEXP(exp);
+
+    // Enemy に速度設定メソッドがある前提
+    enemy->SetSpeed(speed);
+
+    enemies_.push_back(std::move(enemy));
+}
+
+void EnemyManager::Update() {
+    const float dt = 1.0f / 60.0f;
+
+    elapsedTime_ += dt;
+    spawnTimer_ += dt;
+
+    // スポーン間隔を短くする（下限 0.5秒）
+    spawnInterval_ = std::max<float>(0.5f, 2.0f - elapsedTime_ * 0.01f);
+
+    // 一定間隔で敵を湧かせる
+    if (spawnTimer_ >= spawnInterval_) {
+        SpawnEnemies();
+        spawnTimer_ = 0.0f;
+    }
+
+    // 敵の更新・死亡処理
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
             enemy->Update();
@@ -79,8 +127,7 @@ void EnemyManager::Update() {
             orb->Initialize(enemy->GetPosition(), enemy->GetEXP());
             expOrbs_.push_back(std::move(orb));
 
-            const int particleCount = 5;
-            for (int i = 0; i < particleCount; ++i) {
+            for (int i = 0; i < 5; i++) {
                 auto p = std::make_unique<DeathParticle>();
                 p->Initialize(enemy->GetPosition());
                 deathParticles_.push_back(std::move(p));
@@ -90,9 +137,9 @@ void EnemyManager::Update() {
         }
     }
 
+    // プレイヤーから離れすぎた敵を再配置
     {
         Vector3 pPos = player_->GetWorldPosition();
-
         float despawnDist = 75.0f;
         float respawnRadius = 60.0f;
 
@@ -105,7 +152,6 @@ void EnemyManager::Update() {
             float distSq = dx * dx + dz * dz;
 
             if (distSq > despawnDist * despawnDist) {
-
                 float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
 
                 Vector3 newPos = {
@@ -119,15 +165,11 @@ void EnemyManager::Update() {
         }
     }
 
-
+    // パーティクル・オーブ更新（既存処理）
     for (auto it = deathParticles_.begin(); it != deathParticles_.end();) {
         (*it)->Update();
-        if (!(*it)->IsActive()) {
-            it = deathParticles_.erase(it);
-        }
-        else {
-            ++it;
-        }
+        if (!(*it)->IsActive()) it = deathParticles_.erase(it);
+        else ++it;
     }
 
     for (auto it = expOrbs_.begin(); it != expOrbs_.end();) {
@@ -136,21 +178,16 @@ void EnemyManager::Update() {
             playerManager_->AddEXP((*it)->GetEXP());
             it = expOrbs_.erase(it);
         }
-        else {
-            ++it;
-        }
+        else ++it;
     }
 
     for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
         (*it)->Update();
-        if (!(*it)->IsActive()) {
-            it = hitParticles_.erase(it);
-        }
-        else {
-            ++it;
-        }
+        if (!(*it)->IsActive()) it = hitParticles_.erase(it);
+        else ++it;
     }
 
+    // 敵同士の押し戻し（既存処理）
     const float kMinDist = 3.0f;
     const float kPushStrength = 1.0f;
 
@@ -281,7 +318,7 @@ void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
     }
 
     // ===========================
-	// ドローンの弾と敵の当たり判定
+    // ドローンの弾と敵の当たり判定
     // ============================
     if (playerManager->HasDrone()) {
         auto& drone = playerManager->GetDrone();
@@ -355,22 +392,12 @@ void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
 
 void EnemyManager::Draw(Camera* camera) {
     for (auto& enemy : enemies_) {
-        if (enemy->IsActive()) {
-            enemy->Draw(camera);
-        }
+        if (enemy->IsActive()) enemy->Draw(camera);
     }
-
-    for (auto& orb : expOrbs_) {
-        orb->Draw(camera);
-    }
-
-    for (auto& p : deathParticles_) {
-        p->Draw(camera);
-    }
+    for (auto& orb : expOrbs_) orb->Draw(camera);
+    for (auto& p : deathParticles_) p->Draw(camera);
 }
 
 void EnemyManager::DrawHitParticles(Camera* camera) {
-    for (auto& p : hitParticles_) {
-        p->Draw(camera);
-    }
+    for (auto& p : hitParticles_) p->Draw(camera);
 }

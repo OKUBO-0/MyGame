@@ -112,6 +112,8 @@
     <ClCompile Include="3d\DeathParticle.cpp" />
     <ClCompile Include="3d\ExpOrb.cpp" />
     <ClCompile Include="2d\CurtainTransition.cpp" />
+    <ClCompile Include="ui\KeyUI.cpp" />
+    <ClCompile Include="ui\Timer.cpp" />
     <ClCompile Include="ui\Pause.cpp" />
     <ClCompile Include="ui\MiniMap.cpp" />
     <ClCompile Include="player\Drone.cpp" />
@@ -136,7 +138,6 @@
     <ClCompile Include="3d\SkyDome.cpp" />
     <ClCompile Include="ui\Score.cpp" />
     <ClCompile Include="math\WorldTransformEx.cpp" />
-    <ClCompile Include="ui\WaveUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\TerrainPS.hlsl">
@@ -218,6 +219,8 @@
     <ClInclude Include="3d\DeathParticle.h" />
     <ClInclude Include="3d\ExpOrb.h" />
     <ClInclude Include="2d\CurtainTransition.h" />
+    <ClInclude Include="ui\KeyUI.h" />
+    <ClInclude Include="ui\Timer.h" />
     <ClInclude Include="ui\Pause.h" />
     <ClInclude Include="ui\MiniMap.h" />
     <ClInclude Include="player\Drone.h" />
@@ -241,7 +244,6 @@
     <ClInclude Include="scene\TitleScene.h" />
     <ClInclude Include="3d\SkyDome.h" />
     <ClInclude Include="ui\Score.h" />
-    <ClInclude Include="ui\WaveUI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

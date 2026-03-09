@@ -13,7 +13,6 @@
 
 class Player;
 class PlayerManager;
-class Enemy;
 
 class EnemyManager {
 public:
@@ -23,15 +22,28 @@ public:
 
     const std::vector<std::unique_ptr<Enemy>>& GetEnemies() const { return enemies_; }
 
-    void SpawnEnemiesFromCSV(const std::string& filePath);
+    // 敵タイプ定義を CSV から読み込む
+    void LoadEnemyTypes(const std::string& filePath);
 
-    // ★ 当たり判定をここに集約
+    // 当たり判定
     void CheckCollisions(Player* player, PlayerManager* playerManager);
 
-    // ★ ヒットパーティクル描画
+    // ヒットパーティクル描画
     void DrawHitParticles(KamataEngine::Camera* camera);
 
     const std::list<std::unique_ptr<ExpOrb>>& GetExpOrbs() const { return expOrbs_; }
+
+private:
+    struct EnemyTypeData {
+        int32_t type;
+        int32_t baseHP;
+        float   baseSpeed;
+        int32_t baseEXP;
+        int32_t spawnCount;
+    };
+
+    void SpawnEnemies();                     // 無限湧き
+    void SpawnOneEnemy(const EnemyTypeData& data);
 
 private:
     std::vector<std::unique_ptr<Enemy>> enemies_;
@@ -40,10 +52,16 @@ private:
 
     std::list<std::unique_ptr<DeathParticle>> deathParticles_;
     std::list<std::unique_ptr<ExpOrb>> expOrbs_;
-
-    // ★ GameScene から移動
     std::list<std::unique_ptr<HitParticle>> hitParticles_;
 
     KamataEngine::Audio* audio_ = nullptr;
     uint32_t hitSEHandle_ = 0;
+
+    // 敵タイプ定義
+    std::vector<EnemyTypeData> enemyTypes_;
+
+    // 無限湧き用
+    float elapsedTime_ = 0.0f;
+    float spawnTimer_ = 0.0f;
+    float spawnInterval_ = 2.0f;
 };
