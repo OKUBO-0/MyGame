@@ -112,6 +112,10 @@
     <ClCompile Include="3d\DeathParticle.cpp" />
     <ClCompile Include="3d\ExpOrb.cpp" />
     <ClCompile Include="2d\CurtainTransition.cpp" />
+    <ClCompile Include="2d\FadeStateIn.cpp" />
+    <ClCompile Include="2d\FadeStateOut.cpp" />
+    <ClCompile Include="2d\FadeStateStay.cpp" />
+    <ClCompile Include="2d\FadeStateNone.cpp" />
     <ClCompile Include="ui\KeyUI.cpp" />
     <ClCompile Include="ui\Timer.cpp" />
     <ClCompile Include="ui\Pause.cpp" />
@@ -215,10 +219,15 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="2d\FadeState.h" />
     <ClInclude Include="3d\GridPlane.h" />
     <ClInclude Include="3d\DeathParticle.h" />
     <ClInclude Include="3d\ExpOrb.h" />
     <ClInclude Include="2d\CurtainTransition.h" />
+    <ClInclude Include="2d\FadeStateIn.h" />
+    <ClInclude Include="2d\FadeStateOut.h" />
+    <ClInclude Include="2d\FadeStateStay.h" />
+    <ClInclude Include="2d\FadeStateNone.h" />
     <ClInclude Include="ui\KeyUI.h" />
     <ClInclude Include="ui\Timer.h" />
     <ClInclude Include="ui\Pause.h" />
