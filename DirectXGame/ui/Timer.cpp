@@ -1,6 +1,23 @@
 #include "Timer.h"
 using namespace KamataEngine;
 
+namespace {
+
+Vector2 CalculateDigitPosition(const Vector2& basePosition, const Vector2& size, float scale, int32_t index) {
+    return { basePosition.x + (size.x * scale * index), basePosition.y };
+}
+
+void UpdateDigitLayout(Sprite& sprite, const Vector2& basePosition, const Vector2& size, float scale, int32_t index) {
+    sprite.SetSize({ size.x * scale, size.y * scale });
+    sprite.SetPosition(CalculateDigitPosition(basePosition, size, scale, index));
+}
+
+void SetDigitSprite(Sprite& sprite, float digitWidth, const Vector2& size, int32_t number) {
+    sprite.SetTextureRect({ digitWidth * number, 0.0f }, size);
+}
+
+} // namespace
+
 void Timer::Initialize() {
 
     numberTexture_ = TextureManager::Load("number/numbers.png");
@@ -55,30 +72,28 @@ void Timer::UpdateDisplay() {
     int s2 = seconds % 10;
 
     // Score と同じ：SetTextureRect({ left, top }, size_)
-    sprite_[0]->SetTextureRect({ size_.x * m1, 0.0f }, size_);
-    sprite_[1]->SetTextureRect({ size_.x * m2, 0.0f }, size_);
-    sprite_[3]->SetTextureRect({ size_.x * s1, 0.0f }, size_);
-    sprite_[4]->SetTextureRect({ size_.x * s2, 0.0f }, size_);
+    SetDigitSprite(*sprite_[0], size_.x, size_, m1);
+    SetDigitSprite(*sprite_[1], size_.x, size_, m2);
+    SetDigitSprite(*sprite_[3], size_.x, size_, s1);
+    SetDigitSprite(*sprite_[4], size_.x, size_, s2);
 }
 
 void Timer::SetPosition(const Vector2& pos) {
     basePosition_ = pos;
 
     for (int i = 0; i < kDigitCount; i++) {
-        sprite_[i]->SetPosition({ basePosition_.x + (size_.x * scale_ * i), basePosition_.y });
+        sprite_[i]->SetPosition(CalculateDigitPosition(basePosition_, size_, scale_, i));
     }
 
-    colonSprite_->SetPosition({ basePosition_.x + (size_.x * scale_ * 2), basePosition_.y });
+    colonSprite_->SetPosition(CalculateDigitPosition(basePosition_, size_, scale_, 2));
 }
 
 void Timer::SetScale(float scale) {
     scale_ = scale;
 
     for (int i = 0; i < kDigitCount; i++) {
-        sprite_[i]->SetSize({ size_.x * scale_, size_.y * scale_ });
-        sprite_[i]->SetPosition({ basePosition_.x + (size_.x * scale_ * i), basePosition_.y });
+        UpdateDigitLayout(*sprite_[i], basePosition_, size_, scale_, i);
     }
 
-    colonSprite_->SetSize({ size_.x * scale_, size_.y * scale_ });
-    colonSprite_->SetPosition({ basePosition_.x + (size_.x * scale_ * 2), basePosition_.y });
+    UpdateDigitLayout(*colonSprite_, basePosition_, size_, scale_, 2);
 }

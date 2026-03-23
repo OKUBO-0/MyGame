@@ -2,6 +2,23 @@
 
 using namespace KamataEngine;
 
+namespace {
+
+void SetDigitSprite(Sprite& sprite, float digitWidth, const Vector2& size, int32_t number) {
+    sprite.SetTextureRect({ digitWidth * number, 0.0f }, size);
+}
+
+Vector2 CalculateDigitPosition(const Vector2& basePosition, const Vector2& size, float scale, int32_t index) {
+    return { basePosition.x + (size.x * scale * index), basePosition.y };
+}
+
+void UpdateDigitLayout(Sprite& sprite, const Vector2& basePosition, const Vector2& size, float scale, int32_t index) {
+    sprite.SetSize({ size.x * scale, size.y * scale });
+    sprite.SetPosition(CalculateDigitPosition(basePosition, size, scale, index));
+}
+
+} // namespace
+
 void Score::Initialize() {
     // 数字表示用テクスチャを読み込み
     textureHandle_ = TextureManager::Load("number/numbers.png");
@@ -39,7 +56,7 @@ void Score::SetNumber(int32_t number) {
 
     for (int32_t i = 0; i < kDigitCount; ++i) {
         int32_t nowNumber = number / digit;
-        sprite_[i]->SetTextureRect({ size_.x * nowNumber, 0.0f }, size_);
+        SetDigitSprite(*sprite_[i], size_.x, size_, nowNumber);
         number %= digit;
         digit /= 10;
     }
@@ -50,7 +67,7 @@ void Score::SetPosition(const Vector2& pos) {
     basePosition_ = pos;
 
     for (int32_t i = 0; i < kDigitCount; ++i) {
-        sprite_[i]->SetPosition({ basePosition_.x + (size_.x * scale_ * i), basePosition_.y });
+        sprite_[i]->SetPosition(CalculateDigitPosition(basePosition_, size_, scale_, i));
     }
 }
 
@@ -59,7 +76,6 @@ void Score::SetScale(float scale) {
     scale_ = scale;
 
     for (int32_t i = 0; i < kDigitCount; ++i) {
-        sprite_[i]->SetSize({ size_.x * scale_, size_.y * scale_ });
-        sprite_[i]->SetPosition({ basePosition_.x + (size_.x * scale_ * i), basePosition_.y });
+        UpdateDigitLayout(*sprite_[i], basePosition_, size_, scale_, i);
     }
 }

@@ -2,6 +2,30 @@
 #include <algorithm>
 using namespace KamataEngine;
 
+namespace {
+
+int32_t StepDisplayValue(int32_t displayedValue, int32_t targetValue) {
+    if (displayedValue < targetValue) {
+        displayedValue += std::max<int32_t>(1, (targetValue - displayedValue) / 10);
+    } else if (displayedValue > targetValue) {
+        displayedValue -= std::max<int32_t>(1, (displayedValue - targetValue) / 10);
+    }
+
+    return displayedValue;
+}
+
+float CalculateGaugeWidth(int32_t displayedValue, int32_t maxValue, float maxGaugeWidth) {
+    float ratio = static_cast<float>(displayedValue) / static_cast<float>(maxValue);
+    ratio = std::clamp(ratio, 0.0f, 1.0f);
+    return maxGaugeWidth * ratio;
+}
+
+void SetDigitSprite(Sprite& sprite, float digitWidth, const Vector2& size, int32_t number) {
+    sprite.SetTextureRect({ digitWidth * number, 0.0f }, size);
+}
+
+} // namespace
+
 void ExpGauge::Initialize() {
     // テクスチャ読み込み（白1x1は色付き矩形用）
     dummyTextureHandle_ = TextureManager::Load("white1x1.png");
@@ -46,29 +70,21 @@ void ExpGauge::SetLevel(int32_t level) {
     int32_t digit = 10; // 10の位から処理
     for (int32_t i = 0; i < kLvDigits; ++i) {
         int32_t nowNumber = level / digit;
-        sprite_[i]->SetTextureRect({ size_.x * nowNumber, 0.0f }, size_);
+        SetDigitSprite(*sprite_[i], size_.x, size_, nowNumber);
         level %= digit;
         digit /= 10;
     }
 }
 
 void ExpGauge::Update() {
-    // EXP表示を滑らかに変化させる（目標値に徐々に近づける）
-    if (displayedExp_ < targetExp_) {
-        displayedExp_ += std::max<int32_t>(1, (targetExp_ - displayedExp_) / 10);
-    }
-    else if (displayedExp_ > targetExp_) {
-        displayedExp_ -= std::max<int32_t>(1, (displayedExp_ - targetExp_) / 10);
-    }
-
-    // EXP比率を計算してゲージ幅に反映
-    float ratio = static_cast<float>(displayedExp_) / static_cast<float>(maxExp_);
-    ratio = std::clamp(ratio, 0.0f, 1.0f);
-
     static constexpr float kMaxGaugeWidth = 1280.0f; // ゲージ最大幅
     static constexpr float kGaugeHeight = 40.0f;     // ゲージ高さ
 
-    float width = kMaxGaugeWidth * ratio;
+    // EXP表示を滑らかに変化させる（目標値に徐々に近づける）
+    displayedExp_ = StepDisplayValue(displayedExp_, targetExp_);
+
+    // EXP比率を計算してゲージ幅に反映
+    float width = CalculateGaugeWidth(displayedExp_, maxExp_, kMaxGaugeWidth);
     blueGauge_->SetSize({ width, kGaugeHeight });
 }
 
