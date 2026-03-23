@@ -1,8 +1,8 @@
 #pragma once
 
 #include <KamataEngine.h>
-#include "Player.h"
 #include <memory>
+#include "EnemyBehavior.h"
 
 class Player;
 
@@ -10,14 +10,16 @@ class Enemy {
 public:
     void Initialize();
     void Update();
-    void UpdateType2();
     void Draw(KamataEngine::Camera* camera);
 
     void SetPosition(const KamataEngine::Vector3& pos);
+    void SetRotationY(float rotationY) { worldTransform_.rotation_.y = rotationY; }
     void SetPlayer(Player* player);
     void SetModelByType(int32_t type);
+    void SetBehaviorByType(int32_t type);
 
     KamataEngine::Vector3 GetPosition() const;
+    Player* GetPlayer() const { return player_; }
 
     bool IsActive() const;
     void Deactivate();
@@ -35,17 +37,18 @@ public:
     bool JustDied() const;
     void ResetJustDied();
 
-    // 追加：EnemyManager から速度を設定する
     void SetSpeed(float speed) { speed_ = speed; }
+    float GetSpeed() const { return speed_; }
 
 private:
     KamataEngine::WorldTransform worldTransform_;
     std::unique_ptr<KamataEngine::Model> enemyModel_;
+    std::unique_ptr<IEnemyBehavior> behavior_;
 
-    float speed_;   // EnemyManager から上書きされる
+    float speed_ = 0.0f;
 
-    int32_t hp_;
-    int32_t exp_;
+    int32_t hp_ = 0;
+    int32_t exp_ = 0;
     bool active_ = true;
 
     Player* player_ = nullptr;
@@ -60,10 +63,6 @@ private:
     static constexpr float kKnockbackDuration = 0.18f;
 
     bool justDied_ = false;
-
-    int enemyType_;
-    float approachSpeed_ = 1.0f;
-    float circleSpeed_ = 1.0f;
 
     KamataEngine::Audio* audio_ = nullptr;
     uint32_t deathSEHandle_ = 0;

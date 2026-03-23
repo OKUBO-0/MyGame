@@ -44,6 +44,7 @@ private:
 
     uint32_t titleBGMHandle_ = 0; ///< タイトルBGMハンドル
     uint32_t selectSEHandle_ = 0; ///< 選択SEハンドル
+    uint32_t decideSEHandle_ = 0;
 
     int32_t menuIndex_ = 0;
 
