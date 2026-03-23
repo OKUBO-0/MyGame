@@ -27,9 +27,9 @@ SceneManager::SceneManager() : currentSceneNo_(EngineLayer::kInitialScene) {}
 /// </summary>
 SceneManager::~SceneManager() = default;
 
-void SceneManager::RegisterScene(Scene scene, std::function<std::unique_ptr<IScene>()> createFunc) {
+void SceneManager::RegisterScene(Scene scene, const std::function<std::unique_ptr<IScene>()>& createFunc) {
     // シーン生成関数を登録（sceneFactory_ に紐付け）
-    sceneFactory_[scene] = std::move(createFunc);
+    sceneFactory_[scene] = createFunc;
 }
 
 void SceneManager::ChangeScene(Scene scene) {

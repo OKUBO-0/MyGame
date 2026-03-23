@@ -15,7 +15,7 @@ void MiniMap::Update(const Player* player, const EnemyManager& enemyManager) {
 
     Vector3 pPos = player->GetWorldPosition();
 
-    auto addIcon = [&](Vector3 objPos, bool isEnemy) {
+    auto addIcon = [&](const Vector3& objPos, bool isEnemy) {
         Vector3 rel = { objPos.x - pPos.x, 0, objPos.z - pPos.z };
 
         float mx = rel.x * scale_;
