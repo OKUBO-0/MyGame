@@ -1,6 +1,8 @@
 #include "SkyDome.h"
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 void SkyDome::Initialize() {
     // カメラ初期化（背景専用カメラを準備）
     camera_.Initialize();
@@ -24,3 +26,5 @@ void SkyDome::Draw() {
         skyModel_->Draw(worldTransform_, camera_);
     }
 }
+
+} // namespace DirectXGame

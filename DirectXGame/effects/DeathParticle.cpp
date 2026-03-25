@@ -2,6 +2,8 @@
 #include "ModelCache.h"
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 // パーティクル寿命（調整値）
 const float DeathParticle::kLifetime = 0.6f;
 
@@ -68,3 +70,5 @@ void DeathParticle::Draw(Camera* camera) {
     if (!active_ || !model_) return;
     model_->Draw(worldTransform_, *camera, objectColor_.get());
 }
+
+} // namespace DirectXGame

@@ -2,6 +2,8 @@
 #include <KamataEngine.h>
 #include <memory>
 
+namespace DirectXGame {
+
 /// <summary>
 /// クラス名: SkyDome
 /// 目的: 天球モデルを用いて背景を描画する。
@@ -38,3 +40,5 @@ private:
     KamataEngine::Camera camera_;                 ///< 天球描画用カメラ（背景専用）
     std::unique_ptr<KamataEngine::Model> skyModel_; ///< 天球モデル（スマートポインタで管理）
 };
+
+} // namespace DirectXGame

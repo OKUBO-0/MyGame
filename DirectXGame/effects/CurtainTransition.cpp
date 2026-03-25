@@ -1,6 +1,8 @@
 #include "CurtainTransition.h"
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 void CurtainTransition::Initialize() {
     uint32_t tex = TextureManager::Load("textures/color/black.png");
 
@@ -70,3 +72,5 @@ void CurtainTransition::Draw() {
     bottomCurtain_->Draw();
     Sprite::PostDraw();
 }
+
+} // namespace DirectXGame

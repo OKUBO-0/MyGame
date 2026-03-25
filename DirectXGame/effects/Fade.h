@@ -3,6 +3,8 @@
 #include <KamataEngine.h>
 #include <memory>
 
+namespace DirectXGame {
+
 /// <summary>
 /// クラス名: Fade
 /// 目的: 画面のフェードイン／フェードアウト演出を管理する。
@@ -79,3 +81,5 @@ private:
 
     static const float kDefaultFadeSpeed; ///< デフォルトのフェード速度（調整値）
 };
+
+} // namespace DirectXGame

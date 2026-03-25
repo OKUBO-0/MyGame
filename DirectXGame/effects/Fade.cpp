@@ -1,6 +1,8 @@
 #include "Fade.h"
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 // 調整値の初期化（cpp側で定義）
 const float Fade::kDefaultFadeSpeed = 0.02f;
 
@@ -79,3 +81,5 @@ void Fade::Draw() {
         Sprite::PostDraw();
     }
 }
+
+} // namespace DirectXGame

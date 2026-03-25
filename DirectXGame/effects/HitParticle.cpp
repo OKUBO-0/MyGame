@@ -4,6 +4,8 @@
 #include <cmath>   // cos, sin
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 void HitParticle::Initialize(const Vector3& pos) {
     // モデル生成（火花の見た目）
     model_ = ModelCache::Get("cube");
@@ -93,3 +95,5 @@ void HitParticle::Draw(Camera* camera) {
     if (!active_ || !model_) return;
     model_->Draw(worldTransform_, *camera);
 }
+
+} // namespace DirectXGame

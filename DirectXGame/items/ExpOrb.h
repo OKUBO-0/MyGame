@@ -2,6 +2,8 @@
 #include <KamataEngine.h>
 #include <memory>
 
+namespace DirectXGame {
+
 class ExpOrb {
 public:
     void Initialize(const KamataEngine::Vector3& pos, int32_t expValue);
@@ -25,3 +27,5 @@ private:
     KamataEngine::Audio* audio_ = nullptr;
     uint32_t pickupSEHandle_ = 0;
 };
+
+} // namespace DirectXGame

@@ -2,6 +2,8 @@
 #include <KamataEngine.h>
 #include <memory>
 
+namespace DirectXGame {
+
 /// <summary>
 /// クラス名: DeathParticle
 /// 目的: 敵撃破時に煙のようなパーティクルを生成する。
@@ -52,3 +54,5 @@ private:
 
     KamataEngine::Vector3 velocity_{ 0.0f, 0.0f, 0.0f }; ///< 移動速度ベクトル（拡散方向と強さ）
 };
+
+} // namespace DirectXGame

@@ -4,6 +4,8 @@
 #include <cmath>
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 void ExpOrb::Initialize(const Vector3& pos, int32_t expValue) {
     worldTransform_.Initialize();
     worldTransform_.translation_ = pos;
@@ -71,3 +73,5 @@ void ExpOrb::Draw(Camera* camera) {
     if (!active_ || !model_) return;
     model_->Draw(worldTransform_, *camera);
 }
+
+} // namespace DirectXGame

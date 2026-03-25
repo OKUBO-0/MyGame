@@ -4,6 +4,8 @@
 #include <memory>
 #include "EnemyBehavior.h"
 
+namespace DirectXGame {
+
 class Player;
 
 class Enemy {
@@ -67,3 +69,5 @@ private:
     KamataEngine::Audio* audio_ = nullptr;
     uint32_t deathSEHandle_ = 0;
 };
+
+} // namespace DirectXGame

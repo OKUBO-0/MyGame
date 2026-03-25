@@ -2,6 +2,8 @@
 #include <KamataEngine.h>
 #include <memory>
 
+namespace DirectXGame {
+
 class CurtainTransition {
 public:
     enum class State {
@@ -27,3 +29,5 @@ private:
     float speed_ = 20.0f;
     State state_ = State::kNone;
 };
+
+} // namespace DirectXGame

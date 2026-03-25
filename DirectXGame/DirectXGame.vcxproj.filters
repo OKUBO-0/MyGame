@@ -22,17 +22,47 @@
     <Filter Include="ソース ファイル\scene\title">
       <UniqueIdentifier>{3fd040d8-e355-48be-856f-49a81c8e7250}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\scene\core">
+      <UniqueIdentifier>{e6f4fd50-168a-486c-8697-cbfac00fb2b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\scene\game">
+      <UniqueIdentifier>{fa94b073-662f-4728-b7bd-e51ef7ace898}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\scene\result">
+      <UniqueIdentifier>{2fbd2746-c361-45b0-ba4d-019209d509b7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ヘッダー ファイル\scene">
       <UniqueIdentifier>{f48868c8-e74c-4a51-a530-12dd766ec281}</UniqueIdentifier>
     </Filter>
     <Filter Include="ヘッダー ファイル\scene\title">
       <UniqueIdentifier>{fe307362-a36c-4fe8-9148-7298f375ec81}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\scene\core">
+      <UniqueIdentifier>{564f99fc-7b9f-435e-a5ff-b4475a497ad8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\scene\game">
+      <UniqueIdentifier>{49a212ff-f449-4344-befe-1e4434154ffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\scene\result">
+      <UniqueIdentifier>{d732efcd-6734-4fe6-b0fe-1bc6ee4731a1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ソース ファイル\player">
       <UniqueIdentifier>{c7d7cb3d-9f82-42ac-98c7-6f66c5108309}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\player\core">
+      <UniqueIdentifier>{92534144-fb5d-47ef-84f6-f2f16d9a22e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\player\weapons">
+      <UniqueIdentifier>{9cfeac72-c54b-4220-9b9a-fa8fcaf937cb}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ヘッダー ファイル\player">
       <UniqueIdentifier>{85ec7a51-f9dd-4837-be6d-81b4bd5277ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\player\core">
+      <UniqueIdentifier>{dcdf7be7-32ef-4a34-8b31-c12d18bf1332}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\player\weapons">
+      <UniqueIdentifier>{392f39c4-94df-405f-8b7e-d803a94de362}</UniqueIdentifier>
     </Filter>
     <Filter Include="ソース ファイル\enemy">
       <UniqueIdentifier>{d786fbc0-3e6a-416c-9206-9cba37ec6985}</UniqueIdentifier>
@@ -67,37 +97,61 @@
     <Filter Include="ソース ファイル\math">
       <UniqueIdentifier>{1eb2cf09-6fd1-4d16-a8cf-af19563fee4b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\ui">
+      <UniqueIdentifier>{3d2c474a-3a08-4730-8dfa-484c545aa2d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\ui\gauge">
+      <UniqueIdentifier>{585f3874-59cd-461e-b1fb-0744f39ec1f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\ui\hud">
+      <UniqueIdentifier>{1fd8b430-216d-4a90-9cd9-af513896f891}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\ui\common">
+      <UniqueIdentifier>{7546027a-37af-490c-b13c-5991f86409a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\ui">
+      <UniqueIdentifier>{ddfef5d3-c31d-4494-9fe7-7f9d30e677b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\ui\gauge">
+      <UniqueIdentifier>{8c3cd72d-fd1d-49b7-b3af-76a6544c62a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\ui\hud">
+      <UniqueIdentifier>{53f1142b-10fd-4623-97c7-f14b2f86121f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\ui\common">
+      <UniqueIdentifier>{f334c1cb-e418-4744-b91c-2c6c26326b7e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\main.cpp">
       <Filter>ソース ファイル\core</Filter>
     </ClCompile>
-    <ClCompile Include="scene\IScene.cpp">
-      <Filter>ソース ファイル\scene</Filter>
+    <ClCompile Include="scene\core\IScene.cpp">
+      <Filter>ソース ファイル\scene\core</Filter>
     </ClCompile>
-    <ClCompile Include="scene\GameScene.cpp">
-      <Filter>ソース ファイル\scene</Filter>
+    <ClCompile Include="scene\game\GameScene.cpp">
+      <Filter>ソース ファイル\scene\game</Filter>
     </ClCompile>
-    <ClCompile Include="scene\ResultScene.cpp">
-      <Filter>ソース ファイル\scene</Filter>
+    <ClCompile Include="scene\result\ResultScene.cpp">
+      <Filter>ソース ファイル\scene\result</Filter>
     </ClCompile>
-    <ClCompile Include="scene\GameLevelUpController.cpp">
-      <Filter>ソース ファイル\scene</Filter>
+    <ClCompile Include="scene\game\GameLevelUpController.cpp">
+      <Filter>ソース ファイル\scene\game</Filter>
     </ClCompile>
-    <ClCompile Include="scene\GamePauseController.cpp">
-      <Filter>ソース ファイル\scene</Filter>
+    <ClCompile Include="scene\game\GamePauseController.cpp">
+      <Filter>ソース ファイル\scene\game</Filter>
     </ClCompile>
-    <ClCompile Include="scene\GameStartController.cpp">
-      <Filter>ソース ファイル\scene</Filter>
+    <ClCompile Include="scene\game\GameStartController.cpp">
+      <Filter>ソース ファイル\scene\game</Filter>
     </ClCompile>
-    <ClCompile Include="scene\SceneManager.cpp">
-      <Filter>ソース ファイル\scene</Filter>
+    <ClCompile Include="scene\core\SceneManager.cpp">
+      <Filter>ソース ファイル\scene\core</Filter>
     </ClCompile>
-    <ClCompile Include="scene\TitleScene.cpp">
+    <ClCompile Include="scene\title\TitleScene.cpp">
       <Filter>ソース ファイル\scene\title</Filter>
     </ClCompile>
-    <ClCompile Include="player\Player.cpp">
-      <Filter>ソース ファイル\player</Filter>
+    <ClCompile Include="player\core\Player.cpp">
+      <Filter>ソース ファイル\player\core</Filter>
     </ClCompile>
     <ClCompile Include="enemy\Enemy.cpp">
       <Filter>ソース ファイル\enemy</Filter>
@@ -117,23 +171,20 @@
     <ClCompile Include="math\WorldTransformEx.cpp">
       <Filter>ソース ファイル\math</Filter>
     </ClCompile>
-    <ClCompile Include="ui\ExpGauge.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ui\gauge\ExpGauge.cpp">
+      <Filter>ソース ファイル\ui\gauge</Filter>
     </ClCompile>
-    <ClCompile Include="ui\HpGauge.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ui\gauge\HpGauge.cpp">
+      <Filter>ソース ファイル\ui\gauge</Filter>
     </ClCompile>
     <ClCompile Include="world\GridPlane.cpp">
       <Filter>ソース ファイル\world</Filter>
     </ClCompile>
-    <ClCompile Include="core\GameData.cpp">
-      <Filter>ソース ファイル\core</Filter>
-    </ClCompile>
     <ClCompile Include="effects\RippleEffect.cpp">
       <Filter>ソース ファイル\effects</Filter>
     </ClCompile>
-    <ClCompile Include="ui\Score.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ui\hud\Score.cpp">
+      <Filter>ソース ファイル\ui\hud</Filter>
     </ClCompile>
     <ClCompile Include="effects\HitParticle.cpp">
       <Filter>ソース ファイル\effects</Filter>
@@ -144,29 +195,32 @@
     <ClCompile Include="items\ExpOrb.cpp">
       <Filter>ソース ファイル\items</Filter>
     </ClCompile>
-    <ClCompile Include="player\OrbitBullet.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="player\weapons\OrbitBullet.cpp">
+      <Filter>ソース ファイル\player\weapons</Filter>
     </ClCompile>
-    <ClCompile Include="player\NormalBullet.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="player\weapons\NormalBullet.cpp">
+      <Filter>ソース ファイル\player\weapons</Filter>
     </ClCompile>
-    <ClCompile Include="player\PlayerManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="player\core\PlayerManager.cpp">
+      <Filter>ソース ファイル\player\core</Filter>
     </ClCompile>
-    <ClCompile Include="player\Drone.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="player\weapons\Drone.cpp">
+      <Filter>ソース ファイル\player\weapons</Filter>
     </ClCompile>
     <ClCompile Include="effects\CurtainTransition.cpp">
       <Filter>ソース ファイル\effects</Filter>
     </ClCompile>
-    <ClCompile Include="ui\MiniMap.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ui\hud\MiniMap.cpp">
+      <Filter>ソース ファイル\ui\hud</Filter>
     </ClCompile>
-    <ClCompile Include="ui\Timer.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ui\hud\Timer.cpp">
+      <Filter>ソース ファイル\ui\hud</Filter>
     </ClCompile>
-    <ClCompile Include="ui\KeyUI.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ui\common\DigitSpriteUtil.cpp">
+      <Filter>ソース ファイル\ui\common</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\hud\KeyUI.cpp">
+      <Filter>ソース ファイル\ui\hud</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -219,32 +273,32 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scene\GameScene.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
+    <ClInclude Include="scene\game\GameScene.h">
+      <Filter>ヘッダー ファイル\scene\game</Filter>
     </ClInclude>
-    <ClInclude Include="scene\ResultScene.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
+    <ClInclude Include="scene\result\ResultScene.h">
+      <Filter>ヘッダー ファイル\scene\result</Filter>
     </ClInclude>
-    <ClInclude Include="scene\GameLevelUpController.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
+    <ClInclude Include="scene\game\GameLevelUpController.h">
+      <Filter>ヘッダー ファイル\scene\game</Filter>
     </ClInclude>
-    <ClInclude Include="scene\GamePauseController.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
+    <ClInclude Include="scene\game\GamePauseController.h">
+      <Filter>ヘッダー ファイル\scene\game</Filter>
     </ClInclude>
-    <ClInclude Include="scene\GameStartController.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
+    <ClInclude Include="scene\game\GameStartController.h">
+      <Filter>ヘッダー ファイル\scene\game</Filter>
     </ClInclude>
-    <ClInclude Include="scene\IScene.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
+    <ClInclude Include="scene\core\IScene.h">
+      <Filter>ヘッダー ファイル\scene\core</Filter>
     </ClInclude>
-    <ClInclude Include="scene\SceneManager.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
+    <ClInclude Include="scene\core\SceneManager.h">
+      <Filter>ヘッダー ファイル\scene\core</Filter>
     </ClInclude>
-    <ClInclude Include="scene\TitleScene.h">
+    <ClInclude Include="scene\title\TitleScene.h">
       <Filter>ヘッダー ファイル\scene\title</Filter>
     </ClInclude>
-    <ClInclude Include="player\Player.h">
-      <Filter>ヘッダー ファイル\player</Filter>
+    <ClInclude Include="player\core\Player.h">
+      <Filter>ヘッダー ファイル\player\core</Filter>
     </ClInclude>
     <ClInclude Include="enemy\Enemy.h">
       <Filter>ヘッダー ファイル\enemy</Filter>
@@ -261,23 +315,23 @@
     <ClInclude Include="world\SkyDome.h">
       <Filter>ヘッダー ファイル\world</Filter>
     </ClInclude>
-    <ClInclude Include="ui\ExpGauge.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="ui\gauge\ExpGauge.h">
+      <Filter>ヘッダー ファイル\ui\gauge</Filter>
     </ClInclude>
-    <ClInclude Include="ui\HpGauge.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="ui\gauge\HpGauge.h">
+      <Filter>ヘッダー ファイル\ui\gauge</Filter>
     </ClInclude>
     <ClInclude Include="world\GridPlane.h">
       <Filter>ヘッダー ファイル\world</Filter>
     </ClInclude>
-    <ClInclude Include="core\GameData.h">
+    <ClInclude Include="core\GameSessionContext.h">
       <Filter>ヘッダー ファイル\core</Filter>
     </ClInclude>
     <ClInclude Include="effects\RippleEffect.h">
       <Filter>ヘッダー ファイル\effects</Filter>
     </ClInclude>
-    <ClInclude Include="ui\Score.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="ui\hud\Score.h">
+      <Filter>ヘッダー ファイル\ui\hud</Filter>
     </ClInclude>
     <ClInclude Include="effects\HitParticle.h">
       <Filter>ヘッダー ファイル\effects</Filter>
@@ -288,20 +342,20 @@
     <ClInclude Include="items\ExpOrb.h">
       <Filter>ヘッダー ファイル\items</Filter>
     </ClInclude>
-    <ClInclude Include="player\OrbitBullet.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="player\weapons\OrbitBullet.h">
+      <Filter>ヘッダー ファイル\player\weapons</Filter>
     </ClInclude>
-    <ClInclude Include="player\Bullet.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="player\weapons\Bullet.h">
+      <Filter>ヘッダー ファイル\player\weapons</Filter>
     </ClInclude>
-    <ClInclude Include="player\NormalBullet.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="player\weapons\NormalBullet.h">
+      <Filter>ヘッダー ファイル\player\weapons</Filter>
     </ClInclude>
-    <ClInclude Include="player\PlayerManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="player\core\PlayerManager.h">
+      <Filter>ヘッダー ファイル\player\core</Filter>
     </ClInclude>
-    <ClInclude Include="player\Drone.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="player\weapons\Drone.h">
+      <Filter>ヘッダー ファイル\player\weapons</Filter>
     </ClInclude>
     <ClInclude Include="effects\CurtainTransition.h">
       <Filter>ヘッダー ファイル\effects</Filter>
@@ -309,14 +363,17 @@
     <ClInclude Include="core\ModelCache.h">
       <Filter>ヘッダー ファイル\core</Filter>
     </ClInclude>
-    <ClInclude Include="ui\MiniMap.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="ui\hud\MiniMap.h">
+      <Filter>ヘッダー ファイル\ui\hud</Filter>
     </ClInclude>
-    <ClInclude Include="ui\Timer.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="ui\hud\Timer.h">
+      <Filter>ヘッダー ファイル\ui\hud</Filter>
     </ClInclude>
-    <ClInclude Include="ui\KeyUI.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="ui\common\DigitSpriteUtil.h">
+      <Filter>ヘッダー ファイル\ui\common</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\hud\KeyUI.h">
+      <Filter>ヘッダー ファイル\ui\hud</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

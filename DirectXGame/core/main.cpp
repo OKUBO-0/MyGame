@@ -2,43 +2,49 @@
 #include <KamataEngine.h>
 #include <chrono>
 
-#include "SceneManager.h"
-#include "TitleScene.h"
-#include "GameScene.h"
-#include "ResultScene.h"
+#include "../scene/core/SceneManager.h"
+#include "../scene/title/TitleScene.h"
+#include "../scene/game/GameScene.h"
+#include "../scene/result/ResultScene.h"
 
 using namespace KamataEngine;
 
-namespace EngineLayer {
+namespace DirectXGame {
 
-void RegisterScenes(::SceneManager& sceneManager) {
-    sceneManager.RegisterScene(::Scene::Title, []() { return std::make_unique<::TitleScene>(); });
-    sceneManager.RegisterScene(::Scene::Game, []() { return std::make_unique<::GameScene>(); });
-    sceneManager.RegisterScene(::Scene::Result, []() { return std::make_unique<::ResultScene>(); });
+void RegisterScenes(SceneManager& sceneManager) {
+    sceneManager.RegisterScene(Scene::Title,
+        [](const std::shared_ptr<GameSessionContext>& sessionContext) {
+            return std::make_unique<TitleScene>(sessionContext);
+        });
+    sceneManager.RegisterScene(Scene::Game,
+        [](const std::shared_ptr<GameSessionContext>& sessionContext) {
+            return std::make_unique<GameScene>(sessionContext);
+        });
+    sceneManager.RegisterScene(Scene::Result,
+        [](const std::shared_ptr<GameSessionContext>& sessionContext) {
+            return std::make_unique<ResultScene>(sessionContext);
+        });
 }
 
-} // namespace EngineLayer
+} // namespace DirectXGame
 
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
     // エンジン初期化（ウィンドウタイトルを指定）
     Initialize(L"LE3C_04_オオクボ_タク");
 
-    // フルスクリーン化（必要なら有効化）
-    // WinApp::GetInstance()->SetFullscreen(true);
-
     // DirectX共通インスタンス取得（描画制御用）
     DirectXCommon* directXCommon = DirectXCommon::GetInstance();
     ImGuiManager* imguiManager = ImGuiManager::GetInstance();
 
     // シーン管理クラス生成
-    SceneManager sceneManager;
+    DirectXGame::SceneManager sceneManager;
 
     // 各シーンを登録（Title / Game / Result）
-    EngineLayer::RegisterScenes(sceneManager);
+    DirectXGame::RegisterScenes(sceneManager);
 
     // 初期シーンをタイトルに設定
-    sceneManager.ChangeScene(Scene::Title);
+    sceneManager.ChangeScene(DirectXGame::Scene::Title);
 
     auto lastFrameTime = std::chrono::steady_clock::now();
     float fps = 0.0f;
@@ -57,7 +63,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
         imguiManager->Begin();
 
-//#ifdef DEBUG
+#ifdef _DEBUG
         ImGui::SetNextWindowPos(ImVec2(16.0f, 16.0f), ImGuiCond_Always);
         ImGui::SetNextWindowBgAlpha(0.75f);
         if (ImGui::Begin("Performance", nullptr,
@@ -68,7 +74,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
             ImGui::Text("Frame Time: %.2f ms", frameTimeMs);
         }
         ImGui::End();
-//#endif // DEBUG
+#endif
 
         // 現在のシーンを更新
         sceneManager.Update();

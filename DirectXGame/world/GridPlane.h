@@ -3,6 +3,8 @@
 #include <array>
 #include <memory>
 
+namespace DirectXGame {
+
 /// <summary>
 /// クラス名: GridPlane
 /// 目的: グリッド床を表示する。
@@ -46,3 +48,5 @@ private:
 
     static float SnapToTile(float value);
 };
+
+} // namespace DirectXGame

@@ -2,6 +2,8 @@
 #include "ModelCache.h"
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 void RippleEffect::Initialize(const Vector3& pos) {
     // モデル生成（波紋の見た目を表現するモデルを読み込み）
     model_ = ModelCache::Get("ripples");
@@ -52,3 +54,5 @@ void RippleEffect::Draw(Camera* camera) {
     if (!active_ || !model_) return;
     model_->Draw(worldTransform_, *camera);
 }
+
+} // namespace DirectXGame

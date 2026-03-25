@@ -5,6 +5,8 @@
 #include <string>
 #include <unordered_map>
 
+namespace DirectXGame {
+
 class ModelCache {
 public:
     static std::shared_ptr<KamataEngine::Model> Get(const std::string& modelName, bool smoothing = false) {
@@ -29,3 +31,5 @@ private:
         return cache;
     }
 };
+
+} // namespace DirectXGame

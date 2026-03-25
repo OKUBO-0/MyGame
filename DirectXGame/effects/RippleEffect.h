@@ -2,6 +2,8 @@
 #include <KamataEngine.h>
 #include <memory>
 
+namespace DirectXGame {
+
 /// <summary>
 /// クラス名: RippleEffect
 /// 目的: 水面に広がる波紋エフェクトを管理する。
@@ -54,3 +56,5 @@ private:
 
     bool active_ = true;                          ///< 有効フラグ（falseなら更新・描画対象外）
 };
+
+} // namespace DirectXGame

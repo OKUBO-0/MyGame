@@ -2,6 +2,8 @@
 #include <KamataEngine.h>
 #include <memory>
 
+namespace DirectXGame {
+
 /// <summary>
 /// クラス名: HitParticle
 /// 目的: ヒット時に表示される火花パーティクルを管理する。
@@ -64,3 +66,5 @@ private:
     // 地面Y座標（グリッドの Y と合わせる）
     static constexpr float kGroundY = -2.0f;
 };
+
+} // namespace DirectXGame

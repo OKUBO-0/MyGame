@@ -3,6 +3,8 @@
 
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 void GridPlane::Initialize() {
     // 床モデルを読み込み（グリッド模様付き）
     planeModel_.reset(Model::CreateFromOBJ("plane"));
@@ -75,3 +77,5 @@ void GridPlane::Draw(Camera* camera) {
 float GridPlane::SnapToTile(float value) {
     return std::floor(value / kTileSpan) * kTileSpan;
 }
+
+} // namespace DirectXGame

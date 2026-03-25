@@ -3,6 +3,8 @@
 
 using namespace KamataEngine;
 
+namespace DirectXGame {
+
 void Enemy::Initialize() {
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0,0,0 };
@@ -155,3 +157,5 @@ void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) 
         knockbackTimer_ = kKnockbackDuration;
     }
 }
+
+} // namespace DirectXGame
