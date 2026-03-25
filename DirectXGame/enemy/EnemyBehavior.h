@@ -2,6 +2,8 @@
 
 #include <memory>
 
+namespace DirectXGame {
+
 class Enemy;
 
 class IEnemyBehavior {
@@ -11,3 +13,5 @@ public:
 };
 
 std::unique_ptr<IEnemyBehavior> CreateEnemyBehaviorByType(int32_t type);
+
+} // namespace DirectXGame

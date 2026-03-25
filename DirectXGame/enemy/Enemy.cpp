@@ -1,6 +1,9 @@
 #include "Enemy.h"
+#include "ModelCache.h"
 
 using namespace KamataEngine;
+
+namespace DirectXGame {
 
 void Enemy::Initialize() {
     worldTransform_.Initialize();
@@ -13,10 +16,18 @@ void Enemy::Initialize() {
         objectColor_->SetColor({ 1,1,1,1 });
     }
 
-    whiteTextureHandle_ = TextureManager::Load("color/white.png");
+    static uint32_t sharedWhiteTextureHandle = 0;
+    if (sharedWhiteTextureHandle == 0) {
+        sharedWhiteTextureHandle = TextureManager::Load("textures/color/white.png");
+    }
+    whiteTextureHandle_ = sharedWhiteTextureHandle;
 
     audio_ = Audio::GetInstance();
-    deathSEHandle_ = audio_->LoadWave("Sounds/se_death.wav");
+    static uint32_t sharedDeathSEHandle = 0;
+    if (sharedDeathSEHandle == 0) {
+        sharedDeathSEHandle = audio_->LoadWave("audio/se/se_death.wav");
+    }
+    deathSEHandle_ = sharedDeathSEHandle;
 }
 
 void Enemy::SetPosition(const Vector3& pos) {
@@ -29,11 +40,11 @@ void Enemy::SetPlayer(Player* player) {
 
 void Enemy::SetModelByType(int32_t type) {
     switch (type) {
-    case 0: enemyModel_.reset(Model::CreateFromOBJ("Enemy1")); break;
-    case 1: enemyModel_.reset(Model::CreateFromOBJ("Enemy2")); break;
-    case 2: enemyModel_.reset(Model::CreateFromOBJ("Enemy3")); break;
-    case 3: enemyModel_.reset(Model::CreateFromOBJ("Enemy4")); break;
-    default: enemyModel_.reset(Model::CreateFromOBJ("octopus")); break;
+    case 0: enemyModel_ = ModelCache::Get("Enemy1"); break;
+    case 1: enemyModel_ = ModelCache::Get("Enemy2"); break;
+    case 2: enemyModel_ = ModelCache::Get("Enemy3"); break;
+    case 3: enemyModel_ = ModelCache::Get("Enemy4"); break;
+    default: enemyModel_ = ModelCache::Get("octopus"); break;
     }
 }
 
@@ -146,3 +157,5 @@ void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) 
         knockbackTimer_ = kKnockbackDuration;
     }
 }
+
+} // namespace DirectXGame

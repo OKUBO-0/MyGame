@@ -4,6 +4,8 @@
 #include <memory>
 #include "EnemyBehavior.h"
 
+namespace DirectXGame {
+
 class Player;
 
 class Enemy {
@@ -42,7 +44,7 @@ public:
 
 private:
     KamataEngine::WorldTransform worldTransform_;
-    std::unique_ptr<KamataEngine::Model> enemyModel_;
+    std::shared_ptr<KamataEngine::Model> enemyModel_;
     std::unique_ptr<IEnemyBehavior> behavior_;
 
     float speed_ = 0.0f;
@@ -67,3 +69,5 @@ private:
     KamataEngine::Audio* audio_ = nullptr;
     uint32_t deathSEHandle_ = 0;
 };
+
+} // namespace DirectXGame

@@ -1,10 +1,12 @@
 #include "EnemyBehavior.h"
 #include "Enemy.h"
-#include "../player/Player.h"
+#include "../player/core/Player.h"
 #include <KamataEngine.h>
 #include <cmath>
 
 using namespace KamataEngine;
+
+namespace DirectXGame {
 
 namespace {
 
@@ -94,3 +96,5 @@ std::unique_ptr<IEnemyBehavior> CreateEnemyBehaviorByType(int32_t type) {
 
     return std::make_unique<ChaseEnemyBehavior>();
 }
+
+} // namespace DirectXGame

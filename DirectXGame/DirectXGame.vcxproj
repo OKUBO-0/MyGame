@@ -64,7 +64,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)2d;$(ProjectDir)3d;$(ProjectDir)enemy;$(ProjectDir)math;$(ProjectDir)player;$(ProjectDir)scene;$(ProjectDir)ui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)core;$(ProjectDir)effects;$(ProjectDir)world;$(ProjectDir)items;$(ProjectDir)enemy;$(ProjectDir)math;$(ProjectDir)player;$(ProjectDir)player\core;$(ProjectDir)player\weapons;$(ProjectDir)scene;$(ProjectDir)scene\core;$(ProjectDir)scene\game;$(ProjectDir)scene\title;$(ProjectDir)scene\result;$(ProjectDir)ui;$(ProjectDir)ui\gauge;$(ProjectDir)ui\hud;$(ProjectDir)ui\common</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)2d;$(ProjectDir)3d;$(ProjectDir)enemy;$(ProjectDir)math;$(ProjectDir)player;$(ProjectDir)scene;$(ProjectDir)ui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)core;$(ProjectDir)effects;$(ProjectDir)world;$(ProjectDir)items;$(ProjectDir)enemy;$(ProjectDir)math;$(ProjectDir)player;$(ProjectDir)player\core;$(ProjectDir)player\weapons;$(ProjectDir)scene;$(ProjectDir)scene\core;$(ProjectDir)scene\game;$(ProjectDir)scene\title;$(ProjectDir)scene\result;$(ProjectDir)ui;$(ProjectDir)ui\gauge;$(ProjectDir)ui\hud;$(ProjectDir)ui\common</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>MinSpace</Optimization>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -108,36 +108,38 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="3d\GridPlane.cpp" />
-    <ClCompile Include="3d\DeathParticle.cpp" />
-    <ClCompile Include="3d\ExpOrb.cpp" />
-    <ClCompile Include="2d\CurtainTransition.cpp" />
-    <ClCompile Include="ui\KeyUI.cpp" />
-    <ClCompile Include="ui\Timer.cpp" />
-    <ClCompile Include="ui\Pause.cpp" />
-    <ClCompile Include="ui\MiniMap.cpp" />
-    <ClCompile Include="player\Drone.cpp" />
-    <ClCompile Include="GameData.cpp" />
-    <ClCompile Include="3d\RippleEffect.cpp" />
-    <ClCompile Include="3d\HitParticle.cpp" />
-    <ClCompile Include="player\NormalBullet.cpp" />
-    <ClCompile Include="player\OrbitBullet.cpp" />
-    <ClCompile Include="player\PlayerManager.cpp" />
-    <ClCompile Include="ui\HpGauge.cpp" />
-    <ClCompile Include="ui\ExpGauge.cpp" />
+    <ClCompile Include="world\GridPlane.cpp" />
+    <ClCompile Include="effects\DeathParticle.cpp" />
+    <ClCompile Include="items\ExpOrb.cpp" />
+    <ClCompile Include="effects\CurtainTransition.cpp" />
+    <ClCompile Include="ui\hud\KeyUI.cpp" />
+    <ClCompile Include="ui\hud\Timer.cpp" />
+    <ClCompile Include="ui\common\DigitSpriteUtil.cpp" />
+    <ClCompile Include="ui\hud\MiniMap.cpp" />
+    <ClCompile Include="player\weapons\Drone.cpp" />
+    <ClCompile Include="effects\RippleEffect.cpp" />
+    <ClCompile Include="effects\HitParticle.cpp" />
+    <ClCompile Include="player\weapons\NormalBullet.cpp" />
+    <ClCompile Include="player\weapons\OrbitBullet.cpp" />
+    <ClCompile Include="player\core\PlayerManager.cpp" />
+    <ClCompile Include="ui\gauge\HpGauge.cpp" />
+    <ClCompile Include="ui\gauge\ExpGauge.cpp" />
     <ClCompile Include="enemy\Enemy.cpp" />
     <ClCompile Include="enemy\EnemyBehavior.cpp" />
     <ClCompile Include="enemy\EnemyManager.cpp" />
-    <ClCompile Include="2d\Fade.cpp" />
-    <ClCompile Include="scene\ResultScene.cpp" />
-    <ClCompile Include="scene\IScene.cpp" />
-    <ClCompile Include="player\Player.cpp" />
-    <ClCompile Include="scene\SceneManager.cpp" />
-    <ClCompile Include="scene\GameScene.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="scene\TitleScene.cpp" />
-    <ClCompile Include="3d\SkyDome.cpp" />
-    <ClCompile Include="ui\Score.cpp" />
+    <ClCompile Include="effects\Fade.cpp" />
+    <ClCompile Include="scene\result\ResultScene.cpp" />
+    <ClCompile Include="scene\game\GameLevelUpController.cpp" />
+    <ClCompile Include="scene\game\GamePauseController.cpp" />
+    <ClCompile Include="scene\game\GameStartController.cpp" />
+    <ClCompile Include="scene\core\IScene.cpp" />
+    <ClCompile Include="player\core\Player.cpp" />
+    <ClCompile Include="scene\core\SceneManager.cpp" />
+    <ClCompile Include="scene\game\GameScene.cpp" />
+    <ClCompile Include="core\main.cpp" />
+    <ClCompile Include="scene\title\TitleScene.cpp" />
+    <ClCompile Include="world\SkyDome.cpp" />
+    <ClCompile Include="ui\hud\Score.cpp" />
     <ClCompile Include="math\WorldTransformEx.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -216,36 +218,40 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="3d\GridPlane.h" />
-    <ClInclude Include="3d\DeathParticle.h" />
-    <ClInclude Include="3d\ExpOrb.h" />
-    <ClInclude Include="2d\CurtainTransition.h" />
-    <ClInclude Include="ui\KeyUI.h" />
-    <ClInclude Include="ui\Timer.h" />
-    <ClInclude Include="ui\Pause.h" />
-    <ClInclude Include="ui\MiniMap.h" />
-    <ClInclude Include="player\Drone.h" />
-    <ClInclude Include="player\NormalBullet.h" />
-    <ClInclude Include="player\Bullet.h" />
-    <ClInclude Include="GameData.h" />
-    <ClInclude Include="3d\RippleEffect.h" />
-    <ClInclude Include="3d\HitParticle.h" />
-    <ClInclude Include="player\OrbitBullet.h" />
-    <ClInclude Include="player\PlayerManager.h" />
-    <ClInclude Include="ui\HpGauge.h" />
-    <ClInclude Include="ui\ExpGauge.h" />
+    <ClInclude Include="world\GridPlane.h" />
+    <ClInclude Include="effects\DeathParticle.h" />
+    <ClInclude Include="items\ExpOrb.h" />
+    <ClInclude Include="effects\CurtainTransition.h" />
+    <ClInclude Include="ui\hud\KeyUI.h" />
+    <ClInclude Include="ui\hud\Timer.h" />
+    <ClInclude Include="ui\common\DigitSpriteUtil.h" />
+    <ClInclude Include="ui\hud\MiniMap.h" />
+    <ClInclude Include="player\weapons\Drone.h" />
+    <ClInclude Include="player\weapons\NormalBullet.h" />
+    <ClInclude Include="player\weapons\Bullet.h" />
+    <ClInclude Include="core\GameSessionContext.h" />
+    <ClInclude Include="effects\RippleEffect.h" />
+    <ClInclude Include="effects\HitParticle.h" />
+    <ClInclude Include="player\weapons\OrbitBullet.h" />
+    <ClInclude Include="player\core\PlayerManager.h" />
+    <ClInclude Include="ui\gauge\HpGauge.h" />
+    <ClInclude Include="ui\gauge\ExpGauge.h" />
     <ClInclude Include="enemy\Enemy.h" />
     <ClInclude Include="enemy\EnemyBehavior.h" />
     <ClInclude Include="enemy\EnemyManager.h" />
-    <ClInclude Include="2d\Fade.h" />
-    <ClInclude Include="player\Player.h" />
-    <ClInclude Include="scene\ResultScene.h" />
-    <ClInclude Include="scene\SceneManager.h" />
-    <ClInclude Include="scene\IScene.h" />
-    <ClInclude Include="scene\GameScene.h" />
-    <ClInclude Include="scene\TitleScene.h" />
-    <ClInclude Include="3d\SkyDome.h" />
-    <ClInclude Include="ui\Score.h" />
+    <ClInclude Include="effects\Fade.h" />
+    <ClInclude Include="player\core\Player.h" />
+    <ClInclude Include="scene\result\ResultScene.h" />
+    <ClInclude Include="scene\game\GameLevelUpController.h" />
+    <ClInclude Include="scene\game\GamePauseController.h" />
+    <ClInclude Include="scene\game\GameStartController.h" />
+    <ClInclude Include="scene\core\SceneManager.h" />
+    <ClInclude Include="scene\core\IScene.h" />
+    <ClInclude Include="scene\game\GameScene.h" />
+    <ClInclude Include="scene\title\TitleScene.h" />
+    <ClInclude Include="world\SkyDome.h" />
+    <ClInclude Include="core\ModelCache.h" />
+    <ClInclude Include="ui\hud\Score.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
