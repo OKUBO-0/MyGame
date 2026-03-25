@@ -1,5 +1,5 @@
 #include "Enemy.h"
-#include "../ModelCache.h"
+#include "ModelCache.h"
 
 using namespace KamataEngine;
 

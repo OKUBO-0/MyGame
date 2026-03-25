@@ -8,6 +8,10 @@ void GameScene::Initialize() {
     audio_ = Audio::GetInstance();
 
     pauseSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_pause.wav");
+    decideSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_exp.wav");
+    damageSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_hit.wav");
+    deathSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_death.wav");
+    levelUpSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_exp.wav");
 
     camera_.Initialize();
 
@@ -144,6 +148,9 @@ void GameScene::Update() {
         for (int key = 0; key < 256; key++) {
             if (input_->TriggerKey(static_cast<BYTE>(key))) {
                 startState_ = StartState::Play;
+                if (decideSEHandle_ != 0) {
+                    Audio::GetInstance()->PlayWave(decideSEHandle_, false, 1.0f);
+                }
                 break;
             }
         }
@@ -183,6 +190,7 @@ void GameScene::Update() {
     }
 
     if (playerManager_->IsLevelUpRequested()) {
+        Audio::GetInstance()->PlayWave(levelUpSEHandle_, false, 1.0f);
 
         currentChoices_.clear();
 
@@ -236,6 +244,7 @@ void GameScene::Update() {
     }
 
     if (levelUpActive_) {
+        int32_t previousSelection = levelUpSelection_;
 
         if (input_->TriggerKey(DIK_W)) {
             levelUpSelection_ = std::max<int32_t>(0, levelUpSelection_ - 1);
@@ -243,10 +252,16 @@ void GameScene::Update() {
         else if (input_->TriggerKey(DIK_S)) {
             levelUpSelection_ = std::min<int32_t>(2, levelUpSelection_ + 1);
         }
+        if (levelUpSelection_ != previousSelection) {
+            Audio::GetInstance()->PlayWave(pauseSEHandle_, false, 0.5f);
+        }
 
         arrowSprite_->SetPosition({ 0.0f, 0.0f + levelUpSelection_ * 140 });
 
         if (input_->TriggerKey(DIK_RETURN) || input_->TriggerKey(DIK_SPACE)) {
+            if (decideSEHandle_ != 0) {
+                Audio::GetInstance()->PlayWave(decideSEHandle_, false, 1.0f);
+            }
             currentChoices_[levelUpSelection_].action(playerManager_.get());
             levelUpActive_ = false;
         }
@@ -286,6 +301,7 @@ void GameScene::Update() {
         deathFadeInStarted_ = true;
         deathAlpha_ = 0.0f;
         gameStopped_ = true;
+        Audio::GetInstance()->PlayWave(deathSEHandle_, false, 1.0f);
     }
 
     if (gameStopped_) {

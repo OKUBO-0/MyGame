@@ -40,25 +40,37 @@
     <Filter Include="ヘッダー ファイル\enemy">
       <UniqueIdentifier>{ee4d10b2-3bc0-4cb6-9fa0-c6ce3d2859c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\2d">
+    <Filter Include="ソース ファイル\core">
       <UniqueIdentifier>{04a2c63e-bbc1-4c4c-a538-c3a5951de3e3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\2d">
+    <Filter Include="ヘッダー ファイル\core">
       <UniqueIdentifier>{457a20d6-0d7c-4f06-b84d-356e27363977}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\3d">
+    <Filter Include="ソース ファイル\effects">
       <UniqueIdentifier>{b4587b85-0aca-4a0a-875b-4b3f9c35bcd6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\3d">
+    <Filter Include="ヘッダー ファイル\effects">
       <UniqueIdentifier>{3bdcb735-7cd3-448a-825c-ad4495ef4952}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\world">
+      <UniqueIdentifier>{a050eb9d-9550-4664-9b5d-9208c5b83574}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\world">
+      <UniqueIdentifier>{2143badb-47e0-4d03-9ad5-b7e3158983ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\items">
+      <UniqueIdentifier>{a14f61c6-98c7-4692-a3b4-3b0f9d1f4bdc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\items">
+      <UniqueIdentifier>{8f00ae2a-a922-4dbe-82d7-f3244d531a61}</UniqueIdentifier>
     </Filter>
     <Filter Include="ソース ファイル\math">
       <UniqueIdentifier>{1eb2cf09-6fd1-4d16-a8cf-af19563fee4b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="core\main.cpp">
+      <Filter>ソース ファイル\core</Filter>
     </ClCompile>
     <ClCompile Include="scene\IScene.cpp">
       <Filter>ソース ファイル\scene</Filter>
@@ -87,11 +99,11 @@
     <ClCompile Include="enemy\EnemyManager.cpp">
       <Filter>ソース ファイル\enemy</Filter>
     </ClCompile>
-    <ClCompile Include="2d\Fade.cpp">
-      <Filter>ソース ファイル\2d</Filter>
+    <ClCompile Include="effects\Fade.cpp">
+      <Filter>ソース ファイル\effects</Filter>
     </ClCompile>
-    <ClCompile Include="3d\SkyDome.cpp">
-      <Filter>ソース ファイル\3d</Filter>
+    <ClCompile Include="world\SkyDome.cpp">
+      <Filter>ソース ファイル\world</Filter>
     </ClCompile>
     <ClCompile Include="math\WorldTransformEx.cpp">
       <Filter>ソース ファイル\math</Filter>
@@ -102,26 +114,26 @@
     <ClCompile Include="ui\HpGauge.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="3d\GridPlane.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="world\GridPlane.cpp">
+      <Filter>ソース ファイル\world</Filter>
     </ClCompile>
-    <ClCompile Include="GameData.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="core\GameData.cpp">
+      <Filter>ソース ファイル\core</Filter>
     </ClCompile>
-    <ClCompile Include="3d\RippleEffect.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="effects\RippleEffect.cpp">
+      <Filter>ソース ファイル\effects</Filter>
     </ClCompile>
     <ClCompile Include="ui\Score.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="3d\HitParticle.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="effects\HitParticle.cpp">
+      <Filter>ソース ファイル\effects</Filter>
     </ClCompile>
-    <ClCompile Include="3d\DeathParticle.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="effects\DeathParticle.cpp">
+      <Filter>ソース ファイル\effects</Filter>
     </ClCompile>
-    <ClCompile Include="3d\ExpOrb.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="items\ExpOrb.cpp">
+      <Filter>ソース ファイル\items</Filter>
     </ClCompile>
     <ClCompile Include="player\OrbitBullet.cpp">
       <Filter>ソース ファイル</Filter>
@@ -135,8 +147,8 @@
     <ClCompile Include="player\Drone.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="2d\CurtainTransition.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="effects\CurtainTransition.cpp">
+      <Filter>ソース ファイル\effects</Filter>
     </ClCompile>
     <ClCompile Include="ui\MiniMap.cpp">
       <Filter>ソース ファイル</Filter>
@@ -228,11 +240,11 @@
     <ClInclude Include="enemy\EnemyManager.h">
       <Filter>ヘッダー ファイル\enemy</Filter>
     </ClInclude>
-    <ClInclude Include="2d\Fade.h">
-      <Filter>ヘッダー ファイル\2d</Filter>
+    <ClInclude Include="effects\Fade.h">
+      <Filter>ヘッダー ファイル\effects</Filter>
     </ClInclude>
-    <ClInclude Include="3d\SkyDome.h">
-      <Filter>ヘッダー ファイル\3d</Filter>
+    <ClInclude Include="world\SkyDome.h">
+      <Filter>ヘッダー ファイル\world</Filter>
     </ClInclude>
     <ClInclude Include="ui\ExpGauge.h">
       <Filter>ヘッダー ファイル</Filter>
@@ -240,26 +252,26 @@
     <ClInclude Include="ui\HpGauge.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="3d\GridPlane.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="world\GridPlane.h">
+      <Filter>ヘッダー ファイル\world</Filter>
     </ClInclude>
-    <ClInclude Include="GameData.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="core\GameData.h">
+      <Filter>ヘッダー ファイル\core</Filter>
     </ClInclude>
-    <ClInclude Include="3d\RippleEffect.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="effects\RippleEffect.h">
+      <Filter>ヘッダー ファイル\effects</Filter>
     </ClInclude>
     <ClInclude Include="ui\Score.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="3d\HitParticle.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="effects\HitParticle.h">
+      <Filter>ヘッダー ファイル\effects</Filter>
     </ClInclude>
-    <ClInclude Include="3d\DeathParticle.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="effects\DeathParticle.h">
+      <Filter>ヘッダー ファイル\effects</Filter>
     </ClInclude>
-    <ClInclude Include="3d\ExpOrb.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="items\ExpOrb.h">
+      <Filter>ヘッダー ファイル\items</Filter>
     </ClInclude>
     <ClInclude Include="player\OrbitBullet.h">
       <Filter>ヘッダー ファイル</Filter>
@@ -276,8 +288,11 @@
     <ClInclude Include="player\Drone.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="2d\CurtainTransition.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="effects\CurtainTransition.h">
+      <Filter>ヘッダー ファイル\effects</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ModelCache.h">
+      <Filter>ヘッダー ファイル\core</Filter>
     </ClInclude>
     <ClInclude Include="ui\MiniMap.h">
       <Filter>ヘッダー ファイル</Filter>

@@ -1,5 +1,5 @@
 #include "DeathParticle.h"
-#include "../ModelCache.h"
+#include "ModelCache.h"
 using namespace KamataEngine;
 
 // パーティクル寿命（調整値）

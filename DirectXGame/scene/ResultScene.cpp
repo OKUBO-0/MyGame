@@ -7,7 +7,8 @@ void ResultScene::Initialize() {
     input_ = Input::GetInstance();
     audio_ = Audio::GetInstance();
 
-    selectSEHandle_ = audio_->LoadWave("Sounds/se_select.wav");
+    selectSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
+    countupSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
 
     // --- 背景スプライト生成（黒背景） ---
     uint32_t blackTex = TextureManager::Load("color/black.png");
@@ -67,23 +68,38 @@ void ResultScene::Initialize() {
 void ResultScene::Update() {
     // --- フェード更新（常に先頭で処理） ---
     fade_.Update();
+    if (countupSECooldown_ > 0) {
+        --countupSECooldown_;
+    }
 
     // --- スコア加算演出（徐々に最終スコアまで増加させる） ---
     if (currentExp_ < targetExp_) {
         currentExp_ += 1;
         expUI_->SetNumber(currentExp_);
+        if (countupSEHandle_ != 0 && countupSECooldown_ == 0) {
+            audio_->PlayWave(countupSEHandle_, false, 0.25f);
+            countupSECooldown_ = 6;
+        }
     }
 
     // --- レベル加算演出 ---
     if (currentLevel_ < targetLevel_) {
         currentLevel_ += 1;
         levelUI_->SetNumber(currentLevel_);
+        if (countupSEHandle_ != 0 && countupSECooldown_ == 0) {
+            audio_->PlayWave(countupSEHandle_, false, 0.25f);
+            countupSECooldown_ = 6;
+        }
     }
 
     // --- キル数加算演出 ---
     if (currentKill_ < targetKill_) {
         currentKill_ += 1;
         killUI_->SetNumber(currentKill_);
+        if (countupSEHandle_ != 0 && countupSECooldown_ == 0) {
+            audio_->PlayWave(countupSEHandle_, false, 0.25f);
+            countupSECooldown_ = 6;
+        }
     }
 
     expUI_->Update();
@@ -92,7 +108,9 @@ void ResultScene::Update() {
 
     // --- Enterキーでタイトルへ戻る（フェードアウト開始） ---
     if (input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::kStay) {
-        selectSEHandle_ = audio_->PlayWave(selectSEHandle_, false, 1.0f);
+        if (selectSEHandle_ != 0) {
+            audio_->PlayWave(selectSEHandle_, false, 1.0f);
+        }
         fade_.StartFadeOut();
         fadeOutStarted_ = true;
         SetSceneNo(Scene::Title);

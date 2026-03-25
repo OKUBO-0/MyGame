@@ -23,6 +23,7 @@ void EnemyManager::Initialize(const std::string& csvPath, Player* player, Player
 
     audio_ = Audio::GetInstance();
     hitSEHandle_ = audio_->LoadWave("Sounds/se_hit.wav");
+    playerDamageSEHandle_ = audio_->LoadWave("Sounds/se_hit.wav");
 
     if (playerManager_) {
         playerManager_->SetEnemyManager(this);
@@ -414,7 +415,7 @@ void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
 
             if (!playerManager->IsInvincible()) {
                 playerManager->TakeDamage();
-                Audio::GetInstance()->PlayWave(hitSEHandle_, false, 0.5f);
+                Audio::GetInstance()->PlayWave(playerDamageSEHandle_, false, 0.8f);
             }
         }
     }

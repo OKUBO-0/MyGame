@@ -1,5 +1,5 @@
 #include "ExpOrb.h"
-#include "../ModelCache.h"
+#include "ModelCache.h"
 #include <random>
 #include <cmath>
 using namespace KamataEngine;

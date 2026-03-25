@@ -2,6 +2,7 @@
 using namespace KamataEngine;
 
 void Pause::Initialize() {
+    audio_ = Audio::GetInstance();
     pauseTex_ = TextureManager::Load("pause.png");
     pauseOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(pauseTex_, { 0, 0 }));
     pauseOverlay_->SetSize({ 1280, 720 });
@@ -16,6 +17,9 @@ void Pause::Initialize() {
 
     miniMap_ = std::make_unique<MiniMap>();
     miniMap_->Initialize();
+
+    selectSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
+    decideSEHandle_ = audio_->LoadWave("Sounds/se_exp.wav");
 }
 
 void Pause::Update(const Player* player, const EnemyManager& enemyManager, Input* input) {
@@ -25,6 +29,9 @@ void Pause::Update(const Player* player, const EnemyManager& enemyManager, Input
     if (guideActive_) {
         if (input->TriggerKey(DIK_ESCAPE)) {
             guideActive_ = false;
+            if (decideSEHandle_ != 0) {
+                audio_->PlayWave(decideSEHandle_, false, 1.0f);
+            }
         }
         return;
     }
@@ -32,11 +39,17 @@ void Pause::Update(const Player* player, const EnemyManager& enemyManager, Input
     miniMap_->Update(player, enemyManager);
 
     // --- メニュー操作（TitleScene と同じ方式） ---
+    int32_t previousMenuIndex = menuIndex_;
     if (input->TriggerKey(DIK_W)) {
         menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
     }
     if (input->TriggerKey(DIK_S)) {
         menuIndex_ = std::min<int32_t>(1, menuIndex_ + 1);
+    }
+    if (menuIndex_ != previousMenuIndex) {
+        if (selectSEHandle_ != 0) {
+            audio_->PlayWave(selectSEHandle_, false, 1.0f);
+        }
     }
 
     // カーソル位置
@@ -47,6 +60,9 @@ void Pause::Update(const Player* player, const EnemyManager& enemyManager, Input
 
     // --- 決定 ---
     if (input->TriggerKey(DIK_SPACE) || input->TriggerKey(DIK_RETURN)) {
+        if (decideSEHandle_ != 0) {
+            audio_->PlayWave(decideSEHandle_, false, 1.0f);
+        }
         if (menuIndex_ == 0) {
             guideActive_ = true;
         }

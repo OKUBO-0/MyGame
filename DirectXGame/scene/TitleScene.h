@@ -1,8 +1,8 @@
 #pragma once
 
 #include "IScene.h"
-#include "../2d/CurtainTransition.h"
-#include "../3d/SkyDome.h"
+#include "CurtainTransition.h"
+#include "SkyDome.h"
 #include <KamataEngine.h>
 #include <memory>
 

@@ -1,5 +1,5 @@
 #include "OrbitBullet.h"
-#include "../ModelCache.h"
+#include "ModelCache.h"
 using namespace KamataEngine;
 
 void OrbitBullet::Initialize(const Vector3& center, float radius, float angle) {

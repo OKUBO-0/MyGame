@@ -20,6 +20,7 @@ public:
 
 private:
     bool active_ = false;
+    KamataEngine::Audio* audio_ = nullptr;
 
     std::unique_ptr<KamataEngine::Sprite> pauseOverlay_;
     std::unique_ptr<KamataEngine::Sprite> guideSprite_;
@@ -28,6 +29,8 @@ private:
     uint32_t pauseTex_ = 0;
     uint32_t guideTex_ = 0;
     uint32_t cursorTex_ = 0;
+    uint32_t selectSEHandle_ = 0;
+    uint32_t decideSEHandle_ = 0;
 
     std::unique_ptr<MiniMap> miniMap_;
 

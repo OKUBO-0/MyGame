@@ -1,5 +1,5 @@
 #include "HitParticle.h"
-#include "../ModelCache.h"
+#include "ModelCache.h"
 #include <cstdlib> // rand()
 #include <cmath>   // cos, sin
 using namespace KamataEngine;

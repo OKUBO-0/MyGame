@@ -4,9 +4,9 @@
 #include "../player/Player.h"
 #include "../player/PlayerManager.h"
 #include "../enemy/EnemyManager.h"
-#include "../3d/GridPlane.h"
-#include "../3d/SkyDome.h"
-#include "../2d/CurtainTransition.h"
+#include "GridPlane.h"
+#include "SkyDome.h"
+#include "CurtainTransition.h"
 #include "../ui/ExpGauge.h"
 #include "../ui/HpGauge.h"
 #include "../ui/Pause.h"
@@ -78,6 +78,10 @@ private:
     std::unique_ptr<SkyDome> skyDome_;
 
     uint32_t pauseSEHandle_ = 0;
+    uint32_t decideSEHandle_ = 0;
+    uint32_t damageSEHandle_ = 0;
+    uint32_t deathSEHandle_ = 0;
+    uint32_t levelUpSEHandle_ = 0;
 
     std::vector<LevelUpOption> levelUpOptions_;
     std::vector<LevelUpOption> currentChoices_;

@@ -1,6 +1,6 @@
 #pragma once
 #include "IScene.h"
-#include "../2d/Fade.h"
+#include "Fade.h"
 #include "../ui/Score.h"
 #include <KamataEngine.h>
 #include <cstdint>
@@ -54,4 +54,6 @@ private:
     int32_t targetKill_ = 0;       //追加
 
     uint32_t selectSEHandle_ = 0; ///< 選択SEハンドル
+    uint32_t countupSEHandle_ = 0;
+    int32_t countupSECooldown_ = 0;
 };

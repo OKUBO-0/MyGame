@@ -1,5 +1,5 @@
 #include "NormalBullet.h"
-#include "../ModelCache.h"
+#include "ModelCache.h"
 using namespace KamataEngine;
 
 void NormalBullet::InitializeForward(const Vector3& startPos,

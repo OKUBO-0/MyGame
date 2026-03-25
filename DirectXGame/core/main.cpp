@@ -2,10 +2,10 @@
 #include <KamataEngine.h>
 #include <chrono>
 
-#include "scene/SceneManager.h"
-#include "scene/TitleScene.h"
-#include "scene/GameScene.h"
-#include "scene/ResultScene.h"
+#include "SceneManager.h"
+#include "TitleScene.h"
+#include "GameScene.h"
+#include "ResultScene.h"
 
 using namespace KamataEngine;
 

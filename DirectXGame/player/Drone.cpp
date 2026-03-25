@@ -1,5 +1,5 @@
 #include "Drone.h"
-#include "../ModelCache.h"
+#include "ModelCache.h"
 using namespace KamataEngine;
 
 void Drone::Initialize(const Vector3& offset) {

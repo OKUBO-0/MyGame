@@ -11,7 +11,8 @@ void TitleScene::Initialize() {
 
     // --- タイトル画面用BGMと効果音を読み込み ---
     titleBGMHandle_ = audio_->LoadWave("Sounds/bgm_title.wav");
-    selectSEHandle_ = audio_->LoadWave("Sounds/se_select.wav");
+    selectSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
+    decideSEHandle_ = audio_->LoadWave("Sounds/se_exp.wav");
 
     // --- タイトルロゴスプライト生成 ---
     uint32_t titleTex = TextureManager::Load("title/title.png");
@@ -79,16 +80,25 @@ void TitleScene::Update() {
     if (guideActive_) {
         if (input_->TriggerKey(DIK_ESCAPE)) {
             guideActive_ = false;
+            if (decideSEHandle_ != 0) {
+                audio_->PlayWave(decideSEHandle_, false, 1.0f);
+            }
         }
         return; // メニュー操作は無効
     }
 
     // --- メニュー選択（W / S） ---
+    int32_t previousMenuIndex = menuIndex_;
     if (input_->TriggerKey(DIK_W)) {
         menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
     }
     if (input_->TriggerKey(DIK_S)) {
         menuIndex_ = std::min<int32_t>(2, menuIndex_ + 1);
+    }
+    if (menuIndex_ != previousMenuIndex) {
+        if (selectSEHandle_ != 0) {
+            audio_->PlayWave(selectSEHandle_, false, 1.0f);
+        }
     }
 
     // --- カーソル位置更新 ---
@@ -100,6 +110,9 @@ void TitleScene::Update() {
 
     // --- 決定（SPACE / ENTER） ---
     if (input_->TriggerKey(DIK_SPACE)) {
+        if (decideSEHandle_ != 0) {
+            audio_->PlayWave(decideSEHandle_, false, 1.0f);
+        }
         switch (menuIndex_) {
         case 0: // Play
             if (curtain_.GetState() == CurtainTransition::State::kNone) {
@@ -170,6 +183,7 @@ void TitleScene::Draw() {
     // ガイド画面表示中
     if (guideActive_) {
         guideSprite_->Draw();
+        Sprite::PostDraw();
         return;
     }
     cursorSprite_->Draw();

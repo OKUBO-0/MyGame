@@ -9,7 +9,7 @@
 #include "DeathParticle.h"
 #include "ExpOrb.h"
 #include "HitParticle.h"
-#include "../GameData.h"
+#include "GameData.h"
 
 class Player;
 class PlayerManager;
@@ -61,6 +61,7 @@ private:
 
     KamataEngine::Audio* audio_ = nullptr;
     uint32_t hitSEHandle_ = 0;
+    uint32_t playerDamageSEHandle_ = 0;
 
     // 敵タイプ定義
     std::vector<EnemyTypeData> enemyTypes_;
