@@ -84,6 +84,7 @@ void EnemyManager::SpawnOneEnemy(const EnemyTypeData& data) {
     enemy->SetPlayer(player_);
     enemy->SetPosition(pos);
     enemy->SetModelByType(data.type);
+    enemy->SetBehaviorByType(data.type);
 
     // 時間経過で強化
     int hp = data.baseHP + (int)(elapsedTime_ / 30.0f);

@@ -1,26 +1,41 @@
 #include "SceneManager.h"
 
+namespace EngineLayer {
+
+using SceneFactory = std::unordered_map<Scene, std::function<std::unique_ptr<IScene>()>>;
+
+std::unique_ptr<IScene> CreateSceneIfRegistered(const SceneFactory& sceneFactory, Scene scene) {
+    auto it = sceneFactory.find(scene);
+    if (it == sceneFactory.end()) {
+        return nullptr;
+    }
+
+    return it->second();
+}
+
+constexpr Scene kInitialScene = Scene::Title;
+
+} // namespace EngineLayer
+
 /// <summary>
 /// コンストラクタ：初期シーンをタイトルに設定
 /// </summary>
-SceneManager::SceneManager() : currentSceneNo_(Scene::Title) {}
+SceneManager::SceneManager() : currentSceneNo_(EngineLayer::kInitialScene) {}
 
 /// <summary>
 /// デストラクタ：unique_ptrによりリソースは自動解放される
 /// </summary>
 SceneManager::~SceneManager() = default;
 
-void SceneManager::RegisterScene(Scene scene, std::function<std::unique_ptr<IScene>()> createFunc) {
+void SceneManager::RegisterScene(Scene scene, const std::function<std::unique_ptr<IScene>()>& createFunc) {
     // シーン生成関数を登録（sceneFactory_ に紐付け）
-    sceneFactory_[scene] = std::move(createFunc);
+    sceneFactory_[scene] = createFunc;
 }
 
 void SceneManager::ChangeScene(Scene scene) {
     // 登録済みのシーンであれば切り替えを実行
-    auto it = sceneFactory_.find(scene);
-    if (it != sceneFactory_.end()) {
-        // 新しいシーンを生成
-        currentScene_ = it->second();
+    currentScene_ = EngineLayer::CreateSceneIfRegistered(sceneFactory_, scene);
+    if (currentScene_) {
         currentScene_->Initialize();
 
         // 現在のシーン番号を更新

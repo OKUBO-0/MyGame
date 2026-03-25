@@ -27,7 +27,7 @@ public:
     /// </summary>
     /// <param name="scene">登録するシーン番号</param>
     /// <param name="createFunc">シーン生成用関数（unique_ptrを返す）</param>
-    void RegisterScene(Scene scene, std::function<std::unique_ptr<IScene>()> createFunc);
+    void RegisterScene(Scene scene, const std::function<std::unique_ptr<IScene>()>& createFunc);
 
     /// <summary>
     /// シーンを切り替える

@@ -8,6 +8,16 @@
 
 using namespace KamataEngine;
 
+namespace EngineLayer {
+
+void RegisterScenes(::SceneManager& sceneManager) {
+    sceneManager.RegisterScene(::Scene::Title, []() { return std::make_unique<::TitleScene>(); });
+    sceneManager.RegisterScene(::Scene::Game, []() { return std::make_unique<::GameScene>(); });
+    sceneManager.RegisterScene(::Scene::Result, []() { return std::make_unique<::ResultScene>(); });
+}
+
+} // namespace EngineLayer
+
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
     // エンジン初期化（ウィンドウタイトルを指定）
@@ -23,9 +33,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     SceneManager sceneManager;
 
     // 各シーンを登録（Title / Game / Result）
-    sceneManager.RegisterScene(Scene::Title, []() { return std::make_unique<TitleScene>(); });
-    sceneManager.RegisterScene(Scene::Game, []() { return std::make_unique<GameScene>(); });
-    sceneManager.RegisterScene(Scene::Result, []() { return std::make_unique<ResultScene>(); });
+    EngineLayer::RegisterScenes(sceneManager);
 
     // 初期シーンをタイトルに設定
     sceneManager.ChangeScene(Scene::Title);
@@ -48,7 +56,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
         directXCommon->PostDraw();
     }
 
-    // エンジン終了処理（リソース解放など）
+    // エンジン終了処理（リソース解放など） 
     Finalize();
 
     return 0;

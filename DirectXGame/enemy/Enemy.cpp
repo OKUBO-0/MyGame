@@ -1,4 +1,5 @@
 #include "Enemy.h"
+
 using namespace KamataEngine;
 
 void Enemy::Initialize() {
@@ -27,8 +28,6 @@ void Enemy::SetPlayer(Player* player) {
 }
 
 void Enemy::SetModelByType(int32_t type) {
-    enemyType_ = type;
-
     switch (type) {
     case 0: enemyModel_.reset(Model::CreateFromOBJ("Enemy1")); break;
     case 1: enemyModel_.reset(Model::CreateFromOBJ("Enemy2")); break;
@@ -36,6 +35,10 @@ void Enemy::SetModelByType(int32_t type) {
     case 3: enemyModel_.reset(Model::CreateFromOBJ("Enemy4")); break;
     default: enemyModel_.reset(Model::CreateFromOBJ("octopus")); break;
     }
+}
+
+void Enemy::SetBehaviorByType(int32_t type) {
+    behavior_ = CreateEnemyBehaviorByType(type);
 }
 
 Vector3 Enemy::GetPosition() const {
@@ -101,62 +104,12 @@ void Enemy::Update() {
         }
     }
     else {
-        // --- 通常行動 ---
-        if (enemyType_ == 2) {
-            UpdateType2();
-        }
-        else if (player_) {
-            Vector3 p = player_->GetWorldPosition();
-            Vector3 dir = { p.x - worldTransform_.translation_.x, 0, p.z - worldTransform_.translation_.z };
-
-            float len = std::sqrt(dir.x * dir.x + dir.z * dir.z);
-            if (len > 0.0f) {
-                dir.x /= len;
-                dir.z /= len;
-
-                worldTransform_.rotation_.y = std::atan2(dir.x, dir.z);
-
-                float moveSpeed = speed_;
-                worldTransform_.translation_.x += dir.x * moveSpeed;
-                worldTransform_.translation_.z += dir.z * moveSpeed;
-            }
+        if (behavior_) {
+            behavior_->Update(*this);
         }
     }
 
     worldTransform_.UpdateMatrix();
-}
-
-void Enemy::UpdateType2() {
-    if (!player_) return;
-
-    Vector3 p = player_->GetWorldPosition();
-    Vector3 toPlayer = { p.x - worldTransform_.translation_.x, 0, p.z - worldTransform_.translation_.z };
-
-    float dist = std::sqrt(toPlayer.x * toPlayer.x + toPlayer.z * toPlayer.z);
-    if (dist > 0.001f) {
-        toPlayer.x /= dist;
-        toPlayer.z /= dist;
-    }
-
-    Vector3 side = { -toPlayer.z, 0, toPlayer.x };
-
-    Vector3 finalDir = {
-        toPlayer.x * approachSpeed_ + side.x * circleSpeed_,
-        0,
-        toPlayer.z * approachSpeed_ + side.z * circleSpeed_
-    };
-
-    float len = std::sqrt(finalDir.x * finalDir.x + finalDir.z * finalDir.z);
-    if (len > 0.001f) {
-        finalDir.x /= len;
-        finalDir.z /= len;
-    }
-
-    float moveSpeed = speed_;
-    worldTransform_.translation_.x += finalDir.x * moveSpeed;
-    worldTransform_.translation_.z += finalDir.z * moveSpeed;
-
-    worldTransform_.rotation_.y = std::atan2(finalDir.x, finalDir.z);
 }
 
 void Enemy::Draw(Camera* camera) {

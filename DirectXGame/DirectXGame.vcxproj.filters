@@ -81,6 +81,9 @@
     <ClCompile Include="enemy\Enemy.cpp">
       <Filter>ソース ファイル\enemy</Filter>
     </ClCompile>
+    <ClCompile Include="enemy\EnemyBehavior.cpp">
+      <Filter>ソース ファイル\enemy</Filter>
+    </ClCompile>
     <ClCompile Include="enemy\EnemyManager.cpp">
       <Filter>ソース ファイル\enemy</Filter>
     </ClCompile>
@@ -217,6 +220,9 @@
       <Filter>ヘッダー ファイル\player</Filter>
     </ClInclude>
     <ClInclude Include="enemy\Enemy.h">
+      <Filter>ヘッダー ファイル\enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="enemy\EnemyBehavior.h">
       <Filter>ヘッダー ファイル\enemy</Filter>
     </ClInclude>
     <ClInclude Include="enemy\EnemyManager.h">

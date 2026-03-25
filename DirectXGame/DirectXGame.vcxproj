@@ -126,6 +126,7 @@
     <ClCompile Include="ui\HpGauge.cpp" />
     <ClCompile Include="ui\ExpGauge.cpp" />
     <ClCompile Include="enemy\Enemy.cpp" />
+    <ClCompile Include="enemy\EnemyBehavior.cpp" />
     <ClCompile Include="enemy\EnemyManager.cpp" />
     <ClCompile Include="2d\Fade.cpp" />
     <ClCompile Include="scene\ResultScene.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="ui\HpGauge.h" />
     <ClInclude Include="ui\ExpGauge.h" />
     <ClInclude Include="enemy\Enemy.h" />
+    <ClInclude Include="enemy\EnemyBehavior.h" />
     <ClInclude Include="enemy\EnemyManager.h" />
     <ClInclude Include="2d\Fade.h" />
     <ClInclude Include="player\Player.h" />

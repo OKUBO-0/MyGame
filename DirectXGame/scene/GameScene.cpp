@@ -391,7 +391,7 @@ void GameScene::Draw() {
         expGauge_->Draw();
     }
 
-    if (hpGauge_ && player_ && !playerManager_->IsDead() && !levelUpActive_ && !paused_) {
+    if (hpGauge_ && player_ && !playerManager_->IsDead() && !levelUpActive_ && !paused_ && startState_ == StartState::Play) {
         hpGauge_->Draw();
     }
 
