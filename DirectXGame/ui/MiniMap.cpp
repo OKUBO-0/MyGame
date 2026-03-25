@@ -4,10 +4,10 @@
 using namespace KamataEngine;
 
 void MiniMap::Initialize() {
-    playerTex_ = TextureManager::Load("minimap_player.png");
-    enemyTex_ = TextureManager::Load("minimap_enemy.png");
-    orbTex_ = TextureManager::Load("minimap_orb.png");
-    bgTex_ = TextureManager::Load("minimap_bg.png");
+    playerTex_ = TextureManager::Load("ui/game/minimap_player.png");
+    enemyTex_ = TextureManager::Load("ui/game/minimap_enemy.png");
+    orbTex_ = TextureManager::Load("ui/game/minimap_orb.png");
+    bgTex_ = TextureManager::Load("ui/game/minimap_bg.png");
 }
 
 void MiniMap::Update(const Player* player, const EnemyManager& enemyManager) {

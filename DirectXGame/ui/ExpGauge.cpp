@@ -28,9 +28,9 @@ void SetDigitSprite(Sprite& sprite, float digitWidth, const Vector2& size, int32
 
 void ExpGauge::Initialize() {
     // テクスチャ読み込み（白1x1は色付き矩形用）
-    dummyTextureHandle_ = TextureManager::Load("white1x1.png");
-    lvLabelHandle_ = TextureManager::Load("lv_label.png");
-    lvDigitsHandle_ = TextureManager::Load("number/numbers.png");
+    dummyTextureHandle_ = TextureManager::Load("textures/debug/white1x1.png");
+    lvLabelHandle_ = TextureManager::Load("ui/game/lv_label.png");
+    lvDigitsHandle_ = TextureManager::Load("ui/number/numbers.png");
 
     // 外枠（黄色のフレーム）
     yellowFrame_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 0, 1 }));

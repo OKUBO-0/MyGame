@@ -22,8 +22,8 @@ void EnemyManager::Initialize(const std::string& csvPath, Player* player, Player
     LoadEnemyTypes(csvPath);
 
     audio_ = Audio::GetInstance();
-    hitSEHandle_ = audio_->LoadWave("Sounds/se_hit.wav");
-    playerDamageSEHandle_ = audio_->LoadWave("Sounds/se_hit.wav");
+    hitSEHandle_ = audio_->LoadWave("audio/se/se_hit.wav");
+    playerDamageSEHandle_ = audio_->LoadWave("audio/se/se_hit.wav");
 
     if (playerManager_) {
         playerManager_->SetEnemyManager(this);

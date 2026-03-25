@@ -21,7 +21,7 @@ void UpdateDigitLayout(Sprite& sprite, const Vector2& basePosition, const Vector
 
 void Score::Initialize() {
     // 数字表示用テクスチャを読み込み
-    textureHandle_ = TextureManager::Load("number/numbers.png");
+    textureHandle_ = TextureManager::Load("ui/number/numbers.png");
 
     // 各桁分のスプライトを生成し、横並びに配置
     for (int32_t i = 0; i < kDigitCount; ++i) {

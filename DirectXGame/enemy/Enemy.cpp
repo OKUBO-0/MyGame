@@ -16,14 +16,14 @@ void Enemy::Initialize() {
 
     static uint32_t sharedWhiteTextureHandle = 0;
     if (sharedWhiteTextureHandle == 0) {
-        sharedWhiteTextureHandle = TextureManager::Load("color/white.png");
+        sharedWhiteTextureHandle = TextureManager::Load("textures/color/white.png");
     }
     whiteTextureHandle_ = sharedWhiteTextureHandle;
 
     audio_ = Audio::GetInstance();
     static uint32_t sharedDeathSEHandle = 0;
     if (sharedDeathSEHandle == 0) {
-        sharedDeathSEHandle = audio_->LoadWave("Sounds/se_death.wav");
+        sharedDeathSEHandle = audio_->LoadWave("audio/se/se_death.wav");
     }
     deathSEHandle_ = sharedDeathSEHandle;
 }

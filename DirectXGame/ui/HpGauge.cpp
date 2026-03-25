@@ -23,7 +23,7 @@ float CalculateGaugeWidth(int32_t displayedValue, int32_t maxValue, float maxGau
 
 void HpGauge::Initialize() {
     // 白1x1テクスチャを読み込み（色付き矩形として利用）
-    dummyTextureHandle_ = TextureManager::Load("white1x1.png");
+    dummyTextureHandle_ = TextureManager::Load("textures/debug/white1x1.png");
 
     // HPゲージの背景（黒色の土台）
     blackGauge_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 600, 450 }));

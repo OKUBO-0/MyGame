@@ -10,22 +10,22 @@ void TitleScene::Initialize() {
     audio_ = Audio::GetInstance();
 
     // --- タイトル画面用BGMと効果音を読み込み ---
-    titleBGMHandle_ = audio_->LoadWave("Sounds/bgm_title.wav");
-    selectSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
-    decideSEHandle_ = audio_->LoadWave("Sounds/se_exp.wav");
+    titleBGMHandle_ = audio_->LoadWave("audio/bgm/title.wav");
+    selectSEHandle_ = audio_->LoadWave("audio/se/se_pause.wav");
+    decideSEHandle_ = audio_->LoadWave("audio/se/se_exp.wav");
 
     // --- タイトルロゴスプライト生成 ---
-    uint32_t titleTex = TextureManager::Load("title/title.png");
+    uint32_t titleTex = TextureManager::Load("ui/title/title.png");
     titleSprite_ = std::unique_ptr<Sprite>(Sprite::Create(titleTex, { 0, 0 }));
     titleSprite_->SetSize({ 1280, 720 });
 
     // --- カーソルスプライト生成 ---
-    uint32_t cursorTex = TextureManager::Load("title/cursor.png");
+    uint32_t cursorTex = TextureManager::Load("ui/title/cursor.png");
     cursorSprite_ = std::unique_ptr<Sprite>(Sprite::Create(cursorTex, { 0, 0 }));
     cursorSprite_->SetSize({ 1280, 720 });
 
     // ガイド画面
-    uint32_t guideUITex = TextureManager::Load("title/guideUI.png");
+    uint32_t guideUITex = TextureManager::Load("ui/title/guideUI.png");
     guideSprite_ = std::unique_ptr<Sprite>(Sprite::Create(guideUITex, { 0, 0 }));
 	guideSprite_->SetSize({1280, 720});
 

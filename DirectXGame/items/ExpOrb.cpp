@@ -8,7 +8,7 @@ void ExpOrb::Initialize(const Vector3& pos, int32_t expValue) {
     worldTransform_.Initialize();
     worldTransform_.translation_ = pos;
     worldTransform_.scale_ = { 0.7f, 0.7f, 0.7f };
-    model_ = ModelCache::Get("expOrb"); // 経験値オーブ用モデル
+    model_ = ModelCache::Get("ExpOrb"); // 経験値オーブ用モデル
     expValue_ = expValue;
 
     // 乱数生成（少し跳ねる感じの初期速度）
@@ -24,7 +24,7 @@ void ExpOrb::Initialize(const Vector3& pos, int32_t expValue) {
     audio_ = Audio::GetInstance();
     static uint32_t sharedPickupSEHandle = 0;
     if (sharedPickupSEHandle == 0) {
-        sharedPickupSEHandle = audio_->LoadWave("Sounds/se_exp.wav");
+        sharedPickupSEHandle = audio_->LoadWave("audio/se/se_exp.wav");
     }
     pickupSEHandle_ = sharedPickupSEHandle;
 }

@@ -20,8 +20,8 @@ void SetDigitSprite(Sprite& sprite, float digitWidth, const Vector2& size, int32
 
 void Timer::Initialize() {
 
-    numberTexture_ = TextureManager::Load("number/numbers.png");
-    colonTexture_ = TextureManager::Load("number/colon.png");
+    numberTexture_ = TextureManager::Load("ui/number/numbers.png");
+    colonTexture_ = TextureManager::Load("ui/number/colon.png");
 
     // M1 M2 : S1 S2 の 5 つを生成
     for (int i = 0; i < kDigitCount; i++) {

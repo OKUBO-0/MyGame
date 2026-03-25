@@ -75,7 +75,7 @@ private:
     // --- 定数群 ---
     static constexpr int kScreenWidth = 1280;    ///< 画面幅（固定値）
     static constexpr int kScreenHeight = 720;    ///< 画面高さ（固定値）
-    static constexpr const char* kBlackTexturePath = "color/black.png"; ///< 黒テクスチャパス
+    static constexpr const char* kBlackTexturePath = "textures/color/black.png"; ///< 黒テクスチャパス
 
     static const float kDefaultFadeSpeed; ///< デフォルトのフェード速度（調整値）
 };

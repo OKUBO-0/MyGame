@@ -10,13 +10,13 @@ void NormalBullet::InitializeForward(const Vector3& startPos,
 
     static uint32_t sharedShotSEHandle = 0;
     if (sharedShotSEHandle == 0) {
-        sharedShotSEHandle = Audio::GetInstance()->LoadWave("Sounds/se_shot.wav");
+        sharedShotSEHandle = Audio::GetInstance()->LoadWave("audio/se/se_shot.wav");
     }
     shotSEHandle_ = sharedShotSEHandle;
 
     Audio::GetInstance()->PlayWave(shotSEHandle_, false, 1.0f);
 
-    model_ = ModelCache::Get("Bullet");
+    model_ = ModelCache::Get("bullet");
 
     direction_ = forward;
 

@@ -7,21 +7,21 @@ void ResultScene::Initialize() {
     input_ = Input::GetInstance();
     audio_ = Audio::GetInstance();
 
-    selectSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
-    countupSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
+    selectSEHandle_ = audio_->LoadWave("audio/se/se_pause.wav");
+    countupSEHandle_ = audio_->LoadWave("audio/se/se_pause.wav");
 
     // --- 背景スプライト生成（黒背景） ---
-    uint32_t blackTex = TextureManager::Load("color/black.png");
+    uint32_t blackTex = TextureManager::Load("textures/color/black.png");
     backgroundSprite_ = std::unique_ptr<Sprite>(Sprite::Create(blackTex, { 0,0 }));
     backgroundSprite_->SetSize({ 1280, 720 });
 
     // --- リザルト画面用スプライト生成 ---
-    uint32_t resultTex = TextureManager::Load("result/result.png");
+    uint32_t resultTex = TextureManager::Load("ui/result/Result.png");
     resultSprite_ = std::unique_ptr<Sprite>(Sprite::Create(resultTex, { 0,0 }));
     resultSprite_->SetSize({ 1280, 720 });
 
     // --- 終了UIスプライト生成 ---
-    uint32_t uiTex = TextureManager::Load("result/finish_ui.png");
+    uint32_t uiTex = TextureManager::Load("ui/result/finish_ui.png");
     resultUI_ = std::unique_ptr<Sprite>(Sprite::Create(uiTex, { 0,0 }));
     resultUI_->SetSize({ 1280, 720 });
 

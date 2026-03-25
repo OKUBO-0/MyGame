@@ -7,15 +7,15 @@ void GameScene::Initialize() {
     input_ = Input::GetInstance();
     audio_ = Audio::GetInstance();
 
-    pauseSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_pause.wav");
-    decideSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_exp.wav");
-    damageSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_hit.wav");
-    deathSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_death.wav");
-    levelUpSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_exp.wav");
+    pauseSEHandle_ = Audio::GetInstance()->LoadWave("audio/se/se_pause.wav");
+    decideSEHandle_ = Audio::GetInstance()->LoadWave("audio/se/se_exp.wav");
+    damageSEHandle_ = Audio::GetInstance()->LoadWave("audio/se/se_hit.wav");
+    deathSEHandle_ = Audio::GetInstance()->LoadWave("audio/se/se_death.wav");
+    levelUpSEHandle_ = Audio::GetInstance()->LoadWave("audio/se/se_exp.wav");
 
     camera_.Initialize();
 
-    uint32_t startTex = TextureManager::Load("start.png");
+    uint32_t startTex = TextureManager::Load("ui/game/start.png");
     startOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(startTex, { 0, 0 }));
     startOverlay_->SetSize({ 1280, 720 });
 
@@ -27,24 +27,24 @@ void GameScene::Initialize() {
     playerManager_ = std::make_unique<PlayerManager>();
     playerManager_->Initialize(player_.get());
     // 追加：プレイヤーステータスを CSV から読み込む 
-    playerManager_->LoadStatusFromCSV("Resources/csv/playerStatus.csv");
+    playerManager_->LoadStatusFromCSV("Resources/data/playerStatus.csv");
 
     // Wave CSV → 敵タイプ定義 CSV に変更
-    enemyManager_.Initialize("Resources/csv/enemyTypes.csv", player_.get(), playerManager_.get());
+    enemyManager_.Initialize("Resources/data/enemyTypes.csv", player_.get(), playerManager_.get());
 
     curtain_.Initialize();
     curtain_.StartOpen(20.0f); // ゲーム開始時にカーテンを開く
     curtainOpening_ = true;
 
-    uint32_t deathTex = TextureManager::Load("death.png");
+    uint32_t deathTex = TextureManager::Load("ui/game/death.png");
     deathOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(deathTex, { 0, 0 }));
     deathOverlay_->SetSize({ 1280, 720 });
     deathOverlay_->SetColor({ 1, 1, 1, 0.0f });
 
-    uint32_t levelUpTex = TextureManager::Load("levelUp.png");
+    uint32_t levelUpTex = TextureManager::Load("ui/game/levelup.png");
     levelUpOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(levelUpTex, { 0, 0 }));
 
-    uint32_t arrowTex = TextureManager::Load("arrow.png");
+    uint32_t arrowTex = TextureManager::Load("ui/game/arrow.png");
     arrowSprite_ = std::unique_ptr<Sprite>(Sprite::Create(arrowTex, { 0, 0 }));
 
     keyUI_ = std::make_unique<KeyUI>();
@@ -75,7 +75,7 @@ void GameScene::Initialize() {
     levelUpOptions_.push_back({
         "通常弾強化",
         [](PlayerManager* pm) { pm->UpgradeNormalBullets(); },
-        [](PlayerManager*) { return TextureManager::Load("lvup_normal.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_normal.png"); },
         2.0f
     });
 
@@ -88,9 +88,9 @@ void GameScene::Initialize() {
         // 状態に応じて画像を切り替える
         [](PlayerManager* pm) {
             if (!pm->HasOrbitBullets()) {
-                return TextureManager::Load("lvup_orbit_add.png");
+                return TextureManager::Load("ui/game/lvup_orbit_add.png");
             } else {
-                return TextureManager::Load("lvup_orbit_upgrade.png");
+                return TextureManager::Load("ui/game/lvup_orbit_upgrade.png");
             }
         },
         1.0f
@@ -105,9 +105,9 @@ void GameScene::Initialize() {
         // 状態に応じて画像を切り替える
         [](PlayerManager* pm) {
             if (!pm->HasDrone()) {
-                return TextureManager::Load("lvup_drone_add.png");
+                return TextureManager::Load("ui/game/lvup_drone_add.png");
             } else {
-                return TextureManager::Load("lvup_drone_upgrade.png");
+                return TextureManager::Load("ui/game/lvup_drone_upgrade.png");
             }
         },
         0.5f
@@ -116,14 +116,14 @@ void GameScene::Initialize() {
     levelUpOptions_.push_back({
         "攻撃力 +1",
         [](PlayerManager* pm) { pm->UpgradeAttackPower(); },
-        [](PlayerManager*) { return TextureManager::Load("lvup_attack.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_attack.png"); },
         1.5f
     });
 
     levelUpOptions_.push_back({
         "HP回復",
         [](PlayerManager* pm) { pm->RecoverHP(); },
-        [](PlayerManager*) { return TextureManager::Load("lvup_heal.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_heal.png"); },
         1.0f
     });
 }

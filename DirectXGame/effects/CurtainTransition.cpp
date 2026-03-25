@@ -2,7 +2,7 @@
 using namespace KamataEngine;
 
 void CurtainTransition::Initialize() {
-    uint32_t tex = TextureManager::Load("color/black.png");
+    uint32_t tex = TextureManager::Load("textures/color/black.png");
 
     topCurtain_.reset(Sprite::Create(tex, { 0, -720 }));
     bottomCurtain_.reset(Sprite::Create(tex, { 0, 720 }));

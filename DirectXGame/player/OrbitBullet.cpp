@@ -8,7 +8,7 @@ void OrbitBullet::Initialize(const Vector3& center, float radius, float angle) {
     orbitRadius_ = radius;
     angle_ = angle;
 
-    model_ = ModelCache::Get("Bullet");
+    model_ = ModelCache::Get("bullet");
 
     worldTransform_.translation_ = {
         center.x + std::cos(angle_) * orbitRadius_,

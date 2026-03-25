@@ -3,13 +3,13 @@ using namespace KamataEngine;
 
 void KeyUI::Initialize() {
 
-	keyW_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("key_w.png"), {0, 0}));
-	keyA_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("key_a.png"), {0, 0}));
-	keyS_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("key_s.png"), {0, 0}));
-	keyD_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("key_d.png"), {0, 0}));
+	keyW_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_W.png"), {0, 0}));
+	keyA_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_a.png"), {0, 0}));
+	keyS_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_s.png"), {0, 0}));
+	keyD_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_d.png"), {0, 0}));
 
 	// ESC 通常時
-	keyESC_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("key_esc.png"), {0, 0}));
+	keyESC_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_esc.png"), {0, 0}));
 
 	// 全て同じサイズで表示
 	keyW_->SetSize({1280, 720});

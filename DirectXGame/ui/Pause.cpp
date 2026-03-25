@@ -3,23 +3,23 @@ using namespace KamataEngine;
 
 void Pause::Initialize() {
     audio_ = Audio::GetInstance();
-    pauseTex_ = TextureManager::Load("pause.png");
+    pauseTex_ = TextureManager::Load("ui/game/pause.png");
     pauseOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(pauseTex_, { 0, 0 }));
     pauseOverlay_->SetSize({ 1280, 720 });
 
-    guideTex_ = TextureManager::Load("title/guideUI.png");
+    guideTex_ = TextureManager::Load("ui/title/guideUI.png");
     guideSprite_ = std::unique_ptr<Sprite>(Sprite::Create(guideTex_, { 0, 0 }));
     guideSprite_->SetSize({ 1280, 720 });
 
-    cursorTex_ = TextureManager::Load("pause_arrow.png");
+    cursorTex_ = TextureManager::Load("ui/game/pause_arrow.png");
     cursorSprite_ = std::unique_ptr<Sprite>(Sprite::Create(cursorTex_, { 0, 0 }));
     cursorSprite_->SetSize({ 1280, 720 });
 
     miniMap_ = std::make_unique<MiniMap>();
     miniMap_->Initialize();
 
-    selectSEHandle_ = audio_->LoadWave("Sounds/se_pause.wav");
-    decideSEHandle_ = audio_->LoadWave("Sounds/se_exp.wav");
+    selectSEHandle_ = audio_->LoadWave("audio/se/se_pause.wav");
+    decideSEHandle_ = audio_->LoadWave("audio/se/se_exp.wav");
 }
 
 void Pause::Update(const Player* player, const EnemyManager& enemyManager, Input* input) {

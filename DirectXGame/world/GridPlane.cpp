@@ -6,7 +6,7 @@ void GridPlane::Initialize() {
     worldTransform_.Initialize();
 
     // 床モデルを読み込み（グリッド模様付き）
-    planeModel_.reset(Model::CreateFromOBJ("Plane"));
+    planeModel_.reset(Model::CreateFromOBJ("plane"));
 
     // 床の位置・スケール・回転を設定
     worldTransform_.translation_ = { 0.0f, -2.0f, 0.0f };   // Yを下げて地面に配置
