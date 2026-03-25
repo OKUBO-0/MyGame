@@ -56,7 +56,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
         directXCommon->PostDraw();
     }
 
-    // エンジン終了処理（リソース解放など）
+    // エンジン終了処理（リソース解放など） 
     Finalize();
 
     return 0;
