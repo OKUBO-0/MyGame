@@ -42,7 +42,7 @@ public:
 
 private:
     KamataEngine::WorldTransform worldTransform_;
-    std::unique_ptr<KamataEngine::Model> enemyModel_;
+    std::shared_ptr<KamataEngine::Model> enemyModel_;
     std::unique_ptr<IEnemyBehavior> behavior_;
 
     float speed_ = 0.0f;

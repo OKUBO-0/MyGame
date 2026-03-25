@@ -409,6 +409,7 @@ void GameScene::Draw() {
     curtain_.Draw();
 
     Sprite::PostDraw();
+
 }
 
 void GameScene::Finalize() {

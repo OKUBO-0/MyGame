@@ -1,4 +1,5 @@
 #include "DeathParticle.h"
+#include "../ModelCache.h"
 using namespace KamataEngine;
 
 // パーティクル寿命（調整値）
@@ -6,7 +7,7 @@ const float DeathParticle::kLifetime = 0.6f;
 
 void DeathParticle::Initialize(const Vector3& pos) {
     // モデル生成（煙っぽい球体）
-    model_.reset(Model::CreateFromOBJ("bullet"));
+    model_ = ModelCache::Get("bullet");
 
     // ワールド変換初期化
     worldTransform_.Initialize();

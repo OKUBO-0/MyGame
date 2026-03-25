@@ -1,9 +1,10 @@
 #include "RippleEffect.h"
+#include "../ModelCache.h"
 using namespace KamataEngine;
 
 void RippleEffect::Initialize(const Vector3& pos) {
     // モデル生成（波紋の見た目を表現するモデルを読み込み）
-    model_.reset(Model::CreateFromOBJ("ripples"));
+    model_ = ModelCache::Get("ripples");
 
     // ワールド変換初期化（位置・回転・スケールの基準を設定）
     worldTransform_.Initialize();

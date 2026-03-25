@@ -1,4 +1,5 @@
 #include "OrbitBullet.h"
+#include "../ModelCache.h"
 using namespace KamataEngine;
 
 void OrbitBullet::Initialize(const Vector3& center, float radius, float angle) {
@@ -7,7 +8,7 @@ void OrbitBullet::Initialize(const Vector3& center, float radius, float angle) {
     orbitRadius_ = radius;
     angle_ = angle;
 
-    model_ = std::unique_ptr<Model>(Model::CreateFromOBJ("Bullet"));
+    model_ = ModelCache::Get("Bullet");
 
     worldTransform_.translation_ = {
         center.x + std::cos(angle_) * orbitRadius_,

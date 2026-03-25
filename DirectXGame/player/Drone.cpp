@@ -1,11 +1,12 @@
 #include "Drone.h"
+#include "../ModelCache.h"
 using namespace KamataEngine;
 
 void Drone::Initialize(const Vector3& offset) {
     offset_ = offset;
     worldTransform_.Initialize();
     worldTransform_.scale_ = { 0.5f, 0.5f, 0.5f };
-    model_ = std::unique_ptr<Model>(Model::CreateFromOBJ("octopus"));
+    model_ = ModelCache::Get("octopus");
 }
 
 void Drone::Update(const Vector3& playerPos,

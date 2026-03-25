@@ -43,7 +43,7 @@ public:
 
 private:
     KamataEngine::WorldTransform worldTransform_; ///< 波紋の位置・回転・スケールを保持するワールド変換
-    std::unique_ptr<KamataEngine::Model> model_;  ///< 波紋モデル（スマートポインタで管理）
+    std::shared_ptr<KamataEngine::Model> model_;  ///< 波紋モデル（スマートポインタで管理）
 
     static constexpr float kLifetime = 1.0f;      ///< 波紋の総寿命（秒）
     float age_ = 0.0f;                            ///< 経過時間（秒）

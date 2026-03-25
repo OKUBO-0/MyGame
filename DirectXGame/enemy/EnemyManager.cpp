@@ -7,6 +7,13 @@
 
 using namespace KamataEngine;
 
+size_t EnemyManager::GetActiveEnemyCount() const {
+    return static_cast<size_t>(std::count_if(enemies_.begin(), enemies_.end(),
+        [](const std::unique_ptr<Enemy>& enemy) {
+            return enemy && enemy->IsActive();
+        }));
+}
+
 void EnemyManager::Initialize(const std::string& csvPath, Player* player, PlayerManager* playerManager) {
     player_ = player;
     playerManager_ = playerManager;
@@ -55,6 +62,7 @@ void EnemyManager::LoadEnemyTypes(const std::string& filePath) {
 
 void EnemyManager::SpawnEnemies() {
     if (enemyTypes_.empty() || !player_) return;
+    if (GetActiveEnemyCount() >= kMaxActiveEnemies) return;
 
     // 経過時間で解禁される敵タイプを増やす（20秒ごとに1タイプ解禁）
     int maxIndex = static_cast<int>(elapsedTime_ / 20.0f);
@@ -63,6 +71,9 @@ void EnemyManager::SpawnEnemies() {
     const EnemyTypeData& data = enemyTypes_[rand() % (maxIndex + 1)];
 
     for (int i = 0; i < data.spawnCount; i++) {
+        if (GetActiveEnemyCount() >= kMaxActiveEnemies) {
+            break;
+        }
         SpawnOneEnemy(data);
     }
 }
@@ -129,6 +140,9 @@ void EnemyManager::Update() {
             expOrbs_.push_back(std::move(orb));
 
             for (int i = 0; i < 5; i++) {
+                if (deathParticles_.size() >= kMaxDeathParticles) {
+                    deathParticles_.pop_front();
+                }
                 auto p = std::make_unique<DeathParticle>();
                 p->Initialize(enemy->GetPosition());
                 deathParticles_.push_back(std::move(p));
@@ -137,6 +151,13 @@ void EnemyManager::Update() {
             enemy->ResetJustDied();
         }
     }
+
+    enemies_.erase(
+        std::remove_if(enemies_.begin(), enemies_.end(),
+            [](const std::unique_ptr<Enemy>& enemy) {
+                return enemy && !enemy->IsActive() && !enemy->JustDied();
+            }),
+        enemies_.end());
 
     // プレイヤーから離れすぎた敵を再配置
     {
@@ -265,12 +286,16 @@ void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
                 enemy->TakeDamage(damage, knockDir, knockStrength);
 
                 for (int i = 0; i < 4; ++i) {
+                    if (hitParticles_.size() >= kMaxHitParticles) {
+                        hitParticles_.pop_front();
+                    }
                     auto spark = std::make_unique<HitParticle>();
                     spark->Initialize(bPos);
                     hitParticles_.push_back(std::move(spark));
                 }
 
                 bullet->Deactivate();
+                break;
             }
         }
     }
@@ -310,6 +335,9 @@ void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
                 enemy->TakeDamage(damage, knockDir, knockStrength);
 
                 for (int i = 0; i < 4; ++i) {
+                    if (hitParticles_.size() >= kMaxHitParticles) {
+                        hitParticles_.pop_front();
+                    }
                     auto spark = std::make_unique<HitParticle>();
                     spark->Initialize(oPos);
                     hitParticles_.push_back(std::move(spark));
@@ -351,6 +379,7 @@ void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
                     enemy->TakeDamage(droneDamage, knockDir, 0.5f);
 
                     bullet->Deactivate();
+                    break;
                 }
             }
         }

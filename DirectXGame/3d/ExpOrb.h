@@ -16,7 +16,7 @@ public:
 
 private:
     KamataEngine::WorldTransform worldTransform_;
-    std::unique_ptr<KamataEngine::Model> model_; ///< 経験値オーブ用モデル
+    std::shared_ptr<KamataEngine::Model> model_; ///< 経験値オーブ用モデル
     bool active_ = true;
     int32_t expValue_ = 0;
 

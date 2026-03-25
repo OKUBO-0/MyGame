@@ -1,11 +1,12 @@
 #include "HitParticle.h"
+#include "../ModelCache.h"
 #include <cstdlib> // rand()
 #include <cmath>   // cos, sin
 using namespace KamataEngine;
 
 void HitParticle::Initialize(const Vector3& pos) {
     // モデル生成（火花の見た目）
-    model_.reset(Model::CreateFromOBJ("cube"));
+    model_ = ModelCache::Get("cube");
 
     // ワールド変換初期化
     worldTransform_.Initialize();

@@ -34,6 +34,10 @@ public:
     const std::list<std::unique_ptr<ExpOrb>>& GetExpOrbs() const { return expOrbs_; }
 
 private:
+    static constexpr size_t kMaxActiveEnemies = 128;
+    static constexpr size_t kMaxDeathParticles = 256;
+    static constexpr size_t kMaxHitParticles = 256;
+
     struct EnemyTypeData {
         int32_t type;
         int32_t baseHP;
@@ -44,6 +48,7 @@ private:
 
     void SpawnEnemies();                     // 無限湧き
     void SpawnOneEnemy(const EnemyTypeData& data);
+    size_t GetActiveEnemyCount() const;
 
 private:
     std::vector<std::unique_ptr<Enemy>> enemies_;

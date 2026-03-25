@@ -43,7 +43,7 @@ public:
 
 private:
     KamataEngine::WorldTransform worldTransform_; ///< ワールド変換（位置・回転・スケールを保持）
-    std::unique_ptr<KamataEngine::Model> model_;  ///< パーティクルモデル（煙の見た目を表現）
+    std::shared_ptr<KamataEngine::Model> model_;  ///< パーティクルモデル（煙の見た目を表現）
     std::unique_ptr<KamataEngine::ObjectColor> objectColor_; ///< 色管理（アルファ値や色変化を制御）
 
     static const float kLifetime; ///< パーティクル寿命（調整値、秒単位）

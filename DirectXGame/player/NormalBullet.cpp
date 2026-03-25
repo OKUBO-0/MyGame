@@ -1,4 +1,5 @@
 #include "NormalBullet.h"
+#include "../ModelCache.h"
 using namespace KamataEngine;
 
 void NormalBullet::InitializeForward(const Vector3& startPos,
@@ -7,13 +8,15 @@ void NormalBullet::InitializeForward(const Vector3& startPos,
     Bullet::Initialize(startPos);
     audio_ = Audio::GetInstance();
 
-    if (shotSEHandle_ == 0) {
-        shotSEHandle_ = Audio::GetInstance()->LoadWave("Sounds/se_shot.wav");
+    static uint32_t sharedShotSEHandle = 0;
+    if (sharedShotSEHandle == 0) {
+        sharedShotSEHandle = Audio::GetInstance()->LoadWave("Sounds/se_shot.wav");
     }
+    shotSEHandle_ = sharedShotSEHandle;
 
     Audio::GetInstance()->PlayWave(shotSEHandle_, false, 1.0f);
 
-    model_ = std::unique_ptr<Model>(Model::CreateFromOBJ("Bullet"));
+    model_ = ModelCache::Get("Bullet");
 
     direction_ = forward;
 

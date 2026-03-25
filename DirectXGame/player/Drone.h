@@ -19,7 +19,7 @@ public:
 
 private:
     KamataEngine::WorldTransform worldTransform_;
-    std::unique_ptr<KamataEngine::Model> model_;
+    std::shared_ptr<KamataEngine::Model> model_;
 
     KamataEngine::Vector3 offset_; // プレイヤーからの相対位置
 

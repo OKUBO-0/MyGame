@@ -1,5 +1,6 @@
 #pragma once
 #include <KamataEngine.h>
+#include <memory>
 
 class Bullet {
 public:
@@ -23,6 +24,6 @@ public:
 
 protected:
     KamataEngine::WorldTransform worldTransform_;
-    std::unique_ptr<KamataEngine::Model> model_;
+    std::shared_ptr<KamataEngine::Model> model_;
     bool active_ = false;
 };
