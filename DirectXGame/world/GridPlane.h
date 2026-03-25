@@ -1,5 +1,6 @@
 #pragma once
 #include <KamataEngine.h>
+#include <array>
 #include <memory>
 
 /// <summary>
@@ -23,7 +24,7 @@ public:
     /// 引数: なし
     /// 戻り値: なし
     /// </summary>
-    void Update();
+    void Update(const KamataEngine::Vector3& focusPosition);
 
     /// <summary>
     /// 描画処理
@@ -34,9 +35,14 @@ public:
     void Draw(KamataEngine::Camera* camera);
 
 private:
-    KamataEngine::WorldTransform worldTransform_; ///< 床の位置・回転・スケールを保持するワールド変換
+    std::array<KamataEngine::WorldTransform, 9> worldTransforms_; ///< 3x3 の床タイル
     std::unique_ptr<KamataEngine::Model> planeModel_; ///< 床のモデル（グリッド模様付き）
+    float uvScaleX_ = 1.0f;
+    float uvScaleY_ = 1.0f;
 
-    static constexpr float kGroundScale = 1000.0f; ///< 床のスケール（X,Z方向に広げる大きさ）
-    static constexpr float kTileSize = 5.0f;       ///< 1タイルの大きさ（UV繰り返し数算出用）
+    static constexpr float kGroundScale = 160.0f;   ///< 1枚あたりの床サイズ
+    static constexpr float kTileSize = 4.0f;       ///< 1グリッドの見た目サイズ
+    static constexpr float kTileSpan = kGroundScale * 2.0f; ///< タイル配置間隔
+
+    static float SnapToTile(float value);
 };

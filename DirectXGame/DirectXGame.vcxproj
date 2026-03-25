@@ -114,7 +114,6 @@
     <ClCompile Include="effects\CurtainTransition.cpp" />
     <ClCompile Include="ui\KeyUI.cpp" />
     <ClCompile Include="ui\Timer.cpp" />
-    <ClCompile Include="ui\Pause.cpp" />
     <ClCompile Include="ui\MiniMap.cpp" />
     <ClCompile Include="player\Drone.cpp" />
     <ClCompile Include="core\GameData.cpp" />
@@ -130,6 +129,9 @@
     <ClCompile Include="enemy\EnemyManager.cpp" />
     <ClCompile Include="effects\Fade.cpp" />
     <ClCompile Include="scene\ResultScene.cpp" />
+    <ClCompile Include="scene\GameLevelUpController.cpp" />
+    <ClCompile Include="scene\GamePauseController.cpp" />
+    <ClCompile Include="scene\GameStartController.cpp" />
     <ClCompile Include="scene\IScene.cpp" />
     <ClCompile Include="player\Player.cpp" />
     <ClCompile Include="scene\SceneManager.cpp" />
@@ -222,7 +224,6 @@
     <ClInclude Include="effects\CurtainTransition.h" />
     <ClInclude Include="ui\KeyUI.h" />
     <ClInclude Include="ui\Timer.h" />
-    <ClInclude Include="ui\Pause.h" />
     <ClInclude Include="ui\MiniMap.h" />
     <ClInclude Include="player\Drone.h" />
     <ClInclude Include="player\NormalBullet.h" />
@@ -240,6 +241,9 @@
     <ClInclude Include="effects\Fade.h" />
     <ClInclude Include="player\Player.h" />
     <ClInclude Include="scene\ResultScene.h" />
+    <ClInclude Include="scene\GameLevelUpController.h" />
+    <ClInclude Include="scene\GamePauseController.h" />
+    <ClInclude Include="scene\GameStartController.h" />
     <ClInclude Include="scene\SceneManager.h" />
     <ClInclude Include="scene\IScene.h" />
     <ClInclude Include="scene\GameScene.h" />

@@ -57,7 +57,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
         imguiManager->Begin();
 
-#ifdef DEBUG
+//#ifdef DEBUG
         ImGui::SetNextWindowPos(ImVec2(16.0f, 16.0f), ImGuiCond_Always);
         ImGui::SetNextWindowBgAlpha(0.75f);
         if (ImGui::Begin("Performance", nullptr,
@@ -68,7 +68,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
             ImGui::Text("Frame Time: %.2f ms", frameTimeMs);
         }
         ImGui::End();
-#endif // DEBUG
+//#endif // DEBUG
 
         // 現在のシーンを更新
         sceneManager.Update();
