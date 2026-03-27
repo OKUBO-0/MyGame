@@ -14,7 +14,7 @@ public:
         active_ = true;
     }
 
-    virtual void Update(const KamataEngine::Vector3& playerPos) = 0;
+    virtual void Update(const KamataEngine::Vector3& playerPos, float deltaTime) = 0;
 
     virtual void Draw(KamataEngine::Camera* camera) {
         if (active_ && model_) {

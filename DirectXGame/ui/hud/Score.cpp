@@ -24,15 +24,10 @@ void Score::Update() {
 }
 
 void Score::Draw() {
-    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-    Sprite::PreDraw(dxCommon->GetCommandList());
-
     // 各桁スプライトを順に描画
     for (int32_t i = 0; i < kDigitCount; ++i) {
         if (sprite_[i]) { sprite_[i]->Draw(); }
     }
-
-    Sprite::PostDraw();
 }
 
 void Score::SetNumber(int32_t number) {

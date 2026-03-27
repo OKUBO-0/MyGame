@@ -88,14 +88,12 @@ void Enemy::ResetJustDied() {
     justDied_ = false;
 }
 
-void Enemy::Update() {
+void Enemy::Update(float deltaTime) {
     if (!active_) return;
-
-    const float dt = 0.016f;
 
     // --- ヒット点滅 ---
     if (hitFlashTimer_ > 0.0f) {
-        hitFlashTimer_ -= dt;
+        hitFlashTimer_ -= deltaTime;
         if (hitFlashTimer_ <= 0.0f && objectColor_) {
             objectColor_->SetColor({ 1,1,1,1 });
         }
@@ -109,14 +107,14 @@ void Enemy::Update() {
         knockbackVelocity_.x *= 0.88f;
         knockbackVelocity_.z *= 0.88f;
 
-        knockbackTimer_ -= dt;
+        knockbackTimer_ -= deltaTime;
         if (knockbackTimer_ <= 0.0f) {
             knockbackVelocity_ = { 0,0,0 };
         }
     }
     else {
         if (behavior_) {
-            behavior_->Update(*this);
+            behavior_->Update(*this, deltaTime);
         }
     }
 

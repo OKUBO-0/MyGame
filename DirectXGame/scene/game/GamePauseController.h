@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../ui/hud/MiniMap.h"
+#include "../../ui/hud/Score.h"
 #include <cstdint>
 #include <memory>
 
@@ -15,6 +16,7 @@ namespace DirectXGame {
 
 class EnemyManager;
 class Player;
+class PlayerManager;
 
 /// <summary>
 /// ポーズ画面の入力と表示を管理するクラス。
@@ -40,8 +42,8 @@ public:
     /// 引数: toggleSEHandle - ポーズ開閉に使うSEハンドル
     /// 戻り値: true ならポーズ中としてゲーム更新を止める
     /// </summary>
-    bool Update(Player* player, const EnemyManager& enemyManager, KamataEngine::Input* input,
-                KamataEngine::Audio* audio, uint32_t toggleSEHandle);
+    bool Update(Player* player, const EnemyManager& enemyManager, const PlayerManager& playerManager,
+                KamataEngine::Input* input, KamataEngine::Audio* audio, uint32_t toggleSEHandle);
 
     /// <summary>
     /// 描画処理
@@ -49,7 +51,7 @@ public:
     /// 引数: dxCommon - スプライト描画に使う DirectX 共通オブジェクト
     /// 戻り値: なし
     /// </summary>
-    void Draw(KamataEngine::DirectXCommon* dxCommon) const;
+    void Draw() const;
 
     /// <summary>
     /// 状態リセット
@@ -91,6 +93,13 @@ private:
     std::unique_ptr<KamataEngine::Sprite> guideSprite_;
     std::unique_ptr<KamataEngine::Sprite> cursorSprite_;
     std::unique_ptr<MiniMap> miniMap_;
+    std::unique_ptr<KamataEngine::Sprite> statsPanel_;
+    std::unique_ptr<KamataEngine::Sprite> killIconSprite_;
+    std::unique_ptr<KamataEngine::Sprite> buildNormalSprite_;
+    std::unique_ptr<KamataEngine::Sprite> buildOrbitSprite_;
+    std::unique_ptr<KamataEngine::Sprite> buildDroneSprite_;
+    std::unique_ptr<KamataEngine::Sprite> buildAttackSprite_;
+    std::unique_ptr<Score> killScore_;
 
     uint32_t selectSEHandle_ = 0;
     uint32_t decideSEHandle_ = 0;
@@ -98,6 +107,8 @@ private:
     int32_t menuIndex_ = 0;
     bool guideActive_ = false;
     bool goResult_ = false;
+
+    void UpdateStats(const EnemyManager& enemyManager, const PlayerManager& playerManager);
 };
 
 } // namespace DirectXGame

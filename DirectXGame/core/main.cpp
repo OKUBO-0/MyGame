@@ -77,7 +77,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 #endif
 
         // 現在のシーンを更新
-        sceneManager.Update();
+        sceneManager.Update(delta.count());
 
         imguiManager->End();
 

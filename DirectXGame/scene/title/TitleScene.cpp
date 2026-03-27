@@ -61,9 +61,9 @@ void TitleScene::Initialize() {
     camera_.UpdateMatrix();
 }
 
-void TitleScene::Update() {
+void TitleScene::Update(float deltaTime) {
     // --- 遷移演出更新（常に先頭で処理） ---
-    curtain_.Update();
+    curtain_.Update(deltaTime);
 
     // カーテン開き中は操作禁止
     if (curtainOpening_) {
@@ -143,20 +143,19 @@ void TitleScene::Update() {
     // --- プレイヤーモデルのアニメーション（回転 + 浮遊 + 左右揺れ） ---
 
     // 時間経過
-    static float time = 0.0f;
-    time += 1.0f;
+    animationTime_ += deltaTime;
 
     // 回転（Y軸）
-    worldTransform_.rotation_.y += 0.01f;
+    worldTransform_.rotation_.y += deltaTime * 0.625f;
 
     // 上下浮遊（サイン波）
     float baseY = -10.0f; // Initialize() で設定した初期位置
-    float floatY = sinf(time * 0.03f) * 1.5f;
+    float floatY = sinf(animationTime_ * 1.875f) * 1.5f;
     worldTransform_.translation_.y = baseY + floatY;
 
     // 左右揺れ（サイン波）
     float baseX = 20.0f; // Initialize() で設定した初期位置
-    float floatX = sinf(time * 0.02f) * 1.0f;
+    float floatX = sinf(animationTime_ * 1.25f) * 1.0f;
     worldTransform_.translation_.x = baseX + floatX;
 
     // 行列更新

@@ -35,9 +35,10 @@ void HitParticle::Initialize(const Vector3& pos) {
     worldTransform_.UpdateMatrix();
 }
 
-void HitParticle::Update() {
-    constexpr float kDeltaTime = 0.016f; // 60FPS 前提
-    age_ += kDeltaTime;
+void HitParticle::Update(float deltaTime) {
+    age_ += deltaTime;
+
+    const float velocityScale = deltaTime / 0.016f;
 
     // --- 寿命判定 ---
     // 意図: 一定時間経過後にパーティクルを非アクティブ化する
@@ -47,12 +48,12 @@ void HitParticle::Update() {
     }
 
     // 重力を適用（y方向速度に逐次加算）
-    velocity_.y += gravity_;
+    velocity_.y += gravity_ * velocityScale;
 
     // 位置更新
-    worldTransform_.translation_.x += velocity_.x;
-    worldTransform_.translation_.y += velocity_.y;
-    worldTransform_.translation_.z += velocity_.z;
+    worldTransform_.translation_.x += velocity_.x * velocityScale;
+    worldTransform_.translation_.y += velocity_.y * velocityScale;
+    worldTransform_.translation_.z += velocity_.z * velocityScale;
 
     // 地面との衝突（地面より下に行ったらバウンド）
     if (worldTransform_.translation_.y <= kGroundY) {

@@ -21,10 +21,10 @@ void OrbitBullet::Initialize(const Vector3& center, float radius, float angle) {
     worldTransform_.UpdateMatrix();
 }
 
-void OrbitBullet::Update(const Vector3& center) {
+void OrbitBullet::Update(const Vector3& center, float deltaTime) {
     if (!active_) return;
 
-    angle_ += angularSpeed_;
+    angle_ += angularSpeed_ * (deltaTime / 0.016f);
 
     worldTransform_.translation_ = {
         center.x + std::cos(angle_) * orbitRadius_,
@@ -32,9 +32,8 @@ void OrbitBullet::Update(const Vector3& center) {
         center.z + std::sin(angle_) * orbitRadius_
     };
 
-    const float dt = 0.016f;
     for (auto it = hitCooldowns_.begin(); it != hitCooldowns_.end();) {
-        it->second -= dt;
+        it->second -= deltaTime;
         if (it->second <= 0.0f) it = hitCooldowns_.erase(it);
         else ++it;
     }

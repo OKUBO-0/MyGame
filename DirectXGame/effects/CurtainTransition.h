@@ -16,7 +16,7 @@ public:
     void Initialize();
     void StartClose(float speed = 20.0f);
     void StartOpen(float speed = 20.0f);
-    void Update();
+    void Update(float deltaTime);
     void Draw();
 
     bool IsFinished() const { return state_ == State::kFinished; }

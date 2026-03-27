@@ -11,7 +11,7 @@ class Player;
 class Enemy {
 public:
     void Initialize();
-    void Update();
+    void Update(float deltaTime);
     void Draw(KamataEngine::Camera* camera);
 
     void SetPosition(const KamataEngine::Vector3& pos);
@@ -62,7 +62,7 @@ private:
 
     KamataEngine::Vector3 knockbackVelocity_ = { 0,0,0 };
     float knockbackTimer_ = 0.0f;
-    static constexpr float kKnockbackDuration = 0.18f;
+    static constexpr float kKnockbackDuration = 0.22f;
 
     bool justDied_ = false;
 

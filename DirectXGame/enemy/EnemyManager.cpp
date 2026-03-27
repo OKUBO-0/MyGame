@@ -100,9 +100,9 @@ void EnemyManager::SpawnOneEnemy(const EnemyTypeData& data) {
     enemy->SetBehaviorByType(data.type);
 
     // 時間経過で強化
-    int hp = data.baseHP + (int)(elapsedTime_ / 30.0f);
-    int exp = data.baseEXP + (int)(elapsedTime_ / 40.0f);
-    float speed = data.baseSpeed + elapsedTime_ * 0.002f;
+    int hp = data.baseHP + static_cast<int>(elapsedTime_ / 45.0f);
+    int exp = data.baseEXP + static_cast<int>(elapsedTime_ / 35.0f);
+    float speed = data.baseSpeed + elapsedTime_ * 0.0015f;
 
     enemy->SetHP(hp);
     enemy->SetEXP(exp);
@@ -113,9 +113,9 @@ void EnemyManager::SpawnOneEnemy(const EnemyTypeData& data) {
     enemies_.push_back(std::move(enemy));
 }
 
-void EnemyManager::UpdateSpawnState() {
-    elapsedTime_ += kDeltaTime;
-    spawnTimer_ += kDeltaTime;
+void EnemyManager::UpdateSpawnState(float deltaTime) {
+    elapsedTime_ += deltaTime;
+    spawnTimer_ += deltaTime;
     spawnInterval_ = std::max<float>(kMinSpawnInterval, kBaseSpawnInterval - elapsedTime_ * kSpawnAcceleration);
 
     if (spawnTimer_ >= spawnInterval_) {
@@ -141,10 +141,10 @@ void EnemyManager::SpawnDeathEffects(const Enemy& enemy) {
     }
 }
 
-void EnemyManager::UpdateEnemies() {
+void EnemyManager::UpdateEnemies(float deltaTime) {
     for (auto& enemy : enemies_) {
         if (enemy->IsActive()) {
-            enemy->Update();
+            enemy->Update(deltaTime);
         }
         else if (enemy->GetHP() <= 0 && enemy->JustDied()) {
             SpawnDeathEffects(*enemy);
@@ -189,15 +189,15 @@ void EnemyManager::RelocateFarEnemies() {
     }
 }
 
-void EnemyManager::UpdateEffects() {
+void EnemyManager::UpdateEffects(float deltaTime) {
     for (auto it = deathParticles_.begin(); it != deathParticles_.end();) {
-        (*it)->Update();
+        (*it)->Update(deltaTime);
         if (!(*it)->IsActive()) it = deathParticles_.erase(it);
         else ++it;
     }
 
     for (auto it = expOrbs_.begin(); it != expOrbs_.end();) {
-        (*it)->Update(player_->GetWorldPosition());
+        (*it)->Update(player_->GetWorldPosition(), deltaTime);
         if (!(*it)->IsActive()) {
             playerManager_->AddEXP((*it)->GetEXP());
             it = expOrbs_.erase(it);
@@ -206,7 +206,7 @@ void EnemyManager::UpdateEffects() {
     }
 
     for (auto it = hitParticles_.begin(); it != hitParticles_.end();) {
-        (*it)->Update();
+        (*it)->Update(deltaTime);
         if (!(*it)->IsActive()) it = hitParticles_.erase(it);
         else ++it;
     }
@@ -247,12 +247,12 @@ void EnemyManager::ResolveEnemySeparation() {
     }
 }
 
-void EnemyManager::Update() {
-    UpdateSpawnState();
-    UpdateEnemies();
+void EnemyManager::Update(float deltaTime) {
+    UpdateSpawnState(deltaTime);
+    UpdateEnemies(deltaTime);
     RemoveInactiveEnemies();
     RelocateFarEnemies();
-    UpdateEffects();
+    UpdateEffects(deltaTime);
     ResolveEnemySeparation();
 }
 
@@ -305,7 +305,7 @@ void EnemyManager::CheckNormalBulletCollisions(PlayerManager& playerManager) {
                 if (!bullet->CanHitEnemy(enemy.get())) continue;
 
                 bullet->RegisterHit(enemy.get());
-                TryHandleBulletHit(*enemy, bPos, damage, 0.6f + damage * 0.15f);
+                TryHandleBulletHit(*enemy, bPos, damage, 0.8f + damage * 0.18f);
                 bullet->Deactivate();
                 break;
             }
@@ -333,7 +333,7 @@ void EnemyManager::CheckOrbitBulletCollisions(PlayerManager& playerManager) {
                 if (!orb->CanHitEnemy(enemy.get())) continue;
 
                 orb->RegisterHit(enemy.get());
-                TryHandleBulletHit(*enemy, oPos, damage, 0.5f + damage * 0.1f);
+                TryHandleBulletHit(*enemy, oPos, damage, 0.7f + damage * 0.12f);
             }
         }
     }
@@ -361,7 +361,7 @@ void EnemyManager::CheckDroneBulletCollisions(PlayerManager& playerManager) {
 
             if (distSq < kNormalBulletHitDistanceSq) {
                 int32_t droneDamage = playerManager.GetAttackPower() / 2;
-                TryHandleBulletHit(*enemy, bPos, droneDamage, 0.5f);
+                TryHandleBulletHit(*enemy, bPos, droneDamage, 0.65f);
                 bullet->Deactivate();
                 break;
             }

@@ -21,9 +21,8 @@ void RippleEffect::Initialize(const Vector3& pos) {
     active_ = true; // 有効状態に設定
 }
 
-void RippleEffect::Update() {
-    constexpr float kDeltaTime = 0.016f; // 1フレーム時間（60FPS前提）
-    age_ += kDeltaTime;
+void RippleEffect::Update(float deltaTime) {
+    age_ += deltaTime;
 
     // 寿命判定
     // 意図: 一定時間経過後に波紋を非アクティブ化する

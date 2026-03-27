@@ -50,7 +50,7 @@ public:
     /// 引数: なし
     /// 戻り値: なし
     /// </summary>
-    void Update() override;
+    void Update(float deltaTime) override;
 
     /// <summary>
     /// 描画処理
@@ -85,13 +85,13 @@ private:
     bool UpdateStartWaiting();
     bool UpdatePauseState();
     bool UpdateLevelUpFlow();
-    bool UpdateGameTimer();
-    bool UpdateDeathFlow();
+    bool UpdateGameTimer(float deltaTime);
+    bool UpdateDeathFlow(float deltaTime);
     bool FinalizeResultTransition();
 
     void StartResultTransition();
     void UpdateStatusUI();
-    void UpdateGameplay();
+    void UpdateGameplay(float deltaTime);
     void DrawWorld();
     void DrawUI();
 
@@ -136,6 +136,7 @@ private:
     float gameTime_ = 0.0f;
     float gameTimeLimit_ = 60.0f;
     std::unique_ptr<Timer> timer_;
+    static constexpr float kDeathFadeSpeedPerSecond_ = 1.25f;
 };
 
 } // namespace DirectXGame

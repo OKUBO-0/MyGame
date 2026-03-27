@@ -1,5 +1,6 @@
 #include "Timer.h"
 #include "../common/DigitSpriteUtil.h"
+#include <algorithm>
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -31,9 +32,6 @@ void Timer::Update(float dt) {
 }
 
 void Timer::Draw() {
-    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-    Sprite::PreDraw(dxCommon->GetCommandList());
-
     // M1 M2 S1 S2
     for (int i = 0; i < kDigitCount; i++) {
         if (i == 2) continue; // 2番目はコロンの位置
@@ -42,8 +40,6 @@ void Timer::Draw() {
 
     // コロン
     colonSprite_->Draw();
-
-    Sprite::PostDraw();
 }
 
 void Timer::UpdateDisplay() {
@@ -82,6 +78,11 @@ void Timer::SetScale(float scale) {
     }
 
     DigitSpriteUtil::UpdateDigitLayout(*colonSprite_, basePosition_, size_, scale_, 2);
+}
+
+void Timer::SetTime(float time) {
+    time_ = (std::max)(0.0f, time);
+    UpdateDisplay();
 }
 
 } // namespace DirectXGame

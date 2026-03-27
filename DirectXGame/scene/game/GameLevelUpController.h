@@ -88,7 +88,7 @@ public:
     bool IsActive() const { return active_; }
 
 private:
-    int32_t PickWeightedOptionIndex() const;
+    int32_t PickWeightedOptionIndex(const std::vector<LevelUpOption>& candidateOptions) const;
 
     std::vector<LevelUpOption> options_;
     std::vector<LevelUpOption> currentChoices_;

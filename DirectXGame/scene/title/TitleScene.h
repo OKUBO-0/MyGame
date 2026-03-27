@@ -21,7 +21,7 @@ public:
     void Initialize() override;
 
     /// <summary>毎フレーム更新処理（入力判定や演出更新を行う）</summary>
-    void Update() override;
+    void Update(float deltaTime) override;
 
     /// <summary>描画処理（背景、UI、演出を画面に描画する）</summary>
     void Draw() override;
@@ -54,6 +54,7 @@ private:
     int32_t menuIndex_ = 0;
 
     bool guideActive_ = false;
+    float animationTime_ = 0.0f;
 
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Camera camera_;

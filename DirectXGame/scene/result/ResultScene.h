@@ -21,7 +21,7 @@ public:
     void Initialize() override;
 
     /// <summary>毎フレーム更新処理（演出やスコアのアニメーションを更新する）</summary>
-    void Update() override;
+    void Update(float deltaTime) override;
 
     /// <summary>描画処理（背景、UI、スコアを画面に描画する）</summary>
     void Draw() override;

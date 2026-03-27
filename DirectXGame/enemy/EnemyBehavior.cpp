@@ -10,9 +10,21 @@ namespace DirectXGame {
 
 namespace {
 
+float ToFrameScaledSpeed(float unitsPerFrameBase, float deltaTime) {
+    return unitsPerFrameBase * (deltaTime / 0.016f);
+}
+
+void MoveEnemy(Enemy& enemy, const Vector3& direction, float speed) {
+    Vector3 position = enemy.GetPosition();
+    position.x += direction.x * speed;
+    position.z += direction.z * speed;
+    enemy.SetPosition(position);
+    enemy.SetRotationY(std::atan2(direction.x, direction.z));
+}
+
 class ChaseEnemyBehavior final : public IEnemyBehavior {
 public:
-    void Update(Enemy& enemy) override {
+    void Update(Enemy& enemy, float deltaTime) override {
         Player* player = enemy.GetPlayer();
         if (!player) {
             return;
@@ -34,17 +46,13 @@ public:
         dir.x /= len;
         dir.z /= len;
 
-        position.x += dir.x * enemy.GetSpeed();
-        position.z += dir.z * enemy.GetSpeed();
-
-        enemy.SetPosition(position);
-        enemy.SetRotationY(std::atan2(dir.x, dir.z));
+        MoveEnemy(enemy, dir, ToFrameScaledSpeed(enemy.GetSpeed(), deltaTime));
     }
 };
 
-class CircleApproachEnemyBehavior final : public IEnemyBehavior {
+class BurstChaseEnemyBehavior final : public IEnemyBehavior {
 public:
-    void Update(Enemy& enemy) override {
+    void Update(Enemy& enemy, float deltaTime) override {
         Player* player = enemy.GetPlayer();
         if (!player) {
             return;
@@ -59,16 +67,71 @@ public:
         };
 
         float dist = std::sqrt(toPlayer.x * toPlayer.x + toPlayer.z * toPlayer.z);
-        if (dist > 0.001f) {
-            toPlayer.x /= dist;
-            toPlayer.z /= dist;
+        if (dist <= 0.001f) {
+            return;
         }
 
-        const Vector3 side = { -toPlayer.z, 0.0f, toPlayer.x };
-        Vector3 finalDir = {
-            toPlayer.x + side.x,
+        toPlayer.x /= dist;
+        toPlayer.z /= dist;
+
+        if (dashTimer_ > 0.0f) {
+            dashTimer_ -= deltaTime;
+            MoveEnemy(enemy, dashDirection_, ToFrameScaledSpeed(enemy.GetSpeed() * 2.8f, deltaTime));
+            return;
+        }
+
+        if (dist < 18.0f) {
+            windupTimer_ += deltaTime;
+            if (windupTimer_ >= 0.55f) {
+                dashDirection_ = toPlayer;
+                dashTimer_ = 0.28f;
+                windupTimer_ = 0.0f;
+                return;
+            }
+        } else {
+            windupTimer_ = (std::max)(0.0f, windupTimer_ - deltaTime * 1.5f);
+        }
+
+        MoveEnemy(enemy, toPlayer, ToFrameScaledSpeed(enemy.GetSpeed() * 0.75f, deltaTime));
+    }
+
+private:
+    float windupTimer_ = 0.0f;
+    float dashTimer_ = 0.0f;
+    Vector3 dashDirection_ = { 0.0f, 0.0f, 1.0f };
+};
+
+class CircleApproachEnemyBehavior final : public IEnemyBehavior {
+public:
+    void Update(Enemy& enemy, float deltaTime) override {
+        Player* player = enemy.GetPlayer();
+        if (!player) {
+            return;
+        }
+
+        Vector3 position = enemy.GetPosition();
+        Vector3 playerPos = player->GetWorldPosition();
+        Vector3 toPlayer = {
+            playerPos.x - position.x,
             0.0f,
-            toPlayer.z + side.z
+            playerPos.z - position.z
+        };
+
+        float dist = std::sqrt(toPlayer.x * toPlayer.x + toPlayer.z * toPlayer.z);
+        if (dist <= 0.001f) {
+            return;
+        }
+
+        toPlayer.x /= dist;
+        toPlayer.z /= dist;
+
+        const Vector3 side = { -toPlayer.z, 0.0f, toPlayer.x };
+        const float approachWeight = dist > 12.0f ? 1.2f : 0.55f;
+        const float sideWeight = 1.1f;
+        Vector3 finalDir = {
+            toPlayer.x * approachWeight + side.x * sideWeight,
+            0.0f,
+            toPlayer.z * approachWeight + side.z * sideWeight
         };
 
         const float len = std::sqrt(finalDir.x * finalDir.x + finalDir.z * finalDir.z);
@@ -79,19 +142,99 @@ public:
         finalDir.x /= len;
         finalDir.z /= len;
 
-        position.x += finalDir.x * enemy.GetSpeed();
-        position.z += finalDir.z * enemy.GetSpeed();
-
-        enemy.SetPosition(position);
-        enemy.SetRotationY(std::atan2(finalDir.x, finalDir.z));
+        MoveEnemy(enemy, finalDir, ToFrameScaledSpeed(enemy.GetSpeed() * 1.05f, deltaTime));
     }
+};
+
+class KeepDistanceRushEnemyBehavior final : public IEnemyBehavior {
+public:
+    void Update(Enemy& enemy, float deltaTime) override {
+        Player* player = enemy.GetPlayer();
+        if (!player) {
+            return;
+        }
+
+        Vector3 position = enemy.GetPosition();
+        Vector3 playerPos = player->GetWorldPosition();
+        Vector3 toPlayer = {
+            playerPos.x - position.x,
+            0.0f,
+            playerPos.z - position.z
+        };
+
+        float dist = std::sqrt(toPlayer.x * toPlayer.x + toPlayer.z * toPlayer.z);
+        if (dist <= 0.001f) {
+            return;
+        }
+
+        toPlayer.x /= dist;
+        toPlayer.z /= dist;
+
+        strafeSwapTimer_ -= deltaTime;
+        if (strafeSwapTimer_ <= 0.0f) {
+            strafeSign_ *= -1.0f;
+            strafeSwapTimer_ = 1.4f;
+        }
+
+        rushTimer_ -= deltaTime;
+        rushCooldown_ -= deltaTime;
+        if (rushCooldown_ <= 0.0f && dist > 8.0f && dist < 22.0f) {
+            rushTimer_ = 0.35f;
+            rushCooldown_ = 2.3f;
+        }
+
+        const Vector3 side = { -toPlayer.z * strafeSign_, 0.0f, toPlayer.x * strafeSign_ };
+        float towardWeight = 0.0f;
+        if (dist > 16.0f) {
+            towardWeight = 1.0f;
+        } else if (dist < 9.0f) {
+            towardWeight = -1.25f;
+        } else {
+            towardWeight = 0.18f;
+        }
+
+        Vector3 moveDir = {
+            toPlayer.x * towardWeight + side.x,
+            0.0f,
+            toPlayer.z * towardWeight + side.z
+        };
+
+        if (rushTimer_ > 0.0f) {
+            moveDir = toPlayer;
+        }
+
+        const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+        if (len <= 0.001f) {
+            return;
+        }
+
+        moveDir.x /= len;
+        moveDir.z /= len;
+
+        const float speedMultiplier = rushTimer_ > 0.0f ? 2.1f : 1.15f;
+        MoveEnemy(enemy, moveDir, ToFrameScaledSpeed(enemy.GetSpeed() * speedMultiplier, deltaTime));
+    }
+
+private:
+    float strafeSign_ = 1.0f;
+    float strafeSwapTimer_ = 1.2f;
+    float rushTimer_ = 0.0f;
+    float rushCooldown_ = 1.6f;
 };
 
 } // namespace
 
 std::unique_ptr<IEnemyBehavior> CreateEnemyBehaviorByType(int32_t type) {
+    if (type == 1) {
+        return std::make_unique<BurstChaseEnemyBehavior>();
+    }
+
     if (type == 2) {
         return std::make_unique<CircleApproachEnemyBehavior>();
+    }
+
+    if (type == 3) {
+        return std::make_unique<KeepDistanceRushEnemyBehavior>();
     }
 
     return std::make_unique<ChaseEnemyBehavior>();

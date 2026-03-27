@@ -37,7 +37,7 @@ public:
     /// 引数: なし
     /// 戻り値: なし
     /// </summary>
-    void Update();
+    void Update(float deltaTime);
 
     /// <summary>
     /// 描画処理
@@ -78,22 +78,21 @@ public:
     int32_t GetTotalKillCount() const { return totalKillCount_; }
 
 private:
-    static constexpr size_t kMaxActiveEnemies = 128;
+    static constexpr size_t kMaxActiveEnemies = 96;
     static constexpr size_t kMaxDeathParticles = 256;
     static constexpr size_t kMaxHitParticles = 256;
-    static constexpr float kDeltaTime = 1.0f / 60.0f;
-    static constexpr float kSpawnUnlockInterval = 20.0f;
+    static constexpr float kSpawnUnlockInterval = 18.0f;
     static constexpr float kSpawnDistance = 50.0f;
     static constexpr float kRespawnDistance = 75.0f;
     static constexpr float kRespawnRadius = 60.0f;
-    static constexpr float kMinSpawnInterval = 0.5f;
-    static constexpr float kBaseSpawnInterval = 2.0f;
-    static constexpr float kSpawnAcceleration = 0.01f;
-    static constexpr float kEnemySeparationDistance = 3.0f;
-    static constexpr float kEnemySeparationStrength = 1.0f;
+    static constexpr float kMinSpawnInterval = 0.7f;
+    static constexpr float kBaseSpawnInterval = 1.7f;
+    static constexpr float kSpawnAcceleration = 0.0085f;
+    static constexpr float kEnemySeparationDistance = 3.2f;
+    static constexpr float kEnemySeparationStrength = 1.1f;
     static constexpr float kNormalBulletHitDistanceSq = 4.0f;
     static constexpr float kOrbitBulletHitDistanceSq = 25.0f;
-    static constexpr float kPlayerContactDistance = 3.0f;
+    static constexpr float kPlayerContactDistance = 2.5f;
     static constexpr float kPlayerContactDistanceSq = kPlayerContactDistance * kPlayerContactDistance;
     static constexpr int32_t kDeathParticleSpawnCount = 5;
     static constexpr int32_t kHitParticleSpawnCount = 4;
@@ -109,11 +108,11 @@ private:
     void SpawnEnemies();                     // 無限湧き
     void SpawnOneEnemy(const EnemyTypeData& data);
     size_t GetActiveEnemyCount() const;
-    void UpdateSpawnState();
-    void UpdateEnemies();
+    void UpdateSpawnState(float deltaTime);
+    void UpdateEnemies(float deltaTime);
     void RemoveInactiveEnemies();
     void RelocateFarEnemies();
-    void UpdateEffects();
+    void UpdateEffects(float deltaTime);
     void ResolveEnemySeparation();
     void SpawnDeathEffects(const Enemy& enemy);
     void SpawnHitParticles(const KamataEngine::Vector3& position);

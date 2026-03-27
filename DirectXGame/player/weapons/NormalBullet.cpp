@@ -36,23 +36,23 @@ void NormalBullet::InitializeForward(const Vector3& startPos,
     worldTransform_.UpdateMatrix();
 }
 
-void NormalBullet::Update(const Vector3&) {
+void NormalBullet::Update(const Vector3&, float deltaTime) {
     if (!active_) return;
 
-    worldTransform_.translation_.x += direction_.x * speed_;
-    worldTransform_.translation_.y += direction_.y * speed_;
-    worldTransform_.translation_.z += direction_.z * speed_;
+    const float speedPerFrame = speed_ * (deltaTime / 0.016f);
+    worldTransform_.translation_.x += direction_.x * speedPerFrame;
+    worldTransform_.translation_.y += direction_.y * speedPerFrame;
+    worldTransform_.translation_.z += direction_.z * speedPerFrame;
 
-    traveled_ += speed_;
+    traveled_ += speedPerFrame;
 
     if (traveled_ >= range_) {
         active_ = false;
         return;
     }
 
-    const float dt = 0.016f;
     for (auto it = hitCooldowns_.begin(); it != hitCooldowns_.end();) {
-        it->second -= dt;
+        it->second -= deltaTime;
         if (it->second <= 0.0f) it = hitCooldowns_.erase(it);
         else ++it;
     }

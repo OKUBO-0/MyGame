@@ -36,22 +36,28 @@ void SceneManager::RegisterScene(
 }
 
 void SceneManager::ChangeScene(Scene scene) {
-    // 登録済みのシーンであれば切り替えを実行
-    currentScene_ = DirectXGame::CreateSceneIfRegistered(sceneFactory_, scene, sessionContext_);
-    if (currentScene_) {
-        currentScene_->Initialize();
-
-        // 現在のシーン番号を更新
-        currentSceneNo_ = scene;
+    auto nextScene = DirectXGame::CreateSceneIfRegistered(sceneFactory_, scene, sessionContext_);
+    if (!nextScene) {
+        return;
     }
+
+    if (currentScene_) {
+        currentScene_->Finalize();
+    }
+
+    currentScene_ = std::move(nextScene);
+    currentScene_->Initialize();
+
+    // 現在のシーン番号を更新
+    currentSceneNo_ = scene;
 }
 
-void SceneManager::Update() {
+void SceneManager::Update(float deltaTime) {
     // 現在のシーンが存在しない場合は処理しない
     if (!currentScene_) { return; }
 
     // 現在のシーンを更新
-    currentScene_->Update();
+    currentScene_->Update(deltaTime);
 
     // シーンが終了状態になったら次のシーンへ切り替え
     if (currentScene_->IsFinished()) {

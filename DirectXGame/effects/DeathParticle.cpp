@@ -32,9 +32,10 @@ void DeathParticle::Initialize(const Vector3& pos) {
     objectColor_->SetColor({ 0.5f, 0.5f, 0.5f, 1.0f });
 }
 
-void DeathParticle::Update() {
-    constexpr float kDeltaTime = 0.016f; // 1フレーム時間（60FPS前提）
-    age_ += kDeltaTime;
+void DeathParticle::Update(float deltaTime) {
+    age_ += deltaTime;
+
+    const float velocityScale = deltaTime / 0.016f;
 
     // 寿命を超えたら非アクティブ化
     if (age_ >= kLifetime) {
@@ -43,9 +44,9 @@ void DeathParticle::Update() {
     }
 
     // 移動処理（煙が上昇・拡散する意図）
-    worldTransform_.translation_.x += velocity_.x;
-    worldTransform_.translation_.y += velocity_.y;
-    worldTransform_.translation_.z += velocity_.z;
+    worldTransform_.translation_.x += velocity_.x * velocityScale;
+    worldTransform_.translation_.y += velocity_.y * velocityScale;
+    worldTransform_.translation_.z += velocity_.z * velocityScale;
 
     // 徐々に減速（煙が自然に消える演出）
     velocity_.x *= 0.95f;

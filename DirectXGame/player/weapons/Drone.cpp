@@ -13,16 +13,12 @@ void Drone::Initialize(const Vector3& offset) {
 
 void Drone::Update(const Vector3& playerPos,
     const std::vector<std::unique_ptr<Enemy>>& enemies,
-    float& fireTimer, float fireInterval)
+    float& fireTimer, float fireInterval, float deltaTime)
 {
-    const float dt = 0.016f;
-
-    // 浮遊アニメーション用の時間
-    static float time = 0.0f;
-    time += dt * 60.0f; // 60fps 基準で増加
+    animationTime_ += deltaTime * 60.0f;
 
     // 上下浮遊（サイン波）
-    float floatY = std::sinf(time * 0.05f) * 0.5f;
+    float floatY = std::sinf(animationTime_ * 0.05f) * 0.5f;
     // 振幅0.5、速度0.05 → 自然なふわふわ
 
     // プレイヤーの移動には追従するが、回転には追従しない
@@ -33,7 +29,7 @@ void Drone::Update(const Vector3& playerPos,
     };
 
     // --- 敵探索 ---
-    fireTimer += dt;
+    fireTimer += deltaTime;
 
     Enemy* target = nullptr;
     float minDistSq = range_ * range_;
@@ -81,7 +77,7 @@ void Drone::Update(const Vector3& playerPos,
 
     // --- 弾更新 ---
     for (auto& b : bullets_) {
-        b->Update(worldTransform_.translation_);
+        b->Update(worldTransform_.translation_, deltaTime);
     }
 
     bullets_.erase(

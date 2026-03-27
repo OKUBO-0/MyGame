@@ -1,5 +1,6 @@
 #include "PlayerManager.h"
 #include "../../enemy/EnemyManager.h"
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -43,12 +44,12 @@ void PlayerManager::LoadStatusFromCSV(const std::string& filePath) {
     file.close();
 }
 
-void PlayerManager::Update() {
-    UpdateInvincibility();
-    UpdateNormalBullets();
-    UpdateOrbitBullets();
-    UpdateDrone();
-    UpdateEffects();
+void PlayerManager::Update(float deltaTime) {
+    UpdateInvincibility(deltaTime);
+    UpdateNormalBullets(deltaTime);
+    UpdateOrbitBullets(deltaTime);
+    UpdateDrone(deltaTime);
+    UpdateEffects(deltaTime);
 }
 
 void PlayerManager::Draw(Camera* camera) {
@@ -63,7 +64,7 @@ void PlayerManager::TakeDamage() {
 
     lifeStock_--;
     invincible_ = true;
-    invincibleTimer_ = 1.0f;
+    invincibleTimer_ = kInvincibilityDuration;
     visible_ = false;
 
     if (player_) player_->SetVisible(false);
@@ -72,6 +73,31 @@ void PlayerManager::TakeDamage() {
 void PlayerManager::RecoverHP() {
     lifeStock_++;
     if (lifeStock_ > maxLifeStock_) lifeStock_ = maxLifeStock_;
+}
+
+void PlayerManager::IncreaseMaxHP() {
+    if (maxLifeStock_ >= kMaxLifeStockCap) {
+        RecoverHP();
+        return;
+    }
+
+    ++maxLifeStock_;
+    lifeStock_ = maxLifeStock_;
+}
+
+void PlayerManager::UpgradeMoveSpeed() {
+    if (!player_) {
+        return;
+    }
+
+    if (moveSpeedLevel_ >= kMoveSpeedUpgradeCap) {
+        UpgradeAttackPower();
+        return;
+    }
+
+    const float upgradedSpeed = (std::min)(kMoveSpeedMax, player_->GetMoveSpeed() + kMoveSpeedUpgradeStep);
+    player_->SetMoveSpeed(upgradedSpeed);
+    ++moveSpeedLevel_;
 }
 
 void PlayerManager::AddEXP(int32_t amount) {
@@ -86,11 +112,9 @@ void PlayerManager::AddEXP(int32_t amount) {
     }
 }
 
-void PlayerManager::UpdateInvincibility() {
-    const float dt = 0.016f;
-
+void PlayerManager::UpdateInvincibility(float deltaTime) {
     if (invincible_) {
-        invincibleTimer_ -= dt;
+        invincibleTimer_ -= deltaTime;
         if (invincibleTimer_ <= 0.0f) {
             invincible_ = false;
             visible_ = true;
@@ -104,13 +128,11 @@ void PlayerManager::UpdateInvincibility() {
     }
 }
 
-void PlayerManager::UpdateNormalBullets() {
-    const float dt = 0.016f;
-
+void PlayerManager::UpdateNormalBullets(float deltaTime) {
     if (hasNormalBullets_ && player_) {
-        normalBulletTimer_ += dt;
+        normalBulletTimer_ += deltaTime;
 
-        if (normalBulletTimer_ >= normalBulletInterval_) {
+        while (normalBulletTimer_ >= normalBulletInterval_) {
             float angle = player_->GetWorldRotationY();
             Vector3 forward = { std::sin(angle), 0.0f, std::cos(angle) };
 
@@ -118,10 +140,10 @@ void PlayerManager::UpdateNormalBullets() {
             b->InitializeForward(player_->GetWorldPosition(), forward);
             normalBullets_.push_back(std::move(b));
 
-            normalBulletTimer_ = 0.0f;
+            normalBulletTimer_ -= normalBulletInterval_;
         }
 
-        for (auto& b : normalBullets_) b->Update(player_->GetWorldPosition());
+        for (auto& b : normalBullets_) b->Update(player_->GetWorldPosition(), deltaTime);
 
         normalBullets_.erase(
             std::remove_if(normalBullets_.begin(), normalBullets_.end(),
@@ -131,33 +153,35 @@ void PlayerManager::UpdateNormalBullets() {
     }
 }
 
-void PlayerManager::UpdateOrbitBullets() {
+void PlayerManager::UpdateOrbitBullets(float deltaTime) {
     if (hasOrbitBullets_ && player_) {
-        for (auto& orb : orbitBullets_) orb->Update(player_->GetWorldPosition());
+        for (auto& orb : orbitBullets_) orb->Update(player_->GetWorldPosition(), deltaTime);
     }
 }
 
-void PlayerManager::UpdateDrone() {
-    if (hasDrone_ && drone_) {
+void PlayerManager::UpdateDrone(float deltaTime) {
+    if (hasDrone_ && drone_ && player_ && enemyManager_) {
         drone_->Update(
             player_->GetWorldPosition(),
             enemyManager_->GetEnemies(),
             droneTimer_,
-            droneInterval_
+            droneInterval_,
+            deltaTime
         );
     }
 }
 
-void PlayerManager::UpdateEffects() {
+void PlayerManager::UpdateEffects(float deltaTime) {
     for (auto it = effects_.begin(); it != effects_.end();) {
-        (*it)->Update();
+        (*it)->Update(deltaTime);
         if (!(*it)->IsActive()) it = effects_.erase(it);
         else ++it;
     }
 }
 
 void PlayerManager::UpgradeNormalBullets() {
-    normalBulletInterval_ *= 0.8f;
+    normalBulletInterval_ *= 0.84f;
+    normalBulletInterval_ = (std::max)(0.18f, normalBulletInterval_);
 }
 
 void PlayerManager::AddOrbitBullets() {

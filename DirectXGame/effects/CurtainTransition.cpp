@@ -31,13 +31,15 @@ void CurtainTransition::StartOpen(float speed) {
     bottomCurtain_->SetPosition({ 0, 0 });
 }
 
-void CurtainTransition::Update() {
+void CurtainTransition::Update(float deltaTime) {
+    const float deltaScale = deltaTime / 0.016f;
+
     if (state_ == State::kClose) {
         auto posTop = topCurtain_->GetPosition();
         auto posBottom = bottomCurtain_->GetPosition();
 
-        posTop.y += speed_;
-        posBottom.y -= speed_;
+        posTop.y += speed_ * deltaScale;
+        posBottom.y -= speed_ * deltaScale;
 
         topCurtain_->SetPosition(posTop);
         bottomCurtain_->SetPosition(posBottom);
@@ -52,8 +54,8 @@ void CurtainTransition::Update() {
         auto posTop = topCurtain_->GetPosition();
         auto posBottom = bottomCurtain_->GetPosition();
 
-        posTop.y -= speed_;
-        posBottom.y += speed_;
+        posTop.y -= speed_ * deltaScale;
+        posBottom.y += speed_ * deltaScale;
 
         topCurtain_->SetPosition(posTop);
         bottomCurtain_->SetPosition(posBottom);
@@ -67,10 +69,8 @@ void CurtainTransition::Update() {
 void CurtainTransition::Draw() {
     if (state_ == State::kNone) return;
 
-    Sprite::PreDraw(DirectXCommon::GetInstance()->GetCommandList());
     topCurtain_->Draw();
     bottomCurtain_->Draw();
-    Sprite::PostDraw();
 }
 
 } // namespace DirectXGame

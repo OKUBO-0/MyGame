@@ -32,7 +32,7 @@ public:
     virtual void Initialize() = 0;
 
     /// <summary>毎フレーム更新処理（シーン内の状態を更新する）</summary>
-    virtual void Update() = 0;
+    virtual void Update(float deltaTime) = 0;
 
     /// <summary>描画処理（シーン内のオブジェクトを画面に描画する）</summary>
     virtual void Draw() = 0;

@@ -13,6 +13,7 @@ public:
 
     void SetPosition(const KamataEngine::Vector2& pos);
     void SetScale(float scale);
+    void SetTime(float time);
 
     float GetTime() const { return time_; }
     void Reset() { time_ = 0.0f; }

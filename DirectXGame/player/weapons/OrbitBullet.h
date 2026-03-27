@@ -7,7 +7,7 @@ namespace DirectXGame {
 class OrbitBullet : public Bullet {
 public:
     void Initialize(const KamataEngine::Vector3& center, float radius, float angle);
-    void Update(const KamataEngine::Vector3& center) override;
+    void Update(const KamataEngine::Vector3& center, float deltaTime) override;
     void Draw(KamataEngine::Camera* camera) override;
 
     bool CanHitEnemy(void* enemyPtr);

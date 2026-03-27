@@ -1,4 +1,5 @@
 #include "ResultScene.h"
+#include <algorithm>
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -67,16 +68,17 @@ void ResultScene::Initialize() {
     fadeOutStarted_ = false;
 }
 
-void ResultScene::Update() {
+void ResultScene::Update(float deltaTime) {
     // --- フェード更新（常に先頭で処理） ---
-    fade_.Update();
+    fade_.Update(deltaTime);
     if (countupSECooldown_ > 0) {
         --countupSECooldown_;
     }
 
     // --- スコア加算演出（徐々に最終スコアまで増加させる） ---
     if (currentExp_ < targetExp_) {
-        currentExp_ += 1;
+        currentExp_ += (std::max<int32_t>)(1, (targetExp_ - currentExp_) / 12);
+        currentExp_ = (std::min)(currentExp_, targetExp_);
         expUI_->SetNumber(currentExp_);
         if (countupSEHandle_ != 0 && countupSECooldown_ == 0) {
             audio_->PlayWave(countupSEHandle_, false, 0.25f);
@@ -86,7 +88,8 @@ void ResultScene::Update() {
 
     // --- レベル加算演出 ---
     if (currentLevel_ < targetLevel_) {
-        currentLevel_ += 1;
+        currentLevel_ += (std::max<int32_t>)(1, (targetLevel_ - currentLevel_) / 8);
+        currentLevel_ = (std::min)(currentLevel_, targetLevel_);
         levelUI_->SetNumber(currentLevel_);
         if (countupSEHandle_ != 0 && countupSECooldown_ == 0) {
             audio_->PlayWave(countupSEHandle_, false, 0.25f);
@@ -96,7 +99,8 @@ void ResultScene::Update() {
 
     // --- キル数加算演出 ---
     if (currentKill_ < targetKill_) {
-        currentKill_ += 1;
+        currentKill_ += (std::max<int32_t>)(1, (targetKill_ - currentKill_) / 8);
+        currentKill_ = (std::min)(currentKill_, targetKill_);
         killUI_->SetNumber(currentKill_);
         if (countupSEHandle_ != 0 && countupSECooldown_ == 0) {
             audio_->PlayWave(countupSEHandle_, false, 0.25f);
@@ -109,6 +113,17 @@ void ResultScene::Update() {
     killUI_->Update();
 
     // --- Enterキーでタイトルへ戻る（フェードアウト開始） ---
+    const bool canSkipCountUp = currentExp_ < targetExp_ || currentLevel_ < targetLevel_ || currentKill_ < targetKill_;
+    if (input_->TriggerKey(DIK_SPACE) && canSkipCountUp) {
+        currentExp_ = targetExp_;
+        currentLevel_ = targetLevel_;
+        currentKill_ = targetKill_;
+        expUI_->SetNumber(currentExp_);
+        levelUI_->SetNumber(currentLevel_);
+        killUI_->SetNumber(currentKill_);
+        return;
+    }
+
     if (input_->TriggerKey(DIK_SPACE) && fade_.GetState() == Fade::State::kStay) {
         if (selectSEHandle_ != 0) {
             audio_->PlayWave(selectSEHandle_, false, 1.0f);

@@ -82,9 +82,6 @@ void ExpGauge::Update() {
 }
 
 void ExpGauge::Draw() {
-    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-    Sprite::PreDraw(dxCommon->GetCommandList());
-
     // 各スプライトを描画（順序は背景→ゲージ→ラベル→数字）
     if (yellowFrame_) { yellowFrame_->Draw(); }
     if (blackGauge_) { blackGauge_->Draw(); }
@@ -93,8 +90,6 @@ void ExpGauge::Draw() {
     for (int32_t i = 0; i < kLvDigits; ++i) {
         if (sprite_[i]) { sprite_[i]->Draw(); }
     }
-
-    Sprite::PostDraw();
 }
 
 bool ExpGauge::IsFilled() const {

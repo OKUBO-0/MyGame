@@ -1,4 +1,5 @@
 #include "Player.h"
+#include <algorithm>
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -17,8 +18,8 @@ void Player::Initialize() {
     camera_.UpdateMatrix();
 }
 
-void Player::Update() {
-    UpdateMovement();
+void Player::Update(float deltaTime) {
+    UpdateMovement(deltaTime);
     UpdateCamera();
     worldTransform_.UpdateMatrix();
 }
@@ -29,21 +30,21 @@ void Player::Draw() {
     }
 }
 
-void Player::UpdateMovement() {
-    const float kMoveSpeed = 0.5f;
+void Player::UpdateMovement(float deltaTime) {
+    const float movePerFrame = moveSpeedPerSecond_ * deltaTime;
 
     Vector3 move = { 0.0f, 0.0f, 0.0f };
 
-    if (input_->PushKey(DIK_W)) move.z += kMoveSpeed;
-    if (input_->PushKey(DIK_S)) move.z -= kMoveSpeed;
-    if (input_->PushKey(DIK_A)) move.x -= kMoveSpeed;
-    if (input_->PushKey(DIK_D)) move.x += kMoveSpeed;
+    if (input_->PushKey(DIK_W)) move.z += movePerFrame;
+    if (input_->PushKey(DIK_S)) move.z -= movePerFrame;
+    if (input_->PushKey(DIK_A)) move.x -= movePerFrame;
+    if (input_->PushKey(DIK_D)) move.x += movePerFrame;
 
     float moveLen = std::sqrt(move.x * move.x + move.z * move.z);
     if (moveLen > 0.0f) {
         // 正規化して一定速にする
-        move.x = (move.x / moveLen) * kMoveSpeed;
-        move.z = (move.z / moveLen) * kMoveSpeed;
+        move.x = (move.x / moveLen) * movePerFrame;
+        move.z = (move.z / moveLen) * movePerFrame;
 
         // 移動
         worldTransform_.translation_.x += move.x;
@@ -61,7 +62,7 @@ void Player::UpdateMovement() {
 
         // 補間係数（0.0f: 回転しない, 1.0f: 即時回転）
         // 値を大きくすると回転が速く、値を小さくするとゆっくり滑らかになります。
-        const float kRotateLerp = 0.50f;
+        const float kRotateLerp = std::clamp(deltaTime * 30.0f, 0.0f, 1.0f);
 
         currentAngle += diff * kRotateLerp;
         // 必要なら currentAngle を -pi..pi に戻す（安定化）

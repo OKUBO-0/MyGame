@@ -57,14 +57,9 @@ void HpGauge::Update() {
 }
 
 void HpGauge::Draw() {
-    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-    Sprite::PreDraw(dxCommon->GetCommandList());
-
     // 背景 → 赤ゲージの順で描画
     if (blackGauge_) { blackGauge_->Draw(); }
     if (redGauge_) { redGauge_->Draw(); }
-
-    Sprite::PostDraw();
 }
 
 bool HpGauge::IsDepleted() const {
