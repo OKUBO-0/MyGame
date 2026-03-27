@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../ui/common/UIPanel.h"
+#include "../../ui/common/UILabel.h"
 #include "../../ui/hud/MiniMap.h"
 #include "../../ui/hud/Score.h"
 #include <cstdint>
@@ -84,8 +86,26 @@ public:
     /// 戻り値: true ならリザルトへ遷移すべき
     /// </summary>
     bool ShouldGoResult() const;
+    void DebugDrawImGui();
 
 private:
+    enum class GuideTransitionState {
+        None,
+        FadeIn,
+        FadeOut,
+    };
+
+    struct LayoutSettings {
+        KamataEngine::Vector2 statsPanelPosition{ 1240.0f, 690.0f };
+        KamataEngine::Vector2 statsPanelSize{ 420.0f, 180.0f };
+        UIElement::Anchor statsPanelAnchor = UIElement::Anchor::BottomRight;
+        KamataEngine::Vector2 killIconLocalPosition{ 30.0f, 22.0f };
+        KamataEngine::Vector2 buildRowLocalPosition{ 22.0f, 82.0f };
+        float buildStepX = 100.0f;
+        KamataEngine::Vector2 buildIconSize{ 92.0f, 52.0f };
+        KamataEngine::Vector2 killScoreLocalPosition{ 72.0f, 20.0f };
+    };
+
     bool active_ = false;
     KamataEngine::Audio* audio_ = nullptr;
 
@@ -93,12 +113,12 @@ private:
     std::unique_ptr<KamataEngine::Sprite> guideSprite_;
     std::unique_ptr<KamataEngine::Sprite> cursorSprite_;
     std::unique_ptr<MiniMap> miniMap_;
-    std::unique_ptr<KamataEngine::Sprite> statsPanel_;
-    std::unique_ptr<KamataEngine::Sprite> killIconSprite_;
-    std::unique_ptr<KamataEngine::Sprite> buildNormalSprite_;
-    std::unique_ptr<KamataEngine::Sprite> buildOrbitSprite_;
-    std::unique_ptr<KamataEngine::Sprite> buildDroneSprite_;
-    std::unique_ptr<KamataEngine::Sprite> buildAttackSprite_;
+    std::unique_ptr<UIPanel> statsPanel_;
+    std::unique_ptr<UILabel> killIconLabel_;
+    std::unique_ptr<UILabel> buildNormalLabel_;
+    std::unique_ptr<UILabel> buildOrbitLabel_;
+    std::unique_ptr<UILabel> buildDroneLabel_;
+    std::unique_ptr<UILabel> buildAttackLabel_;
     std::unique_ptr<Score> killScore_;
 
     uint32_t selectSEHandle_ = 0;
@@ -106,9 +126,16 @@ private:
 
     int32_t menuIndex_ = 0;
     bool guideActive_ = false;
+    GuideTransitionState guideTransitionState_ = GuideTransitionState::None;
+    float guideAlpha_ = 0.0f;
+    static constexpr float kGuideFadeSpeed_ = 4.5f;
     bool goResult_ = false;
+    bool debugLayoutEnabled_ = false;
+    LayoutSettings layoutSettings_{};
 
+    void ApplyLayout();
     void UpdateStats(const EnemyManager& enemyManager, const PlayerManager& playerManager);
+    void UpdateVisibility();
 };
 
 } // namespace DirectXGame

@@ -1,8 +1,17 @@
 #include "DeathParticle.h"
 #include "ModelCache.h"
+#include <cmath>
 using namespace KamataEngine;
 
 namespace DirectXGame {
+
+namespace {
+
+float ScalePerFrameDecay(float decayPerFrame, float deltaTime) {
+    return std::pow(decayPerFrame, deltaTime / 0.016f);
+}
+
+}
 
 // パーティクル寿命（調整値）
 const float DeathParticle::kLifetime = 0.6f;
@@ -49,9 +58,11 @@ void DeathParticle::Update(float deltaTime) {
     worldTransform_.translation_.z += velocity_.z * velocityScale;
 
     // 徐々に減速（煙が自然に消える演出）
-    velocity_.x *= 0.95f;
-    velocity_.y *= 0.98f;
-    velocity_.z *= 0.95f;
+    const float horizontalDecay = ScalePerFrameDecay(0.95f, deltaTime);
+    const float verticalDecay = ScalePerFrameDecay(0.98f, deltaTime);
+    velocity_.x *= horizontalDecay;
+    velocity_.y *= verticalDecay;
+    velocity_.z *= horizontalDecay;
 
     // スケール拡大（煙が広がる演出）
     float scale = 1.0f + age_ * 0.3f;

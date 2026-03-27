@@ -41,6 +41,8 @@ public:
 
     void SetSpeed(float speed) { speed_ = speed; }
     float GetSpeed() const { return speed_; }
+    void SetBehaviorVisual(const KamataEngine::Vector4& color, float scaleMultiplier = 1.0f);
+    void ClearBehaviorVisual();
 
 private:
     KamataEngine::WorldTransform worldTransform_;
@@ -56,6 +58,8 @@ private:
     Player* player_ = nullptr;
 
     std::unique_ptr<KamataEngine::ObjectColor> objectColor_;
+    KamataEngine::Vector4 behaviorColor_{ 1.0f, 1.0f, 1.0f, 1.0f };
+    float behaviorScaleMultiplier_ = 1.0f;
     float hitFlashTimer_ = 0.0f;
     static constexpr float kHitFlashDuration = 0.12f;
     uint32_t whiteTextureHandle_ = 0;

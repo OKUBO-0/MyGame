@@ -1,11 +1,14 @@
 #include "ExpGauge.h"
 #include "../common/DigitSpriteUtil.h"
+#include "../common/UILayoutIO.h"
 #include <algorithm>
 using namespace KamataEngine;
 
 namespace DirectXGame {
 
 namespace {
+
+const char* kHudLayoutPath = "Resources/data/ui_layout_hud.csv";
 
 int32_t StepDisplayValue(int32_t displayedValue, int32_t targetValue) {
     if (displayedValue < targetValue) {
@@ -26,36 +29,52 @@ float CalculateGaugeWidth(int32_t displayedValue, int32_t maxValue, float maxGau
 } // namespace
 
 void ExpGauge::Initialize() {
-    // テクスチャ読み込み（白1x1は色付き矩形用）
-    dummyTextureHandle_ = TextureManager::Load("textures/debug/white1x1.png");
     lvLabelHandle_ = TextureManager::Load("ui/game/lv_label.png");
     lvDigitsHandle_ = TextureManager::Load("ui/number/numbers.png");
 
-    // 外枠（黄色のフレーム）
-    yellowFrame_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 0, 1 }));
-    yellowFrame_->SetSize({ 1280, 50 });
-    yellowFrame_->SetColor({ 1.0f, 1.0f, 0.0f, 1.0f });
+    const auto layout = UILayoutIO::Load(kHudLayoutPath);
+    if (const auto it = layout.find("expFramePosition"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.framePosition = { it->second[0], it->second[1] };
+    }
+    if (const auto it = layout.find("expFrameSize"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.frameSize = { it->second[0], it->second[1] };
+    }
+    if (const auto it = layout.find("expGaugePosition"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.gaugePosition = { it->second[0], it->second[1] };
+    }
+    if (const auto it = layout.find("expGaugeSize"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.gaugeSize = { it->second[0], it->second[1] };
+    }
+    if (const auto it = layout.find("lvLabelPosition"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.lvLabelPosition = { it->second[0], it->second[1] };
+    }
+    if (const auto it = layout.find("lvLabelSize"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.lvLabelSize = { it->second[0], it->second[1] };
+    }
+    if (const auto it = layout.find("lvDigitsPosition"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.lvDigitsPosition = { it->second[0], it->second[1] };
+    }
 
-    // 黒背景（ゲージの土台部分）
-    blackGauge_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 5, 6 }));
-    blackGauge_->SetSize({ 1270, 40 });
-    blackGauge_->SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+    frameBar_.Initialize();
+    frameBar_.SetColors({ 1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 1.0f });
+    frameBar_.SetRate(1.0f);
 
-    // 青ゲージ（現在のEXPを表す部分）
-    blueGauge_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 5, 6 }));
-    blueGauge_->SetSize({ 0, 40 }); // 初期値は0幅
-    blueGauge_->SetColor({ 0.0f, 0.0f, 1.0f, 1.0f });
+    gaugeBar_.Initialize();
+    gaugeBar_.SetColors({ 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f });
+    gaugeBar_.SetRate(0.0f);
 
     // LVラベル（「LV」文字画像）
-    lvLabel_ = std::unique_ptr<Sprite>(Sprite::Create(lvLabelHandle_, { 1175.0f, 10.0f }));
-    lvLabel_->SetSize({ 48, 32 });
+    lvLabel_.Initialize(lvLabelHandle_, layoutSettings_.lvLabelPosition);
+    lvLabel_.SetSize(layoutSettings_.lvLabelSize);
 
     // レベル数字（2桁分を用意）
     for (int32_t i = 0; i < kLvDigits; ++i) {
-        sprite_[i] = std::unique_ptr<Sprite>(Sprite::Create(lvDigitsHandle_, { 1225.0f + size_.x * i, 10.0f }));
+        sprite_[i] = std::unique_ptr<Sprite>(Sprite::Create(lvDigitsHandle_, { 0.0f, 0.0f }));
         sprite_[i]->SetSize(size_);
         sprite_[i]->SetTextureRect({ 0.0f, 0.0f }, size_);
     }
+
+    ApplyLayout();
 }
 
 void ExpGauge::SetEXP(int32_t current, int32_t max) {
@@ -70,23 +89,18 @@ void ExpGauge::SetLevel(int32_t level) {
 }
 
 void ExpGauge::Update() {
-    static constexpr float kMaxGaugeWidth = 1280.0f; // ゲージ最大幅
-    static constexpr float kGaugeHeight = 40.0f;     // ゲージ高さ
-
     // EXP表示を滑らかに変化させる（目標値に徐々に近づける）
     displayedExp_ = StepDisplayValue(displayedExp_, targetExp_);
 
     // EXP比率を計算してゲージ幅に反映
-    float width = CalculateGaugeWidth(displayedExp_, maxExp_, kMaxGaugeWidth);
-    blueGauge_->SetSize({ width, kGaugeHeight });
+    gaugeBar_.SetRate(CalculateGaugeWidth(displayedExp_, maxExp_, 1.0f));
 }
 
 void ExpGauge::Draw() {
     // 各スプライトを描画（順序は背景→ゲージ→ラベル→数字）
-    if (yellowFrame_) { yellowFrame_->Draw(); }
-    if (blackGauge_) { blackGauge_->Draw(); }
-    if (blueGauge_) { blueGauge_->Draw(); }
-    if (lvLabel_) { lvLabel_->Draw(); }
+    frameBar_.Draw();
+    gaugeBar_.Draw();
+    lvLabel_.Draw();
     for (int32_t i = 0; i < kLvDigits; ++i) {
         if (sprite_[i]) { sprite_[i]->Draw(); }
     }
@@ -95,6 +109,89 @@ void ExpGauge::Draw() {
 bool ExpGauge::IsFilled() const {
     // 現在EXPが最大値に到達しているか判定
     return displayedExp_ >= maxExp_;
+}
+
+void ExpGauge::DebugDrawImGui() {
+#ifdef _DEBUG
+    if (!ImGui::CollapsingHeader("HUD EXP", ImGuiTreeNodeFlags_DefaultOpen)) {
+        return;
+    }
+
+    ImGui::Checkbox("Enable HUD Debug##EXP", &layoutSettings_.debugEnabled);
+    if (!layoutSettings_.debugEnabled) {
+        return;
+    }
+
+    float framePosition[2]{ layoutSettings_.framePosition.x, layoutSettings_.framePosition.y };
+    if (ImGui::DragFloat2("EXP Frame Pos", framePosition, 1.0f, -400.0f, 1280.0f)) {
+        layoutSettings_.framePosition = { framePosition[0], framePosition[1] };
+        ApplyLayout();
+    }
+
+    float frameSize[2]{ layoutSettings_.frameSize.x, layoutSettings_.frameSize.y };
+    if (ImGui::DragFloat2("EXP Frame Size", frameSize, 1.0f, 16.0f, 1600.0f)) {
+        layoutSettings_.frameSize = { frameSize[0], frameSize[1] };
+        ApplyLayout();
+    }
+
+    float gaugePosition[2]{ layoutSettings_.gaugePosition.x, layoutSettings_.gaugePosition.y };
+    if (ImGui::DragFloat2("EXP Gauge Pos", gaugePosition, 1.0f, -400.0f, 1280.0f)) {
+        layoutSettings_.gaugePosition = { gaugePosition[0], gaugePosition[1] };
+        ApplyLayout();
+    }
+
+    float gaugeSize[2]{ layoutSettings_.gaugeSize.x, layoutSettings_.gaugeSize.y };
+    if (ImGui::DragFloat2("EXP Gauge Size", gaugeSize, 1.0f, 16.0f, 1600.0f)) {
+        layoutSettings_.gaugeSize = { gaugeSize[0], gaugeSize[1] };
+        ApplyLayout();
+    }
+
+    float labelPosition[2]{ layoutSettings_.lvLabelPosition.x, layoutSettings_.lvLabelPosition.y };
+    if (ImGui::DragFloat2("LV Label Pos", labelPosition, 1.0f, -400.0f, 1280.0f)) {
+        layoutSettings_.lvLabelPosition = { labelPosition[0], labelPosition[1] };
+        ApplyLayout();
+    }
+
+    float digitsPosition[2]{ layoutSettings_.lvDigitsPosition.x, layoutSettings_.lvDigitsPosition.y };
+    if (ImGui::DragFloat2("LV Digits Pos", digitsPosition, 1.0f, -400.0f, 1280.0f)) {
+        layoutSettings_.lvDigitsPosition = { digitsPosition[0], digitsPosition[1] };
+        ApplyLayout();
+    }
+
+    if (ImGui::Button("Save EXP Layout")) {
+        SaveLayout();
+    }
+#endif
+}
+
+void ExpGauge::ApplyLayout() {
+    frameBar_.SetPosition(layoutSettings_.framePosition);
+    frameBar_.SetSize(layoutSettings_.frameSize);
+    gaugeBar_.SetPosition(layoutSettings_.gaugePosition);
+    gaugeBar_.SetSize(layoutSettings_.gaugeSize);
+    lvLabel_.SetPosition(layoutSettings_.lvLabelPosition);
+    lvLabel_.SetSize(layoutSettings_.lvLabelSize);
+
+    for (int32_t i = 0; i < kLvDigits; ++i) {
+        if (!sprite_[i]) {
+            continue;
+        }
+        sprite_[i]->SetPosition({ layoutSettings_.lvDigitsPosition.x + size_.x * static_cast<float>(i),
+                                  layoutSettings_.lvDigitsPosition.y });
+        sprite_[i]->SetSize(size_);
+    }
+}
+
+void ExpGauge::SaveLayout() const {
+    UILayoutIO::Save(kHudLayoutPath, {
+        { "expFramePosition", { layoutSettings_.framePosition.x, layoutSettings_.framePosition.y } },
+        { "expFrameSize", { layoutSettings_.frameSize.x, layoutSettings_.frameSize.y } },
+        { "expGaugePosition", { layoutSettings_.gaugePosition.x, layoutSettings_.gaugePosition.y } },
+        { "expGaugeSize", { layoutSettings_.gaugeSize.x, layoutSettings_.gaugeSize.y } },
+        { "lvLabelPosition", { layoutSettings_.lvLabelPosition.x, layoutSettings_.lvLabelPosition.y } },
+        { "lvLabelSize", { layoutSettings_.lvLabelSize.x, layoutSettings_.lvLabelSize.y } },
+        { "lvDigitsPosition", { layoutSettings_.lvDigitsPosition.x, layoutSettings_.lvDigitsPosition.y } },
+    });
 }
 
 } // namespace DirectXGame

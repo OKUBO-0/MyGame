@@ -39,6 +39,16 @@ void PlayerManager::LoadStatusFromCSV(const std::string& filePath) {
         else if (key == "exp") exp_ = std::stoi(value);
         else if (key == "totalExp") totalExp_ = std::stoi(value);
         else if (key == "attackPower") attackPower_ = std::stoi(value);
+        else if (key == "invincibilityDuration") invincibilityDuration_ = std::stof(value);
+        else if (key == "normalBulletInterval") normalBulletInterval_ = std::stof(value);
+        else if (key == "normalBulletUpgradeMultiplier") normalBulletUpgradeMultiplier_ = std::stof(value);
+        else if (key == "normalBulletMinInterval") normalBulletMinInterval_ = std::stof(value);
+        else if (key == "droneInterval") droneInterval_ = std::stof(value);
+        else if (key == "droneUpgradeMultiplier") droneUpgradeMultiplier_ = std::stof(value);
+        else if (key == "maxLifeStockCap") maxLifeStockCap_ = std::stoi(value);
+        else if (key == "moveSpeedUpgradeCap") moveSpeedUpgradeCap_ = std::stoi(value);
+        else if (key == "moveSpeedUpgradeStep") moveSpeedUpgradeStep_ = std::stof(value);
+        else if (key == "moveSpeedMax") moveSpeedMax_ = std::stof(value);
     }
 
     file.close();
@@ -64,7 +74,7 @@ void PlayerManager::TakeDamage() {
 
     lifeStock_--;
     invincible_ = true;
-    invincibleTimer_ = kInvincibilityDuration;
+    invincibleTimer_ = invincibilityDuration_;
     visible_ = false;
 
     if (player_) player_->SetVisible(false);
@@ -76,7 +86,7 @@ void PlayerManager::RecoverHP() {
 }
 
 void PlayerManager::IncreaseMaxHP() {
-    if (maxLifeStock_ >= kMaxLifeStockCap) {
+    if (maxLifeStock_ >= maxLifeStockCap_) {
         RecoverHP();
         return;
     }
@@ -90,12 +100,12 @@ void PlayerManager::UpgradeMoveSpeed() {
         return;
     }
 
-    if (moveSpeedLevel_ >= kMoveSpeedUpgradeCap) {
+    if (moveSpeedLevel_ >= moveSpeedUpgradeCap_) {
         UpgradeAttackPower();
         return;
     }
 
-    const float upgradedSpeed = (std::min)(kMoveSpeedMax, player_->GetMoveSpeed() + kMoveSpeedUpgradeStep);
+    const float upgradedSpeed = (std::min)(moveSpeedMax_, player_->GetMoveSpeed() + moveSpeedUpgradeStep_);
     player_->SetMoveSpeed(upgradedSpeed);
     ++moveSpeedLevel_;
 }
@@ -180,8 +190,8 @@ void PlayerManager::UpdateEffects(float deltaTime) {
 }
 
 void PlayerManager::UpgradeNormalBullets() {
-    normalBulletInterval_ *= 0.84f;
-    normalBulletInterval_ = (std::max)(0.18f, normalBulletInterval_);
+    normalBulletInterval_ *= normalBulletUpgradeMultiplier_;
+    normalBulletInterval_ = (std::max)(normalBulletMinInterval_, normalBulletInterval_);
 }
 
 void PlayerManager::AddOrbitBullets() {
@@ -220,7 +230,7 @@ void PlayerManager::AddDrone() {
 }
 
 void PlayerManager::UpgradeDrone() {
-    droneInterval_ *= 0.8f;
+    droneInterval_ *= droneUpgradeMultiplier_;
 }
 
 } // namespace DirectXGame

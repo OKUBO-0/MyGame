@@ -4,7 +4,6 @@ using namespace KamataEngine;
 namespace DirectXGame {
 
 void KeyUI::Initialize() {
-
 	keyW_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_W.png"), {0, 0}));
 	keyA_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_a.png"), {0, 0}));
 	keyS_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_s.png"), {0, 0}));

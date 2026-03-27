@@ -1,8 +1,8 @@
 #pragma once
 #include <KamataEngine.h>
+#include "../common/UIBar.h"
 #include <algorithm>
 #include <cstdint>
-#include <memory>
 
 namespace DirectXGame {
 
@@ -26,18 +26,26 @@ public:
 
     /// <summary>HPがゼロになっているかを判定する</summary>
     bool IsDepleted() const;
+    void DebugDrawImGui();
+    void SaveLayout() const;
 
 private:
-    uint32_t dummyTextureHandle_ = 0; ///< ダミーテクスチャハンドル
+    struct LayoutSettings {
+        KamataEngine::Vector2 position{ 600.0f, 450.0f };
+        KamataEngine::Vector2 size{ 80.0f, 10.0f };
+        bool debugEnabled = false;
+    };
 
-    std::unique_ptr<KamataEngine::Sprite> blackGauge_; ///< 背景スプライト
-    std::unique_ptr<KamataEngine::Sprite> redGauge_;   ///< HPゲージスプライト
+    void ApplyLayout();
+
+    UIBar gauge_;
 
     int32_t displayedHP_ = 0; ///< 表示中のHP（補間用）
     int32_t targetHP_ = 0;    ///< 実際のHP
     int32_t maxHP_ = kDefaultMaxHP; ///< 最大HP（0除算防止）
 
     static constexpr int32_t kDefaultMaxHP = 1; ///< 最大HPの初期値（0除算防止用）
+    LayoutSettings layoutSettings_{};
 };
 
 } // namespace DirectXGame

@@ -1,9 +1,12 @@
 #include "HpGauge.h"
+#include "../common/UILayoutIO.h"
 using namespace KamataEngine;
 
 namespace DirectXGame {
 
 namespace {
+
+const char* kHudLayoutPath = "Resources/data/ui_layout_hud.csv";
 
 int32_t StepDisplayValue(int32_t displayedValue, int32_t targetValue) {
     if (displayedValue < targetValue) {
@@ -24,18 +27,18 @@ float CalculateGaugeWidth(int32_t displayedValue, int32_t maxValue, float maxGau
 } // namespace
 
 void HpGauge::Initialize() {
-    // 白1x1テクスチャを読み込み（色付き矩形として利用）
-    dummyTextureHandle_ = TextureManager::Load("textures/debug/white1x1.png");
+    const auto layout = UILayoutIO::Load(kHudLayoutPath);
+    if (const auto it = layout.find("hpPosition"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.position = { it->second[0], it->second[1] };
+    }
+    if (const auto it = layout.find("hpSize"); it != layout.end() && it->second.size() >= 2) {
+        layoutSettings_.size = { it->second[0], it->second[1] };
+    }
 
-    // HPゲージの背景（黒色の土台）
-    blackGauge_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 600, 450 }));
-    blackGauge_->SetSize({ 80, 10 });
-    blackGauge_->SetColor({ 0.0f, 0.0f, 0.0f, 0.85f });
-
-    // HPゲージ本体（赤色で残りHPを表現）
-    redGauge_ = std::unique_ptr<Sprite>(Sprite::Create(dummyTextureHandle_, { 600, 450 }));
-    redGauge_->SetSize({ 0, 10 });
-    redGauge_->SetColor({ 1.0f, 0.0f, 0.0f, 0.95f });
+    gauge_.Initialize();
+    gauge_.SetColors({ 0.0f, 0.0f, 0.0f, 0.85f }, { 1.0f, 0.0f, 0.0f, 0.95f });
+    gauge_.SetRate(0.0f);
+    ApplyLayout();
 }
 
 void HpGauge::SetHP(int32_t current, int32_t max) {
@@ -45,26 +48,61 @@ void HpGauge::SetHP(int32_t current, int32_t max) {
 }
 
 void HpGauge::Update() {
-    static constexpr float kMaxGaugeWidth = 80.0f; // ゲージ最大幅
-    static constexpr float kGaugeHeight = 10.0f;   // ゲージ高さ
-
     // 表示HPを滑らかに変化させる（目標値に徐々に近づける）
     displayedHP_ = StepDisplayValue(displayedHP_, targetHP_);
 
     // HP比率を計算し、赤ゲージの幅に反映
-    float width = CalculateGaugeWidth(displayedHP_, maxHP_, kMaxGaugeWidth);
-    redGauge_->SetSize({ width, kGaugeHeight });
+    gauge_.SetRate(CalculateGaugeWidth(displayedHP_, maxHP_, 1.0f));
 }
 
 void HpGauge::Draw() {
-    // 背景 → 赤ゲージの順で描画
-    if (blackGauge_) { blackGauge_->Draw(); }
-    if (redGauge_) { redGauge_->Draw(); }
+    gauge_.Draw();
 }
 
 bool HpGauge::IsDepleted() const {
     // HPが0以下になったかどうかを判定
     return displayedHP_ <= 0;
+}
+
+void HpGauge::DebugDrawImGui() {
+#ifdef _DEBUG
+    if (!ImGui::CollapsingHeader("HUD HP", ImGuiTreeNodeFlags_DefaultOpen)) {
+        return;
+    }
+
+    ImGui::Checkbox("Enable HUD Debug##HP", &layoutSettings_.debugEnabled);
+    if (!layoutSettings_.debugEnabled) {
+        return;
+    }
+
+    float position[2]{ layoutSettings_.position.x, layoutSettings_.position.y };
+    if (ImGui::DragFloat2("HP Position", position, 1.0f, -400.0f, 1280.0f)) {
+        layoutSettings_.position = { position[0], position[1] };
+        ApplyLayout();
+    }
+
+    float size[2]{ layoutSettings_.size.x, layoutSettings_.size.y };
+    if (ImGui::DragFloat2("HP Size", size, 1.0f, 4.0f, 512.0f)) {
+        layoutSettings_.size = { size[0], size[1] };
+        ApplyLayout();
+    }
+
+    if (ImGui::Button("Save HP Layout")) {
+        SaveLayout();
+    }
+#endif
+}
+
+void HpGauge::ApplyLayout() {
+    gauge_.SetPosition(layoutSettings_.position);
+    gauge_.SetSize(layoutSettings_.size);
+}
+
+void HpGauge::SaveLayout() const {
+    UILayoutIO::Save(kHudLayoutPath, {
+        { "hpPosition", { layoutSettings_.position.x, layoutSettings_.position.y } },
+        { "hpSize", { layoutSettings_.size.x, layoutSettings_.size.y } },
+    });
 }
 
 } // namespace DirectXGame

@@ -1,5 +1,6 @@
 #include "GameLevelUpController.h"
 #include "PlayerManager.h"
+#include "../../ui/common/UILayoutIO.h"
 #include <algorithm>
 #include <random>
 
@@ -8,6 +9,8 @@ using namespace KamataEngine;
 namespace DirectXGame {
 
 namespace {
+
+const char* kLevelUpLayoutPath = "Resources/data/ui_layout_levelup.csv";
 
 std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption>& baseOptions, PlayerManager* playerManager) {
     std::vector<LevelUpOption> candidates;
@@ -18,8 +21,20 @@ std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption
 
         if (option.name == "周囲弾強化" && !playerManager->HasOrbitBullets()) {
             adjusted.weight = 2.2f;
+        } else if (option.name == "通常弾強化") {
+            const float interval = playerManager->GetNormalBulletInterval();
+            if (interval <= 0.24f) {
+                adjusted.weight = 0.35f;
+            } else if (interval <= 0.32f) {
+                adjusted.weight = 0.7f;
+            } else if (interval <= 0.45f) {
+                adjusted.weight = 1.1f;
+            }
         } else if (option.name == "ドローン" && !playerManager->HasDrone()) {
             adjusted.weight = 1.8f;
+        } else if (option.name == "攻撃力 +1") {
+            const int attackPower = playerManager->GetAttackPower();
+            adjusted.weight = attackPower >= 6 ? 0.75f : (attackPower >= 4 ? 1.1f : 1.5f);
         } else if (option.name == "最大HP増加") {
             if (playerManager->GetMaxHP() >= 6) {
                 continue;
@@ -53,9 +68,29 @@ std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption
 void GameLevelUpController::Initialize() {
     uint32_t overlayTexture = TextureManager::Load("ui/game/levelup.png");
     overlaySprite_ = std::unique_ptr<Sprite>(Sprite::Create(overlayTexture, {0, 0}));
+    overlaySprite_->SetSize({1280.0f, 720.0f});
 
     uint32_t arrowTexture = TextureManager::Load("ui/game/arrow.png");
     arrowSprite_ = std::unique_ptr<Sprite>(Sprite::Create(arrowTexture, {0, 0}));
+    {
+        const auto layout = UILayoutIO::Load(kLevelUpLayoutPath);
+        for (int i = 0; i < 3; ++i) {
+            const std::string key = "choicePosition" + std::to_string(i);
+            if (const auto it = layout.find(key); it != layout.end() && it->second.size() >= 2) {
+                layoutSettings_.choicePositions[i] = { it->second[0], it->second[1] };
+            }
+        }
+        if (const auto it = layout.find("choiceSize"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.choiceSize = { it->second[0], it->second[1] };
+        }
+        if (const auto it = layout.find("arrowBasePosition"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.arrowBasePosition = { it->second[0], it->second[1] };
+        }
+        if (const auto it = layout.find("choiceSpacingY"); it != layout.end() && !it->second.empty()) {
+            layoutSettings_.choiceSpacingY = it->second[0];
+        }
+    }
+    ApplyLayout();
 }
 
 void GameLevelUpController::RegisterDefaultOptions() {
@@ -166,9 +201,9 @@ bool GameLevelUpController::TryStart(PlayerManager* playerManager, Audio* audio,
     for (int32_t i = 0; i < choiceCount; ++i) {
         uint32_t textureHandle = currentChoices_[i].getTexture(playerManager);
         choiceSprites_[i] = std::unique_ptr<Sprite>(
-            Sprite::Create(textureHandle, {0.0f, static_cast<float>(i) * 140.0f})
+            Sprite::Create(textureHandle, layoutSettings_.choicePositions[i])
         );
-        choiceSprites_[i]->SetSize({1280, 720});
+        choiceSprites_[i]->SetSize(layoutSettings_.choiceSize);
     }
     for (int32_t i = choiceCount; i < 3; ++i) {
         choiceSprites_[i].reset();
@@ -176,6 +211,7 @@ bool GameLevelUpController::TryStart(PlayerManager* playerManager, Audio* audio,
 
     active_ = true;
     selection_ = 0;
+    ApplyLayout();
     playerManager->ClearLevelUpRequest();
     return true;
 }
@@ -197,7 +233,8 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
         audio->PlayWave(moveSEHandle, false, 0.5f);
     }
 
-    arrowSprite_->SetPosition({0.0f, static_cast<float>(selection_) * 140.0f});
+    arrowSprite_->SetPosition({layoutSettings_.arrowBasePosition.x,
+                               layoutSettings_.arrowBasePosition.y + static_cast<float>(selection_) * layoutSettings_.choiceSpacingY});
 
     if (input->TriggerKey(DIK_RETURN) || input->TriggerKey(DIK_SPACE)) {
         if (decideSEHandle != 0) {
@@ -222,6 +259,58 @@ void GameLevelUpController::Draw() const {
         }
     }
     arrowSprite_->Draw();
+}
+
+void GameLevelUpController::DebugDrawImGui() {
+#ifdef _DEBUG
+    if (!ImGui::Begin("UI Debug")) {
+        ImGui::End();
+        return;
+    }
+
+    if (ImGui::CollapsingHeader("Level Up", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Checkbox("Enable LevelUp Debug", &layoutSettings_.debugEnabled);
+        if (layoutSettings_.debugEnabled) {
+            float choiceSize[2]{ layoutSettings_.choiceSize.x, layoutSettings_.choiceSize.y };
+            if (ImGui::DragFloat2("Choice Size", choiceSize, 1.0f, 64.0f, 1280.0f)) {
+                layoutSettings_.choiceSize = { choiceSize[0], choiceSize[1] };
+                ApplyLayout();
+            }
+
+            for (int i = 0; i < 3; ++i) {
+                float choicePosition[2]{ layoutSettings_.choicePositions[i].x, layoutSettings_.choicePositions[i].y };
+                const std::string label = "Choice " + std::to_string(i + 1);
+                if (ImGui::DragFloat2(label.c_str(), choicePosition, 1.0f, -400.0f, 1280.0f)) {
+                    layoutSettings_.choicePositions[i] = { choicePosition[0], choicePosition[1] };
+                    ApplyLayout();
+                }
+            }
+
+            float arrowBase[2]{ layoutSettings_.arrowBasePosition.x, layoutSettings_.arrowBasePosition.y };
+            if (ImGui::DragFloat2("Arrow Base", arrowBase, 1.0f, -400.0f, 1280.0f)) {
+                layoutSettings_.arrowBasePosition = { arrowBase[0], arrowBase[1] };
+                ApplyLayout();
+            }
+
+            if (ImGui::DragFloat("Choice Spacing", &layoutSettings_.choiceSpacingY, 1.0f, 16.0f, 320.0f)) {
+                ApplyLayout();
+            }
+
+            if (ImGui::Button("Save LevelUp Layout")) {
+                UILayoutIO::Save(kLevelUpLayoutPath, {
+                    { "choicePosition0", { layoutSettings_.choicePositions[0].x, layoutSettings_.choicePositions[0].y } },
+                    { "choicePosition1", { layoutSettings_.choicePositions[1].x, layoutSettings_.choicePositions[1].y } },
+                    { "choicePosition2", { layoutSettings_.choicePositions[2].x, layoutSettings_.choicePositions[2].y } },
+                    { "choiceSize", { layoutSettings_.choiceSize.x, layoutSettings_.choiceSize.y } },
+                    { "arrowBasePosition", { layoutSettings_.arrowBasePosition.x, layoutSettings_.arrowBasePosition.y } },
+                    { "choiceSpacingY", { layoutSettings_.choiceSpacingY } },
+                });
+            }
+        }
+    }
+
+    ImGui::End();
+#endif
 }
 
 void GameLevelUpController::Reset() {
@@ -252,6 +341,22 @@ int32_t GameLevelUpController::PickWeightedOptionIndex(const std::vector<LevelUp
     }
 
     return static_cast<int32_t>(candidateOptions.size() - 1);
+}
+
+void GameLevelUpController::ApplyLayout() {
+    if (arrowSprite_) {
+        arrowSprite_->SetPosition({layoutSettings_.arrowBasePosition.x,
+                                   layoutSettings_.arrowBasePosition.y + static_cast<float>(selection_) * layoutSettings_.choiceSpacingY});
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        if (!choiceSprites_[i]) {
+            continue;
+        }
+
+        choiceSprites_[i]->SetPosition(layoutSettings_.choicePositions[i]);
+        choiceSprites_[i]->SetSize(layoutSettings_.choiceSize);
+    }
 }
 
 } // namespace DirectXGame

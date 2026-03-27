@@ -164,7 +164,7 @@ private:
     bool invincible_ = false;
     float invincibleTimer_ = 0.0f;
     bool visible_ = true;
-    static constexpr float kInvincibilityDuration = 1.25f;
+    float invincibilityDuration_ = 1.25f;
 
     // EXP / レベル
     int32_t level_ = 1;
@@ -188,10 +188,12 @@ private:
     float normalBulletInterval_ = 0.85f;
     float normalBulletTimer_ = 0.0f;
 
-    static constexpr int32_t kMaxLifeStockCap = 6;
-    static constexpr int32_t kMoveSpeedUpgradeCap = 5;
-    static constexpr float kMoveSpeedUpgradeStep = 3.0f;
-    static constexpr float kMoveSpeedMax = 45.0f;
+    int32_t maxLifeStockCap_ = 6;
+    int32_t moveSpeedUpgradeCap_ = 5;
+    float moveSpeedUpgradeStep_ = 3.0f;
+    float moveSpeedMax_ = 45.0f;
+    float normalBulletUpgradeMultiplier_ = 0.84f;
+    float normalBulletMinInterval_ = 0.18f;
 
     // 周囲弾
     std::vector<std::unique_ptr<OrbitBullet>> orbitBullets_;
@@ -202,6 +204,7 @@ private:
     bool hasDrone_ = false;
     float droneInterval_ = 2.0f;
     float droneTimer_ = 0.0f;
+    float droneUpgradeMultiplier_ = 0.8f;
 
     void UpdateInvincibility(float deltaTime);
     void UpdateNormalBullets(float deltaTime);

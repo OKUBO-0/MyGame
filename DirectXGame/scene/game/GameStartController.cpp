@@ -16,16 +16,11 @@ bool GameStartController::Update(Input* input, Audio* audio, uint32_t startSEHan
         return false;
     }
 
-    for (int key = 0; key < 256; ++key) {
-        if (!input->TriggerKey(static_cast<BYTE>(key))) {
-            continue;
-        }
-
+    if (input->TriggerKey(DIK_SPACE) || input->TriggerKey(DIK_RETURN)) {
         waiting_ = false;
         if (startSEHandle != 0) {
             audio->PlayWave(startSEHandle, false, 1.0f);
         }
-        break;
     }
 
     return waiting_;

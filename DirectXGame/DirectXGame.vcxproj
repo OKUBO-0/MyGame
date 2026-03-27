@@ -115,6 +115,11 @@
     <ClCompile Include="ui\hud\KeyUI.cpp" />
     <ClCompile Include="ui\hud\Timer.cpp" />
     <ClCompile Include="ui\common\DigitSpriteUtil.cpp" />
+    <ClCompile Include="ui\common\UIElement.cpp" />
+    <ClCompile Include="ui\common\UILayoutIO.cpp" />
+    <ClCompile Include="ui\common\UIBar.cpp" />
+    <ClCompile Include="ui\common\UILabel.cpp" />
+    <ClCompile Include="ui\common\UIPanel.cpp" />
     <ClCompile Include="ui\hud\MiniMap.cpp" />
     <ClCompile Include="player\weapons\Drone.cpp" />
     <ClCompile Include="effects\RippleEffect.cpp" />
@@ -225,6 +230,11 @@
     <ClInclude Include="ui\hud\KeyUI.h" />
     <ClInclude Include="ui\hud\Timer.h" />
     <ClInclude Include="ui\common\DigitSpriteUtil.h" />
+    <ClInclude Include="ui\common\UIElement.h" />
+    <ClInclude Include="ui\common\UILayoutIO.h" />
+    <ClInclude Include="ui\common\UIBar.h" />
+    <ClInclude Include="ui\common\UILabel.h" />
+    <ClInclude Include="ui\common\UIPanel.h" />
     <ClInclude Include="ui\hud\MiniMap.h" />
     <ClInclude Include="player\weapons\Drone.h" />
     <ClInclude Include="player\weapons\NormalBullet.h" />

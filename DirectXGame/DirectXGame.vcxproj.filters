@@ -219,6 +219,21 @@
     <ClCompile Include="ui\common\DigitSpriteUtil.cpp">
       <Filter>ソース ファイル\ui\common</Filter>
     </ClCompile>
+    <ClCompile Include="ui\common\UIElement.cpp">
+      <Filter>ソース ファイル\ui\common</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\common\UILayoutIO.cpp">
+      <Filter>ソース ファイル\ui\common</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\common\UIPanel.cpp">
+      <Filter>ソース ファイル\ui\common</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\common\UIBar.cpp">
+      <Filter>ソース ファイル\ui\common</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\common\UILabel.cpp">
+      <Filter>ソース ファイル\ui\common</Filter>
+    </ClCompile>
     <ClCompile Include="ui\hud\KeyUI.cpp">
       <Filter>ソース ファイル\ui\hud</Filter>
     </ClCompile>
@@ -370,6 +385,21 @@
       <Filter>ヘッダー ファイル\ui\hud</Filter>
     </ClInclude>
     <ClInclude Include="ui\common\DigitSpriteUtil.h">
+      <Filter>ヘッダー ファイル\ui\common</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\common\UIElement.h">
+      <Filter>ヘッダー ファイル\ui\common</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\common\UILayoutIO.h">
+      <Filter>ヘッダー ファイル\ui\common</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\common\UIPanel.h">
+      <Filter>ヘッダー ファイル\ui\common</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\common\UIBar.h">
+      <Filter>ヘッダー ファイル\ui\common</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\common\UILabel.h">
       <Filter>ヘッダー ファイル\ui\common</Filter>
     </ClInclude>
     <ClInclude Include="ui\hud\KeyUI.h">

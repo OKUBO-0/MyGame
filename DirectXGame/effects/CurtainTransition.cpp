@@ -1,16 +1,29 @@
 #include "CurtainTransition.h"
+#include <algorithm>
 using namespace KamataEngine;
 
 namespace DirectXGame {
 
+namespace {
+
+constexpr float kFrameDeltaBaseline = 0.016f;
+constexpr float kMaxTransitionDelta = 0.033f;
+constexpr float kCurtainHalfHeight = 360.0f;
+constexpr float kCurtainOverlap = 24.0f;
+constexpr float kTopOpenY = -(kCurtainHalfHeight + kCurtainOverlap);
+constexpr float kBottomClosedY = kCurtainHalfHeight - kCurtainOverlap;
+constexpr float kBottomOpenY = 720.0f;
+
+}
+
 void CurtainTransition::Initialize() {
     uint32_t tex = TextureManager::Load("textures/color/black.png");
 
-    topCurtain_.reset(Sprite::Create(tex, { 0, -720 }));
-    bottomCurtain_.reset(Sprite::Create(tex, { 0, 720 }));
+    topCurtain_.reset(Sprite::Create(tex, { 0, kTopOpenY }));
+    bottomCurtain_.reset(Sprite::Create(tex, { 0, kBottomOpenY }));
 
-    topCurtain_->SetSize({ 1280, 720 });
-    bottomCurtain_->SetSize({ 1280, 720 });
+    topCurtain_->SetSize({ 1280, kCurtainHalfHeight + kCurtainOverlap });
+    bottomCurtain_->SetSize({ 1280, kCurtainHalfHeight + kCurtainOverlap });
 
     state_ = State::kNone;
 }
@@ -19,8 +32,8 @@ void CurtainTransition::StartClose(float speed) {
     speed_ = speed;
     state_ = State::kClose;
 
-    topCurtain_->SetPosition({ 0, -720 });
-    bottomCurtain_->SetPosition({ 0, 720 });
+    topCurtain_->SetPosition({ 0, kTopOpenY });
+    bottomCurtain_->SetPosition({ 0, kBottomOpenY });
 }
 
 void CurtainTransition::StartOpen(float speed) {
@@ -28,11 +41,12 @@ void CurtainTransition::StartOpen(float speed) {
     state_ = State::kOpen;
 
     topCurtain_->SetPosition({ 0, 0 });
-    bottomCurtain_->SetPosition({ 0, 0 });
+    bottomCurtain_->SetPosition({ 0, kBottomClosedY });
 }
 
 void CurtainTransition::Update(float deltaTime) {
-    const float deltaScale = deltaTime / 0.016f;
+    const float clampedDeltaTime = (std::min)(deltaTime, kMaxTransitionDelta);
+    const float deltaScale = clampedDeltaTime / kFrameDeltaBaseline;
 
     if (state_ == State::kClose) {
         auto posTop = topCurtain_->GetPosition();
@@ -46,7 +60,7 @@ void CurtainTransition::Update(float deltaTime) {
 
         if (posTop.y >= 0) {
             topCurtain_->SetPosition({ 0, 0 });
-            bottomCurtain_->SetPosition({ 0, 0 });
+            bottomCurtain_->SetPosition({ 0, kBottomClosedY });
             state_ = State::kFinished;
         }
     }
@@ -60,7 +74,9 @@ void CurtainTransition::Update(float deltaTime) {
         topCurtain_->SetPosition(posTop);
         bottomCurtain_->SetPosition(posBottom);
 
-        if (posTop.y <= -720) {
+        if (posTop.y <= kTopOpenY) {
+            topCurtain_->SetPosition({ 0, kTopOpenY });
+            bottomCurtain_->SetPosition({ 0, kBottomOpenY });
             state_ = State::kNone;
         }
     }

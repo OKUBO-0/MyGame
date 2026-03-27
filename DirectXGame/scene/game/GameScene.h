@@ -92,6 +92,7 @@ private:
     void StartResultTransition();
     void UpdateStatusUI();
     void UpdateGameplay(float deltaTime);
+    void DrawDebugUI();
     void DrawWorld();
     void DrawUI();
 

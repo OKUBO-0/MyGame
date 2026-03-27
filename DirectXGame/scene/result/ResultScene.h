@@ -1,6 +1,6 @@
 #pragma once
 #include "../core/IScene.h"
-#include "../../effects/Fade.h"
+#include "../../effects/CurtainTransition.h"
 #include "../../ui/hud/Score.h"
 #include <KamataEngine.h>
 #include <cstdint>
@@ -33,6 +33,23 @@ public:
     bool IsFinished() const override { return finished_; }
 
 private:
+    struct LayoutSettings {
+        KamataEngine::Vector2 backgroundPosition{ 0.0f, 0.0f };
+        KamataEngine::Vector2 backgroundSize{ 1280.0f, 720.0f };
+        KamataEngine::Vector2 resultPosition{ 0.0f, 0.0f };
+        KamataEngine::Vector2 resultSize{ 1280.0f, 720.0f };
+        KamataEngine::Vector2 resultUIPosition{ 0.0f, 0.0f };
+        KamataEngine::Vector2 resultUISize{ 1280.0f, 720.0f };
+        KamataEngine::Vector2 expPosition{ 500.0f, 200.0f };
+        KamataEngine::Vector2 levelPosition{ 500.0f, 300.0f };
+        KamataEngine::Vector2 killPosition{ 500.0f, 400.0f };
+        float scoreScale = 2.0f;
+        bool debugEnabled = false;
+    };
+
+    void ApplyLayout();
+    void DrawDebugUI();
+
     KamataEngine::DirectXCommon* dxCommon_ = nullptr; ///< DirectX管理（外部から取得）
     KamataEngine::Input* input_ = nullptr;            ///< 入力管理（外部から取得）
     KamataEngine::Audio* audio_ = nullptr;            ///< オーディオ管理（外部から取得）
@@ -41,8 +58,9 @@ private:
     std::unique_ptr<KamataEngine::Sprite> resultSprite_;     ///< リザルト文字スプライト
     std::unique_ptr<KamataEngine::Sprite> resultUI_;         ///< リザルトUIスプライト
 
-    Fade fade_;                   ///< フェード演出
-    bool fadeOutStarted_ = false; ///< フェードアウト開始フラグ
+    CurtainTransition curtain_;   ///< カーテン演出
+    bool curtainOutStarted_ = false;
+    bool curtainOpening_ = true;
     bool finished_ = false;       ///< シーン終了フラグ
 
     std::unique_ptr<Score> expUI_;   ///< 経験値表示UI
@@ -61,6 +79,7 @@ private:
     uint32_t selectSEHandle_ = 0; ///< 選択SEハンドル
     uint32_t countupSEHandle_ = 0;
     int32_t countupSECooldown_ = 0;
+    LayoutSettings layoutSettings_{};
 };
 
 } // namespace DirectXGame

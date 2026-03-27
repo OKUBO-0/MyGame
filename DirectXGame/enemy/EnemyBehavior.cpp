@@ -46,6 +46,7 @@ public:
         dir.x /= len;
         dir.z /= len;
 
+        enemy.ClearBehaviorVisual();
         MoveEnemy(enemy, dir, ToFrameScaledSpeed(enemy.GetSpeed(), deltaTime));
     }
 };
@@ -76,12 +77,14 @@ public:
 
         if (dashTimer_ > 0.0f) {
             dashTimer_ -= deltaTime;
+            enemy.SetBehaviorVisual({ 1.0f, 0.55f, 0.3f, 1.0f }, 1.12f);
             MoveEnemy(enemy, dashDirection_, ToFrameScaledSpeed(enemy.GetSpeed() * 2.8f, deltaTime));
             return;
         }
 
         if (dist < 18.0f) {
             windupTimer_ += deltaTime;
+            enemy.SetBehaviorVisual({ 1.0f, 0.9f, 0.35f, 1.0f }, 1.18f);
             if (windupTimer_ >= 0.55f) {
                 dashDirection_ = toPlayer;
                 dashTimer_ = 0.28f;
@@ -90,6 +93,7 @@ public:
             }
         } else {
             windupTimer_ = (std::max)(0.0f, windupTimer_ - deltaTime * 1.5f);
+            enemy.ClearBehaviorVisual();
         }
 
         MoveEnemy(enemy, toPlayer, ToFrameScaledSpeed(enemy.GetSpeed() * 0.75f, deltaTime));
@@ -142,6 +146,7 @@ public:
         finalDir.x /= len;
         finalDir.z /= len;
 
+        enemy.SetBehaviorVisual({ 0.65f, 0.95f, 1.0f, 1.0f }, 0.96f);
         MoveEnemy(enemy, finalDir, ToFrameScaledSpeed(enemy.GetSpeed() * 1.05f, deltaTime));
     }
 };
@@ -212,6 +217,11 @@ public:
         moveDir.z /= len;
 
         const float speedMultiplier = rushTimer_ > 0.0f ? 2.1f : 1.15f;
+        if (rushTimer_ > 0.0f) {
+            enemy.SetBehaviorVisual({ 1.0f, 0.35f, 0.35f, 1.0f }, 1.2f);
+        } else {
+            enemy.SetBehaviorVisual({ 0.82f, 0.72f, 1.0f, 1.0f }, 1.05f);
+        }
         MoveEnemy(enemy, moveDir, ToFrameScaledSpeed(enemy.GetSpeed() * speedMultiplier, deltaTime));
     }
 

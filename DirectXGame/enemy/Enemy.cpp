@@ -1,9 +1,18 @@
 #include "Enemy.h"
 #include "ModelCache.h"
+#include <cmath>
 
 using namespace KamataEngine;
 
 namespace DirectXGame {
+
+namespace {
+
+float ScalePerFrameDecay(float decayPerFrame, float deltaTime) {
+    return std::pow(decayPerFrame, deltaTime / 0.016f);
+}
+
+}
 
 void Enemy::Initialize() {
     worldTransform_.Initialize();
@@ -88,24 +97,35 @@ void Enemy::ResetJustDied() {
     justDied_ = false;
 }
 
+void Enemy::SetBehaviorVisual(const Vector4& color, float scaleMultiplier) {
+    behaviorColor_ = color;
+    behaviorScaleMultiplier_ = scaleMultiplier;
+}
+
+void Enemy::ClearBehaviorVisual() {
+    behaviorColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+    behaviorScaleMultiplier_ = 1.0f;
+}
+
 void Enemy::Update(float deltaTime) {
     if (!active_) return;
+
+    ClearBehaviorVisual();
 
     // --- ヒット点滅 ---
     if (hitFlashTimer_ > 0.0f) {
         hitFlashTimer_ -= deltaTime;
-        if (hitFlashTimer_ <= 0.0f && objectColor_) {
-            objectColor_->SetColor({ 1,1,1,1 });
-        }
     }
 
     // --- ノックバック ---
     if (knockbackTimer_ > 0.0f) {
-        worldTransform_.translation_.x += knockbackVelocity_.x;
-        worldTransform_.translation_.z += knockbackVelocity_.z;
+        const float velocityScale = deltaTime / 0.016f;
+        worldTransform_.translation_.x += knockbackVelocity_.x * velocityScale;
+        worldTransform_.translation_.z += knockbackVelocity_.z * velocityScale;
 
-        knockbackVelocity_.x *= 0.88f;
-        knockbackVelocity_.z *= 0.88f;
+        const float knockbackDecay = ScalePerFrameDecay(0.88f, deltaTime);
+        knockbackVelocity_.x *= knockbackDecay;
+        knockbackVelocity_.z *= knockbackDecay;
 
         knockbackTimer_ -= deltaTime;
         if (knockbackTimer_ <= 0.0f) {
@@ -115,6 +135,20 @@ void Enemy::Update(float deltaTime) {
     else {
         if (behavior_) {
             behavior_->Update(*this, deltaTime);
+        }
+    }
+
+    worldTransform_.scale_ = {
+        behaviorScaleMultiplier_,
+        behaviorScaleMultiplier_,
+        behaviorScaleMultiplier_
+    };
+
+    if (objectColor_) {
+        if (hitFlashTimer_ > 0.0f) {
+            objectColor_->SetColor({ 10, 10, 10, 1 });
+        } else {
+            objectColor_->SetColor(behaviorColor_);
         }
     }
 
@@ -143,9 +177,6 @@ void Enemy::TakeDamage(int32_t damage, const Vector3& knockDir, float strength) 
     }
 
     hitFlashTimer_ = kHitFlashDuration;
-    if (objectColor_) {
-        objectColor_->SetColor({ 10,10,10,1 });
-    }
 
     float len = std::sqrt(knockDir.x * knockDir.x + knockDir.z * knockDir.z);
     if (len > 0.001f && strength > 0.0f) {

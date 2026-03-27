@@ -75,10 +75,12 @@ void GameScene::Update(float deltaTime) {
     curtain_.Update(deltaTime);
 
     if (FinalizeResultTransition()) {
+        DrawDebugUI();
         return;
     }
 
     if (UpdateCurtainOpening()) {
+        DrawDebugUI();
         return;
     }
 
@@ -90,25 +92,31 @@ void GameScene::Update(float deltaTime) {
     }
 
     if (UpdateStartWaiting()) {
+        DrawDebugUI();
         return;
     }
     if (UpdatePauseState()) {
+        DrawDebugUI();
         return;
     }
     if (UpdateLevelUpFlow()) {
+        DrawDebugUI();
         return;
     }
     if (UpdateGameTimer(deltaTime)) {
+        DrawDebugUI();
         return;
     }
 
     UpdateStatusUI();
 
     if (UpdateDeathFlow(deltaTime)) {
+        DrawDebugUI();
         return;
     }
 
     UpdateGameplay(deltaTime);
+    DrawDebugUI();
 }
 
 bool GameScene::UpdateCurtainOpening() {
@@ -246,6 +254,25 @@ void GameScene::UpdateGameplay(float deltaTime) {
     }
 }
 
+void GameScene::DrawDebugUI() {
+#ifdef _DEBUG
+    pauseController_.DebugDrawImGui();
+    levelUpController_.DebugDrawImGui();
+    if (ImGui::Begin("UI Debug")) {
+        if (expGauge_) {
+            expGauge_->DebugDrawImGui();
+        }
+        if (hpGauge_) {
+            hpGauge_->DebugDrawImGui();
+        }
+        if (timer_) {
+            timer_->DebugDrawImGui();
+        }
+    }
+    ImGui::End();
+#endif
+}
+
 void GameScene::Draw() {
     DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
@@ -313,6 +340,7 @@ void GameScene::DrawUI() {
 
 void GameScene::Finalize() {
     finished_ = false;
+    curtainCloseStarted_ = false;
     deathFadeInStarted_ = false;
     deathFadeInComplete_ = false;
     gameStopped_ = false;

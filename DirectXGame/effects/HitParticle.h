@@ -46,6 +46,7 @@ public:
 private:
     KamataEngine::WorldTransform worldTransform_; ///< パーティクルの位置・回転・スケールを保持するワールド変換
     std::shared_ptr<KamataEngine::Model> model_;  ///< 火花の見た目を表現するモデル
+    std::unique_ptr<KamataEngine::ObjectColor> objectColor_; ///< インスタンスごとの色・透明度管理
 
     static constexpr float kLifetime = 0.9f; ///< 火花の寿命（秒） — 少し長めにして落下を表現
     float age_ = 0.0f;                       ///< 経過時間（秒）
