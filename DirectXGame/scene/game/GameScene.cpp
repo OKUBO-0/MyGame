@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include "../../core/InputBindings.h"
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -211,7 +212,7 @@ bool GameScene::UpdateDeathFlow(float deltaTime) {
     }
 
     if (deathFadeInComplete_ &&
-        input_->TriggerKey(DIK_SPACE) &&
+        InputBindings::IsConfirmTriggered(input_) &&
         curtain_.GetState() == CurtainTransition::State::kNone) {
         StartResultTransition();
     }

@@ -1,4 +1,5 @@
 #include "ResultScene.h"
+#include "../../core/InputBindings.h"
 #include "../../ui/common/UILayoutIO.h"
 #include <algorithm>
 using namespace KamataEngine;
@@ -163,7 +164,7 @@ void ResultScene::Update(float deltaTime) {
 
     // --- SPACE / ENTER で演出スキップ・タイトル復帰 ---
     const bool canSkipCountUp = currentExp_ < targetExp_ || currentLevel_ < targetLevel_ || currentKill_ < targetKill_;
-    if ((input_->TriggerKey(DIK_SPACE) || input_->TriggerKey(DIK_RETURN)) && canSkipCountUp) {
+    if (InputBindings::IsConfirmTriggered(input_) && canSkipCountUp) {
         currentExp_ = targetExp_;
         currentLevel_ = targetLevel_;
         currentKill_ = targetKill_;
@@ -174,7 +175,7 @@ void ResultScene::Update(float deltaTime) {
         return;
     }
 
-    if ((input_->TriggerKey(DIK_SPACE) || input_->TriggerKey(DIK_RETURN)) &&
+    if (InputBindings::IsConfirmTriggered(input_) &&
         curtain_.GetState() == CurtainTransition::State::kNone) {
         if (selectSEHandle_ != 0) {
             audio_->PlayWave(selectSEHandle_, false, 1.0f);

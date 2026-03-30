@@ -15,6 +15,7 @@ struct LevelUpOption {
     std::string name;
     std::function<void(PlayerManager*)> action;
     std::function<uint32_t(PlayerManager*)> getTexture;
+    std::function<uint32_t(PlayerManager*)> getIconTexture;
     float weight = 1.0f;
 };
 
@@ -109,6 +110,7 @@ private:
     std::unique_ptr<KamataEngine::Sprite> overlaySprite_;
     std::unique_ptr<KamataEngine::Sprite> arrowSprite_;
     std::unique_ptr<KamataEngine::Sprite> choiceSprites_[3];
+    std::unique_ptr<KamataEngine::Sprite> iconSprites_[3];
     bool active_ = false;
     int32_t selection_ = 0;
     LayoutSettings layoutSettings_{};

@@ -35,6 +35,7 @@ private:
     float moveSpeedPerSecond_ = 30.0f;
 
     void UpdateMovement(float deltaTime);
+    void UpdateAim(float deltaTime);
     void UpdateCamera();
 };
 

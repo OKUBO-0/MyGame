@@ -3,7 +3,6 @@
 #include "../../ui/common/UIPanel.h"
 #include "../../ui/common/UILabel.h"
 #include "../../ui/hud/MiniMap.h"
-#include "../../ui/hud/Score.h"
 #include <cstdint>
 #include <memory>
 
@@ -96,14 +95,9 @@ private:
     };
 
     struct LayoutSettings {
-        KamataEngine::Vector2 statsPanelPosition{ 1240.0f, 690.0f };
-        KamataEngine::Vector2 statsPanelSize{ 420.0f, 180.0f };
-        UIElement::Anchor statsPanelAnchor = UIElement::Anchor::BottomRight;
-        KamataEngine::Vector2 killIconLocalPosition{ 30.0f, 22.0f };
         KamataEngine::Vector2 buildRowLocalPosition{ 22.0f, 82.0f };
-        float buildStepX = 100.0f;
-        KamataEngine::Vector2 buildIconSize{ 92.0f, 52.0f };
-        KamataEngine::Vector2 killScoreLocalPosition{ 72.0f, 20.0f };
+        float buildStepX = 128.0f;
+        KamataEngine::Vector2 buildIconSize{ 128.0f, 72.0f };
     };
 
     bool active_ = false;
@@ -114,12 +108,10 @@ private:
     std::unique_ptr<KamataEngine::Sprite> cursorSprite_;
     std::unique_ptr<MiniMap> miniMap_;
     std::unique_ptr<UIPanel> statsPanel_;
-    std::unique_ptr<UILabel> killIconLabel_;
     std::unique_ptr<UILabel> buildNormalLabel_;
     std::unique_ptr<UILabel> buildOrbitLabel_;
     std::unique_ptr<UILabel> buildDroneLabel_;
     std::unique_ptr<UILabel> buildAttackLabel_;
-    std::unique_ptr<Score> killScore_;
 
     uint32_t selectSEHandle_ = 0;
     uint32_t decideSEHandle_ = 0;

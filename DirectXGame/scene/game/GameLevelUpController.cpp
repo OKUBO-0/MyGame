@@ -1,5 +1,6 @@
 #include "GameLevelUpController.h"
-#include "PlayerManager.h"
+#include "../../core/InputBindings.h"
+#include "../../player/core/PlayerManager.h"
 #include "../../ui/common/UILayoutIO.h"
 #include <algorithm>
 #include <random>
@@ -100,6 +101,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
         "通常弾強化",
         [](PlayerManager* pm) { pm->UpgradeNormalBullets(); },
         [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_normal.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_normal_icon.png"); },
         2.0f
     });
 
@@ -118,6 +120,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
             }
             return TextureManager::Load("ui/game/lvup_orbit_upgrade.png");
         },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_orbit_icon.png"); },
         1.0f
     });
 
@@ -136,6 +139,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
             }
             return TextureManager::Load("ui/game/lvup_drone_upgrade.png");
         },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_drone_icon.png"); },
         0.5f
     });
 
@@ -143,6 +147,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
         "攻撃力 +1",
         [](PlayerManager* pm) { pm->UpgradeAttackPower(); },
         [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_attack.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_attack_icon.png"); },
         1.5f
     });
 
@@ -150,6 +155,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
         "移動速度アップ",
         [](PlayerManager* pm) { pm->UpgradeMoveSpeed(); },
         [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_speed.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_speed_icon.png"); },
         1.1f
     });
 
@@ -157,6 +163,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
         "HP回復",
         [](PlayerManager* pm) { pm->RecoverHP(); },
         [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_heal.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_heal_icon.png"); },
         1.0f
     });
 
@@ -164,6 +171,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
         "最大HP増加",
         [](PlayerManager* pm) { pm->IncreaseMaxHP(); },
         [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_maxhp.png"); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_maxhp_icon.png"); },
         0.8f
     });
 }
@@ -204,9 +212,16 @@ bool GameLevelUpController::TryStart(PlayerManager* playerManager, Audio* audio,
             Sprite::Create(textureHandle, layoutSettings_.choicePositions[i])
         );
         choiceSprites_[i]->SetSize(layoutSettings_.choiceSize);
+
+        uint32_t iconTextureHandle = currentChoices_[i].getIconTexture(playerManager);
+        iconSprites_[i] = std::unique_ptr<Sprite>(
+            Sprite::Create(iconTextureHandle, layoutSettings_.choicePositions[i])
+        );
+        iconSprites_[i]->SetSize(layoutSettings_.choiceSize);
     }
     for (int32_t i = choiceCount; i < 3; ++i) {
         choiceSprites_[i].reset();
+        iconSprites_[i].reset();
     }
 
     active_ = true;
@@ -223,9 +238,9 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
     }
 
     int32_t previousSelection = selection_;
-    if (input->TriggerKey(DIK_W)) {
+    if (InputBindings::IsMenuUpTriggered(input)) {
         selection_ = std::max<int32_t>(0, selection_ - 1);
-    } else if (input->TriggerKey(DIK_S)) {
+    } else if (InputBindings::IsMenuDownTriggered(input)) {
         selection_ = std::min<int32_t>(2, selection_ + 1);
     }
 
@@ -236,7 +251,7 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
     arrowSprite_->SetPosition({layoutSettings_.arrowBasePosition.x,
                                layoutSettings_.arrowBasePosition.y + static_cast<float>(selection_) * layoutSettings_.choiceSpacingY});
 
-    if (input->TriggerKey(DIK_RETURN) || input->TriggerKey(DIK_SPACE)) {
+    if (InputBindings::IsConfirmTriggered(input)) {
         if (decideSEHandle != 0) {
             audio->PlayWave(decideSEHandle, false, 1.0f);
         }
@@ -254,6 +269,11 @@ void GameLevelUpController::Draw() const {
 
     overlaySprite_->Draw();
     for (const auto& sprite : choiceSprites_) {
+        if (sprite) {
+            sprite->Draw();
+        }
+    }
+    for (const auto& sprite : iconSprites_) {
         if (sprite) {
             sprite->Draw();
         }
@@ -320,6 +340,9 @@ void GameLevelUpController::Reset() {
     for (auto& sprite : choiceSprites_) {
         sprite.reset();
     }
+    for (auto& sprite : iconSprites_) {
+        sprite.reset();
+    }
 }
 
 int32_t GameLevelUpController::PickWeightedOptionIndex(const std::vector<LevelUpOption>& candidateOptions) const {
@@ -351,11 +374,17 @@ void GameLevelUpController::ApplyLayout() {
 
     for (int i = 0; i < 3; ++i) {
         if (!choiceSprites_[i]) {
+        } else {
+            choiceSprites_[i]->SetPosition(layoutSettings_.choicePositions[i]);
+            choiceSprites_[i]->SetSize(layoutSettings_.choiceSize);
+        }
+
+        if (!iconSprites_[i]) {
             continue;
         }
 
-        choiceSprites_[i]->SetPosition(layoutSettings_.choicePositions[i]);
-        choiceSprites_[i]->SetSize(layoutSettings_.choiceSize);
+        iconSprites_[i]->SetPosition(layoutSettings_.choicePositions[i]);
+        iconSprites_[i]->SetSize(layoutSettings_.choiceSize);
     }
 }
 

@@ -1,4 +1,5 @@
 #include "TitleScene.h"
+#include "../../core/InputBindings.h"
 #include "../../ui/common/UILayoutIO.h"
 #include <cmath>
 
@@ -150,7 +151,7 @@ void TitleScene::Update(float deltaTime) {
     }
 
     if (guideActive_) {
-        if (input_->TriggerKey(DIK_ESCAPE)) {
+        if (InputBindings::IsCancelTriggered(input_)) {
             if (decideSEHandle_ != 0) {
                 audio_->PlayWave(decideSEHandle_, false, 1.0f);
             }
@@ -162,10 +163,10 @@ void TitleScene::Update(float deltaTime) {
 
     // --- メニュー選択（W / S） ---
     int32_t previousMenuIndex = menuIndex_;
-    if (input_->TriggerKey(DIK_W)) {
+    if (InputBindings::IsMenuUpTriggered(input_)) {
         menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
     }
-    if (input_->TriggerKey(DIK_S)) {
+    if (InputBindings::IsMenuDownTriggered(input_)) {
         menuIndex_ = std::min<int32_t>(2, menuIndex_ + 1);
     }
     if (menuIndex_ != previousMenuIndex) {
@@ -182,7 +183,7 @@ void TitleScene::Update(float deltaTime) {
     }
 
     // --- 決定（SPACE / ENTER） ---
-    if (input_->TriggerKey(DIK_SPACE) || input_->TriggerKey(DIK_RETURN)) {
+    if (InputBindings::IsConfirmTriggered(input_)) {
         if (decideSEHandle_ != 0) {
             audio_->PlayWave(decideSEHandle_, false, 1.0f);
         }
