@@ -9,7 +9,7 @@ public:
     void InitializeForward(const KamataEngine::Vector3& startPos,
         const KamataEngine::Vector3& forward);
 
-    void Update(const KamataEngine::Vector3& playerPos) override;
+    void Update(const KamataEngine::Vector3& playerPos, float deltaTime) override;
     void Draw(KamataEngine::Camera* camera) override;
 
     bool CanHitEnemy(void* enemyPtr);

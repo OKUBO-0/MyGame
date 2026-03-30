@@ -1,4 +1,5 @@
 #include "GameStartController.h"
+#include "../../core/InputBindings.h"
 
 using namespace KamataEngine;
 
@@ -16,16 +17,11 @@ bool GameStartController::Update(Input* input, Audio* audio, uint32_t startSEHan
         return false;
     }
 
-    for (int key = 0; key < 256; ++key) {
-        if (!input->TriggerKey(static_cast<BYTE>(key))) {
-            continue;
-        }
-
+    if (InputBindings::IsConfirmTriggered(input)) {
         waiting_ = false;
         if (startSEHandle != 0) {
             audio->PlayWave(startSEHandle, false, 1.0f);
         }
-        break;
     }
 
     return waiting_;

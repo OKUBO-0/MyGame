@@ -1,10 +1,10 @@
 #include "KeyUI.h"
+#include "../../core/InputBindings.h"
 using namespace KamataEngine;
 
 namespace DirectXGame {
 
 void KeyUI::Initialize() {
-
 	keyW_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_W.png"), {0, 0}));
 	keyA_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_a.png"), {0, 0}));
 	keyS_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_s.png"), {0, 0}));
@@ -23,10 +23,11 @@ void KeyUI::Initialize() {
 }
 
 void KeyUI::Update(Input* input) {
-	SetKeyColor(keyW_.get(), input->PushKey(DIK_W));
-	SetKeyColor(keyA_.get(), input->PushKey(DIK_A));
-	SetKeyColor(keyS_.get(), input->PushKey(DIK_S));
-	SetKeyColor(keyD_.get(), input->PushKey(DIK_D));
+	const Vector2 move = InputBindings::GetMoveVector(input);
+	SetKeyColor(keyW_.get(), move.y > 0.15f);
+	SetKeyColor(keyA_.get(), move.x < -0.15f);
+	SetKeyColor(keyS_.get(), move.y < -0.15f);
+	SetKeyColor(keyD_.get(), move.x > 0.15f);
 }
 
 void KeyUI::SetKeyColor(Sprite* key, bool pressed) {

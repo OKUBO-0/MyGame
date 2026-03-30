@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../ui/common/UIPanel.h"
+#include "../../ui/common/UILabel.h"
 #include "../../ui/hud/MiniMap.h"
 #include <cstdint>
 #include <memory>
@@ -15,6 +17,7 @@ namespace DirectXGame {
 
 class EnemyManager;
 class Player;
+class PlayerManager;
 
 /// <summary>
 /// ポーズ画面の入力と表示を管理するクラス。
@@ -40,8 +43,8 @@ public:
     /// 引数: toggleSEHandle - ポーズ開閉に使うSEハンドル
     /// 戻り値: true ならポーズ中としてゲーム更新を止める
     /// </summary>
-    bool Update(Player* player, const EnemyManager& enemyManager, KamataEngine::Input* input,
-                KamataEngine::Audio* audio, uint32_t toggleSEHandle);
+    bool Update(Player* player, const EnemyManager& enemyManager, const PlayerManager& playerManager,
+                KamataEngine::Input* input, KamataEngine::Audio* audio, uint32_t toggleSEHandle);
 
     /// <summary>
     /// 描画処理
@@ -49,7 +52,7 @@ public:
     /// 引数: dxCommon - スプライト描画に使う DirectX 共通オブジェクト
     /// 戻り値: なし
     /// </summary>
-    void Draw(KamataEngine::DirectXCommon* dxCommon) const;
+    void Draw() const;
 
     /// <summary>
     /// 状態リセット
@@ -82,8 +85,21 @@ public:
     /// 戻り値: true ならリザルトへ遷移すべき
     /// </summary>
     bool ShouldGoResult() const;
+    void DebugDrawImGui();
 
 private:
+    enum class GuideTransitionState {
+        None,
+        FadeIn,
+        FadeOut,
+    };
+
+    struct LayoutSettings {
+        KamataEngine::Vector2 buildRowLocalPosition{ 22.0f, 82.0f };
+        float buildStepX = 128.0f;
+        KamataEngine::Vector2 buildIconSize{ 128.0f, 72.0f };
+    };
+
     bool active_ = false;
     KamataEngine::Audio* audio_ = nullptr;
 
@@ -91,13 +107,27 @@ private:
     std::unique_ptr<KamataEngine::Sprite> guideSprite_;
     std::unique_ptr<KamataEngine::Sprite> cursorSprite_;
     std::unique_ptr<MiniMap> miniMap_;
+    std::unique_ptr<UIPanel> statsPanel_;
+    std::unique_ptr<UILabel> buildNormalLabel_;
+    std::unique_ptr<UILabel> buildOrbitLabel_;
+    std::unique_ptr<UILabel> buildDroneLabel_;
+    std::unique_ptr<UILabel> buildAttackLabel_;
 
     uint32_t selectSEHandle_ = 0;
     uint32_t decideSEHandle_ = 0;
 
     int32_t menuIndex_ = 0;
     bool guideActive_ = false;
+    GuideTransitionState guideTransitionState_ = GuideTransitionState::None;
+    float guideAlpha_ = 0.0f;
+    static constexpr float kGuideFadeSpeed_ = 4.5f;
     bool goResult_ = false;
+    bool debugLayoutEnabled_ = false;
+    LayoutSettings layoutSettings_{};
+
+    void ApplyLayout();
+    void UpdateStats(const EnemyManager& enemyManager, const PlayerManager& playerManager);
+    void UpdateVisibility();
 };
 
 } // namespace DirectXGame

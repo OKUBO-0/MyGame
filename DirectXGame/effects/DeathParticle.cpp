@@ -1,8 +1,17 @@
 #include "DeathParticle.h"
 #include "ModelCache.h"
+#include <cmath>
 using namespace KamataEngine;
 
 namespace DirectXGame {
+
+namespace {
+
+float ScalePerFrameDecay(float decayPerFrame, float deltaTime) {
+    return std::pow(decayPerFrame, deltaTime / 0.016f);
+}
+
+}
 
 // パーティクル寿命（調整値）
 const float DeathParticle::kLifetime = 0.6f;
@@ -32,9 +41,10 @@ void DeathParticle::Initialize(const Vector3& pos) {
     objectColor_->SetColor({ 0.5f, 0.5f, 0.5f, 1.0f });
 }
 
-void DeathParticle::Update() {
-    constexpr float kDeltaTime = 0.016f; // 1フレーム時間（60FPS前提）
-    age_ += kDeltaTime;
+void DeathParticle::Update(float deltaTime) {
+    age_ += deltaTime;
+
+    const float velocityScale = deltaTime / 0.016f;
 
     // 寿命を超えたら非アクティブ化
     if (age_ >= kLifetime) {
@@ -43,14 +53,16 @@ void DeathParticle::Update() {
     }
 
     // 移動処理（煙が上昇・拡散する意図）
-    worldTransform_.translation_.x += velocity_.x;
-    worldTransform_.translation_.y += velocity_.y;
-    worldTransform_.translation_.z += velocity_.z;
+    worldTransform_.translation_.x += velocity_.x * velocityScale;
+    worldTransform_.translation_.y += velocity_.y * velocityScale;
+    worldTransform_.translation_.z += velocity_.z * velocityScale;
 
     // 徐々に減速（煙が自然に消える演出）
-    velocity_.x *= 0.95f;
-    velocity_.y *= 0.98f;
-    velocity_.z *= 0.95f;
+    const float horizontalDecay = ScalePerFrameDecay(0.95f, deltaTime);
+    const float verticalDecay = ScalePerFrameDecay(0.98f, deltaTime);
+    velocity_.x *= horizontalDecay;
+    velocity_.y *= verticalDecay;
+    velocity_.z *= horizontalDecay;
 
     // スケール拡大（煙が広がる演出）
     float scale = 1.0f + age_ * 0.3f;

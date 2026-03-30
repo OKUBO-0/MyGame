@@ -7,7 +7,7 @@ namespace DirectXGame {
 class ExpOrb {
 public:
     void Initialize(const KamataEngine::Vector3& pos, int32_t expValue);
-    void Update(const KamataEngine::Vector3& playerPos);
+    void Update(const KamataEngine::Vector3& playerPos, float deltaTime);
     void Draw(KamataEngine::Camera* camera);
 
     bool IsActive() const { return active_; }

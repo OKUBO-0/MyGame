@@ -31,8 +31,10 @@ void ExpOrb::Initialize(const Vector3& pos, int32_t expValue) {
     pickupSEHandle_ = sharedPickupSEHandle;
 }
 
-void ExpOrb::Update(const Vector3& playerPos) {
+void ExpOrb::Update(const Vector3& playerPos, float deltaTime) {
     if (!active_) return;
+
+    const float velocityScale = deltaTime / 0.016f;
 
     // プレイヤーとの距離
     float dx = playerPos.x - worldTransform_.translation_.x;
@@ -45,15 +47,15 @@ void ExpOrb::Update(const Vector3& playerPos) {
         if (dist > 0.001f) {
             dx /= dist; dz /= dist;
             // プレイヤー方向へ加速
-            velocity_.x += dx * 0.05f;
-            velocity_.z += dz * 0.05f;
+            velocity_.x += dx * 0.05f * velocityScale;
+            velocity_.z += dz * 0.05f * velocityScale;
         }
     }
 
     // 移動
-    worldTransform_.translation_.x += velocity_.x;
-    worldTransform_.translation_.y += velocity_.y;
-    worldTransform_.translation_.z += velocity_.z;
+    worldTransform_.translation_.x += velocity_.x * velocityScale;
+    worldTransform_.translation_.y += velocity_.y * velocityScale;
+    worldTransform_.translation_.z += velocity_.z * velocityScale;
 
     // 徐々に減速
     velocity_.x *= 0.95f;

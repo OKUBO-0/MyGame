@@ -19,7 +19,7 @@ public:
     ~SceneManager();
 
     /// <summary>毎フレーム更新処理（現在のシーンの更新を呼び出す）</summary>
-    void Update();
+    void Update(float deltaTime);
 
     /// <summary>描画処理（現在のシーンの描画を呼び出す）</summary>
     void Draw();

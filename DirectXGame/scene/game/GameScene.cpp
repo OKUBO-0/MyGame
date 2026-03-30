@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include "../../core/InputBindings.h"
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -71,14 +72,16 @@ void GameScene::InitializeUI() {
     levelUpController_.RegisterDefaultOptions();
 }
 
-void GameScene::Update() {
-    curtain_.Update();
+void GameScene::Update(float deltaTime) {
+    curtain_.Update(deltaTime);
 
     if (FinalizeResultTransition()) {
+        DrawDebugUI();
         return;
     }
 
     if (UpdateCurtainOpening()) {
+        DrawDebugUI();
         return;
     }
 
@@ -90,25 +93,31 @@ void GameScene::Update() {
     }
 
     if (UpdateStartWaiting()) {
+        DrawDebugUI();
         return;
     }
     if (UpdatePauseState()) {
+        DrawDebugUI();
         return;
     }
     if (UpdateLevelUpFlow()) {
+        DrawDebugUI();
         return;
     }
-    if (UpdateGameTimer()) {
+    if (UpdateGameTimer(deltaTime)) {
+        DrawDebugUI();
         return;
     }
 
     UpdateStatusUI();
 
-    if (UpdateDeathFlow()) {
+    if (UpdateDeathFlow(deltaTime)) {
+        DrawDebugUI();
         return;
     }
 
-    UpdateGameplay();
+    UpdateGameplay(deltaTime);
+    DrawDebugUI();
 }
 
 bool GameScene::UpdateCurtainOpening() {
@@ -133,7 +142,7 @@ bool GameScene::UpdatePauseState() {
         return false;
     }
 
-    if (!pauseController_.Update(player_.get(), enemyManager_, input_, audio_, pauseSEHandle_)) {
+    if (!pauseController_.Update(player_.get(), enemyManager_, *playerManager_, input_, audio_, pauseSEHandle_)) {
         return false;
     }
 
@@ -152,13 +161,13 @@ bool GameScene::UpdateLevelUpFlow() {
     return levelUpController_.Update(playerManager_.get(), input_, audio_, pauseSEHandle_, startSEHandle_);
 }
 
-bool GameScene::UpdateGameTimer() {
+bool GameScene::UpdateGameTimer(float deltaTime) {
     if (startController_.IsWaiting() || pauseController_.IsActive() || levelUpController_.IsActive() || gameStopped_) {
         return false;
     }
 
-    timer_->Update(0.016f);
-    gameTime_ += 0.016f;
+    timer_->Update(deltaTime);
+    gameTime_ += deltaTime;
 
     if (gameTime_ < gameTimeLimit_) {
         return false;
@@ -181,7 +190,7 @@ void GameScene::UpdateStatusUI() {
     }
 }
 
-bool GameScene::UpdateDeathFlow() {
+bool GameScene::UpdateDeathFlow(float deltaTime) {
     if (playerManager_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
         deathFadeInStarted_ = true;
         deathAlpha_ = 0.0f;
@@ -194,7 +203,7 @@ bool GameScene::UpdateDeathFlow() {
     }
 
     if (deathFadeInStarted_ && !deathFadeInComplete_) {
-        deathAlpha_ += 0.02f;
+        deathAlpha_ += deltaTime * kDeathFadeSpeedPerSecond_;
         if (deathAlpha_ >= 0.5f) {
             deathAlpha_ = 0.5f;
             deathFadeInComplete_ = true;
@@ -203,7 +212,7 @@ bool GameScene::UpdateDeathFlow() {
     }
 
     if (deathFadeInComplete_ &&
-        input_->TriggerKey(DIK_SPACE) &&
+        InputBindings::IsConfirmTriggered(input_) &&
         curtain_.GetState() == CurtainTransition::State::kNone) {
         StartResultTransition();
     }
@@ -235,15 +244,34 @@ void GameScene::StartResultTransition() {
     SetSceneNo(Scene::Result);
 }
 
-void GameScene::UpdateGameplay() {
-    player_->Update();
-    playerManager_->Update();
-    enemyManager_.Update();
+void GameScene::UpdateGameplay(float deltaTime) {
+    player_->Update(deltaTime);
+    playerManager_->Update(deltaTime);
+    enemyManager_.Update(deltaTime);
     enemyManager_.CheckCollisions(player_.get(), playerManager_.get());
 
     if (!startController_.IsWaiting()) {
         keyUI_->Update(input_);
     }
+}
+
+void GameScene::DrawDebugUI() {
+#ifdef _DEBUG
+    pauseController_.DebugDrawImGui();
+    levelUpController_.DebugDrawImGui();
+    if (ImGui::Begin("UI Debug")) {
+        if (expGauge_) {
+            expGauge_->DebugDrawImGui();
+        }
+        if (hpGauge_) {
+            hpGauge_->DebugDrawImGui();
+        }
+        if (timer_) {
+            timer_->DebugDrawImGui();
+        }
+    }
+    ImGui::End();
+#endif
 }
 
 void GameScene::Draw() {
@@ -306,13 +334,14 @@ void GameScene::DrawUI() {
         timer_->Draw();
     }
 
-    pauseController_.Draw(dxCommon_);
+    pauseController_.Draw();
 
     curtain_.Draw();
 }
 
 void GameScene::Finalize() {
     finished_ = false;
+    curtainCloseStarted_ = false;
     deathFadeInStarted_ = false;
     deathFadeInComplete_ = false;
     gameStopped_ = false;

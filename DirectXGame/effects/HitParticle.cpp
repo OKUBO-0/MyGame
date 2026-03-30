@@ -6,9 +6,21 @@ using namespace KamataEngine;
 
 namespace DirectXGame {
 
+namespace {
+
+float ScalePerFrameDecay(float decayPerFrame, float deltaTime) {
+    return std::pow(decayPerFrame, deltaTime / 0.016f);
+}
+
+}
+
 void HitParticle::Initialize(const Vector3& pos) {
     // モデル生成（火花の見た目）
     model_ = ModelCache::Get("cube");
+
+    objectColor_ = std::make_unique<ObjectColor>();
+    objectColor_->Initialize();
+    objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 
     // ワールド変換初期化
     worldTransform_.Initialize();
@@ -35,9 +47,10 @@ void HitParticle::Initialize(const Vector3& pos) {
     worldTransform_.UpdateMatrix();
 }
 
-void HitParticle::Update() {
-    constexpr float kDeltaTime = 0.016f; // 60FPS 前提
-    age_ += kDeltaTime;
+void HitParticle::Update(float deltaTime) {
+    age_ += deltaTime;
+
+    const float velocityScale = deltaTime / 0.016f;
 
     // --- 寿命判定 ---
     // 意図: 一定時間経過後にパーティクルを非アクティブ化する
@@ -47,12 +60,12 @@ void HitParticle::Update() {
     }
 
     // 重力を適用（y方向速度に逐次加算）
-    velocity_.y += gravity_;
+    velocity_.y += gravity_ * velocityScale;
 
     // 位置更新
-    worldTransform_.translation_.x += velocity_.x;
-    worldTransform_.translation_.y += velocity_.y;
-    worldTransform_.translation_.z += velocity_.z;
+    worldTransform_.translation_.x += velocity_.x * velocityScale;
+    worldTransform_.translation_.y += velocity_.y * velocityScale;
+    worldTransform_.translation_.z += velocity_.z * velocityScale;
 
     // 地面との衝突（地面より下に行ったらバウンド）
     if (worldTransform_.translation_.y <= kGroundY) {
@@ -63,8 +76,9 @@ void HitParticle::Update() {
             // 反発（y速度を反転して減衰）
             velocity_.y = -velocity_.y * 0.45f;
             // 水平成分も減衰させる
-            velocity_.x *= 0.6f;
-            velocity_.z *= 0.6f;
+            const float bounceDecay = ScalePerFrameDecay(0.6f, deltaTime);
+            velocity_.x *= bounceDecay;
+            velocity_.z *= bounceDecay;
             bounceCount_++;
         }
         else {
@@ -74,13 +88,17 @@ void HitParticle::Update() {
                 active_ = false;
                 return;
             }
-            if (model_) model_->SetAlpha(alpha_);
+            if (objectColor_) {
+                objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, alpha_ });
+            }
         }
     }
     else {
         // 空中では時間経過により透明度を下げる（オプション）
         alpha_ = 1.0f - (age_ / kLifetime) * 0.6f;
-        if (model_) model_->SetAlpha(alpha_);
+        if (objectColor_) {
+            objectColor_->SetColor({ 1.0f, 1.0f, 1.0f, alpha_ });
+        }
     }
 
     // スケール変化：生成時に大きく、時間で元に戻す（または縮小）
@@ -93,7 +111,7 @@ void HitParticle::Update() {
 
 void HitParticle::Draw(Camera* camera) {
     if (!active_ || !model_) return;
-    model_->Draw(worldTransform_, *camera);
+    model_->Draw(worldTransform_, *camera, objectColor_.get());
 }
 
 } // namespace DirectXGame

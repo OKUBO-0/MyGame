@@ -35,14 +35,14 @@ void Fade::StartFadeOut(float speed) {
     finished_ = false;
 }
 
-void Fade::Update() {
+void Fade::Update(float deltaTime) {
     /// <summary>
     /// 状態に応じてアルファ値を更新する処理
     /// 意図: フェードイン/アウトの進行度を管理し、完了時に状態を切り替える
     /// </summary>
     switch (state_) {
     case State::kFadeIn:
-        alpha_ -= speed_;
+        alpha_ -= speed_ * (deltaTime / 0.016f);
         if (alpha_ <= 0.0f) {
             alpha_ = 0.0f;
             state_ = State::kStay;   // 完全透明後は「表示維持」状態
@@ -51,7 +51,7 @@ void Fade::Update() {
         break;
 
     case State::kFadeOut:
-        alpha_ += speed_;
+        alpha_ += speed_ * (deltaTime / 0.016f);
         if (alpha_ >= 1.0f) {
             alpha_ = 1.0f;
             state_ = State::kNone;   // 完全黒後は「非表示」状態
@@ -76,9 +76,7 @@ void Fade::Draw() {
     /// 意図: フェード演出が不要な場合は描画負荷を避ける
     /// </summary>
     if (state_ != State::kNone && fadeSprite_) {
-        Sprite::PreDraw(DirectXCommon::GetInstance()->GetCommandList());
         fadeSprite_->Draw();
-        Sprite::PostDraw();
     }
 }
 

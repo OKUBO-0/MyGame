@@ -37,7 +37,7 @@ public:
     /// 引数: なし
     /// 戻り値: なし
     /// </summary>
-    void Update();
+    void Update(float deltaTime);
 
     /// <summary>
     /// フェードスプライトの描画処理

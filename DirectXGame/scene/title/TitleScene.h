@@ -21,7 +21,7 @@ public:
     void Initialize() override;
 
     /// <summary>毎フレーム更新処理（入力判定や演出更新を行う）</summary>
-    void Update() override;
+    void Update(float deltaTime) override;
 
     /// <summary>描画処理（背景、UI、演出を画面に描画する）</summary>
     void Draw() override;
@@ -33,6 +33,28 @@ public:
     bool IsFinished() const override { return finished_; }
 
 private:
+    enum class GuideTransitionState {
+        None,
+        FadeIn,
+        FadeOut,
+    };
+
+    struct LayoutSettings {
+        KamataEngine::Vector2 titlePosition{ 0.0f, 0.0f };
+        KamataEngine::Vector2 titleSize{ 1280.0f, 720.0f };
+        KamataEngine::Vector2 cursorBasePosition{ 0.0f, 0.0f };
+        KamataEngine::Vector2 cursorSize{ 1280.0f, 720.0f };
+        float cursorStepY = 120.0f;
+        KamataEngine::Vector2 guidePosition{ 0.0f, 0.0f };
+        KamataEngine::Vector2 guideSize{ 1280.0f, 720.0f };
+        KamataEngine::Vector3 modelBasePosition{ 20.0f, -10.0f, 0.0f };
+        KamataEngine::Vector3 modelScale{ 4.5f, 4.5f, 4.5f };
+        bool debugEnabled = false;
+    };
+
+    void ApplyLayout();
+    void DrawDebugUI();
+
     KamataEngine::DirectXCommon* dxCommon_ = nullptr; ///< DirectX管理（外部から取得）
     KamataEngine::Input* input_ = nullptr;            ///< 入力管理（外部から取得）
     KamataEngine::Audio* audio_ = nullptr;            ///< オーディオ管理（外部から取得）
@@ -54,6 +76,11 @@ private:
     int32_t menuIndex_ = 0;
 
     bool guideActive_ = false;
+    GuideTransitionState guideTransitionState_ = GuideTransitionState::None;
+    float guideAlpha_ = 0.0f;
+    static constexpr float kGuideFadeSpeed_ = 4.5f;
+    float animationTime_ = 0.0f;
+    LayoutSettings layoutSettings_{};
 
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Camera camera_;

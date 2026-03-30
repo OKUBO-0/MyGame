@@ -11,7 +11,7 @@ class Player;
 class Enemy {
 public:
     void Initialize();
-    void Update();
+    void Update(float deltaTime);
     void Draw(KamataEngine::Camera* camera);
 
     void SetPosition(const KamataEngine::Vector3& pos);
@@ -41,6 +41,8 @@ public:
 
     void SetSpeed(float speed) { speed_ = speed; }
     float GetSpeed() const { return speed_; }
+    void SetBehaviorVisual(const KamataEngine::Vector4& color, float scaleMultiplier = 1.0f);
+    void ClearBehaviorVisual();
 
 private:
     KamataEngine::WorldTransform worldTransform_;
@@ -56,13 +58,15 @@ private:
     Player* player_ = nullptr;
 
     std::unique_ptr<KamataEngine::ObjectColor> objectColor_;
+    KamataEngine::Vector4 behaviorColor_{ 1.0f, 1.0f, 1.0f, 1.0f };
+    float behaviorScaleMultiplier_ = 1.0f;
     float hitFlashTimer_ = 0.0f;
     static constexpr float kHitFlashDuration = 0.12f;
     uint32_t whiteTextureHandle_ = 0;
 
     KamataEngine::Vector3 knockbackVelocity_ = { 0,0,0 };
     float knockbackTimer_ = 0.0f;
-    static constexpr float kKnockbackDuration = 0.18f;
+    static constexpr float kKnockbackDuration = 0.22f;
 
     bool justDied_ = false;
 

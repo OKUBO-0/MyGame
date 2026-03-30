@@ -1,5 +1,7 @@
 #pragma once
 #include <KamataEngine.h>
+#include "../common/UIBar.h"
+#include "../common/UILabel.h"
 #include <array>
 #include <algorithm>
 #include <cstdint>
@@ -30,17 +32,30 @@ public:
 
     /// <summary>EXPゲージが満タンかどうかを判定する</summary>
     bool IsFilled() const;
+    void DebugDrawImGui();
+    void SaveLayout() const;
 
 private:
-    uint32_t dummyTextureHandle_ = 0; ///< ダミーテクスチャハンドル
+    struct LayoutSettings {
+        KamataEngine::Vector2 framePosition{ 0.0f, 1.0f };
+        KamataEngine::Vector2 frameSize{ 1280.0f, 50.0f };
+        KamataEngine::Vector2 gaugePosition{ 5.0f, 6.0f };
+        KamataEngine::Vector2 gaugeSize{ 1270.0f, 40.0f };
+        KamataEngine::Vector2 lvLabelPosition{ 1175.0f, 10.0f };
+        KamataEngine::Vector2 lvLabelSize{ 48.0f, 32.0f };
+        KamataEngine::Vector2 lvDigitsPosition{ 1225.0f, 10.0f };
+        bool debugEnabled = false;
+    };
+
+    void ApplyLayout();
+
     uint32_t lvLabelHandle_ = 0;      ///< [LV]ラベル用テクスチャハンドル
     uint32_t lvDigitsHandle_ = 0;     ///< レベル数字用テクスチャハンドル
 
-    std::unique_ptr<KamataEngine::Sprite> yellowFrame_; ///< ゲージ枠スプライト
-    std::unique_ptr<KamataEngine::Sprite> blackGauge_;  ///< 背景スプライト
-    std::unique_ptr<KamataEngine::Sprite> blueGauge_;   ///< ゲージ本体スプライト
+    UIBar frameBar_;
+    UIBar gaugeBar_;
 
-    std::unique_ptr<KamataEngine::Sprite> lvLabel_;     ///< [LV]ラベルスプライト
+    UILabel lvLabel_;                                   ///< [LV]ラベル
     static constexpr int32_t kLvDigits = 2;             ///< レベル表示の最大桁数
     std::array<std::unique_ptr<KamataEngine::Sprite>, kLvDigits> sprite_; ///< レベル数字スプライト
 
@@ -49,6 +64,7 @@ private:
     int32_t displayedExp_ = 0; ///< 表示中のEXP値（アニメーション用）
     int32_t targetExp_ = 0;    ///< 設定されたEXP値
     int32_t maxExp_ = 1;       ///< 最大EXP値
+    LayoutSettings layoutSettings_{};
 };
 
 } // namespace DirectXGame

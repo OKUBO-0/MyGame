@@ -15,6 +15,7 @@ struct LevelUpOption {
     std::string name;
     std::function<void(PlayerManager*)> action;
     std::function<uint32_t(PlayerManager*)> getTexture;
+    std::function<uint32_t(PlayerManager*)> getIconTexture;
     float weight = 1.0f;
 };
 
@@ -70,6 +71,7 @@ public:
     /// 戻り値: なし
     /// </summary>
     void Draw() const;
+    void DebugDrawImGui();
 
     /// <summary>
     /// 状態リセット
@@ -88,15 +90,30 @@ public:
     bool IsActive() const { return active_; }
 
 private:
-    int32_t PickWeightedOptionIndex() const;
+    struct LayoutSettings {
+        KamataEngine::Vector2 choicePositions[3]{
+            { 0.0f, 0.0f },
+            { 0.0f, 140.0f },
+            { 0.0f, 280.0f },
+        };
+        KamataEngine::Vector2 choiceSize{ 1280.0f, 720.0f };
+        KamataEngine::Vector2 arrowBasePosition{ 0.0f, 0.0f };
+        float choiceSpacingY = 140.0f;
+        bool debugEnabled = false;
+    };
+
+    int32_t PickWeightedOptionIndex(const std::vector<LevelUpOption>& candidateOptions) const;
+    void ApplyLayout();
 
     std::vector<LevelUpOption> options_;
     std::vector<LevelUpOption> currentChoices_;
     std::unique_ptr<KamataEngine::Sprite> overlaySprite_;
     std::unique_ptr<KamataEngine::Sprite> arrowSprite_;
     std::unique_ptr<KamataEngine::Sprite> choiceSprites_[3];
+    std::unique_ptr<KamataEngine::Sprite> iconSprites_[3];
     bool active_ = false;
     int32_t selection_ = 0;
+    LayoutSettings layoutSettings_{};
 };
 
 } // namespace DirectXGame

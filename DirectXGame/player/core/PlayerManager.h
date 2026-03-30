@@ -44,7 +44,7 @@ public:
     /// 引数: なし
     /// 戻り値: なし
     /// </summary>
-    void Update();
+    void Update(float deltaTime);
 
     /// <summary>
     /// 描画処理
@@ -94,6 +94,11 @@ public:
     int32_t GetAttackPower() const { return attackPower_; }
     void UpgradeAttackPower() { attackPower_++; }
 
+    // 基礎ステータス強化
+    void IncreaseMaxHP();
+    void UpgradeMoveSpeed();
+    int32_t GetMoveSpeedLevel() const { return moveSpeedLevel_; }
+
     // 通常弾
     /// <summary>
     /// 通常弾強化
@@ -103,6 +108,7 @@ public:
     /// </summary>
     void UpgradeNormalBullets();
     const std::vector<std::unique_ptr<NormalBullet>>& GetNormalBullets() const { return normalBullets_; }
+    float GetNormalBulletInterval() const { return normalBulletInterval_; }
 
     // 周囲弾
     /// <summary>
@@ -158,15 +164,17 @@ private:
     bool invincible_ = false;
     float invincibleTimer_ = 0.0f;
     bool visible_ = true;
+    float invincibilityDuration_ = 1.25f;
 
     // EXP / レベル
-    int32_t level_;
-    int32_t nextLevelExp_ ;
-    int32_t maxLifeStock_ ;
-    int32_t lifeStock_;
-    int32_t exp_;
-    int32_t totalExp_;
-    int32_t attackPower_;
+    int32_t level_ = 1;
+    int32_t nextLevelExp_ = 10;
+    int32_t maxLifeStock_ = 3;
+    int32_t lifeStock_ = 3;
+    int32_t exp_ = 0;
+    int32_t totalExp_ = 0;
+    int32_t attackPower_ = 1;
+    int32_t moveSpeedLevel_ = 0;
     bool levelUpRequested_ = false;
 
     // エフェクト
@@ -177,8 +185,15 @@ private:
     // 通常弾
     std::vector<std::unique_ptr<NormalBullet>> normalBullets_;
     bool hasNormalBullets_ = true;
-    float normalBulletInterval_ = 1.0f;
+    float normalBulletInterval_ = 0.85f;
     float normalBulletTimer_ = 0.0f;
+
+    int32_t maxLifeStockCap_ = 6;
+    int32_t moveSpeedUpgradeCap_ = 5;
+    float moveSpeedUpgradeStep_ = 3.0f;
+    float moveSpeedMax_ = 45.0f;
+    float normalBulletUpgradeMultiplier_ = 0.84f;
+    float normalBulletMinInterval_ = 0.18f;
 
     // 周囲弾
     std::vector<std::unique_ptr<OrbitBullet>> orbitBullets_;
@@ -189,12 +204,13 @@ private:
     bool hasDrone_ = false;
     float droneInterval_ = 2.0f;
     float droneTimer_ = 0.0f;
+    float droneUpgradeMultiplier_ = 0.8f;
 
-    void UpdateInvincibility();
-    void UpdateNormalBullets();
-    void UpdateOrbitBullets();
-    void UpdateDrone();
-    void UpdateEffects();
+    void UpdateInvincibility(float deltaTime);
+    void UpdateNormalBullets(float deltaTime);
+    void UpdateOrbitBullets(float deltaTime);
+    void UpdateDrone(float deltaTime);
+    void UpdateEffects(float deltaTime);
 };
 
 } // namespace DirectXGame

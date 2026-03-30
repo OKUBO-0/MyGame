@@ -1,7 +1,25 @@
 #include "Player.h"
+#include "../../core/InputBindings.h"
+#include <math/MathUtility.h>
+#include <algorithm>
 using namespace KamataEngine;
+using namespace KamataEngine::MathUtility;
 
 namespace DirectXGame {
+
+namespace {
+
+constexpr float kPi = 3.14159265f;
+constexpr float kScreenWidth = 1280.0f;
+constexpr float kScreenHeight = 720.0f;
+
+float NormalizeAngle(float angle) {
+    while (angle > kPi) angle -= 2.0f * kPi;
+    while (angle < -kPi) angle += 2.0f * kPi;
+    return angle;
+}
+
+}
 
 void Player::Initialize() {
     input_ = Input::GetInstance();
@@ -17,9 +35,10 @@ void Player::Initialize() {
     camera_.UpdateMatrix();
 }
 
-void Player::Update() {
-    UpdateMovement();
+void Player::Update(float deltaTime) {
+    UpdateMovement(deltaTime);
     UpdateCamera();
+    UpdateAim(deltaTime);
     worldTransform_.UpdateMatrix();
 }
 
@@ -29,48 +48,80 @@ void Player::Draw() {
     }
 }
 
-void Player::UpdateMovement() {
-    const float kMoveSpeed = 0.5f;
+void Player::UpdateMovement(float deltaTime) {
+    const float movePerFrame = moveSpeedPerSecond_ * deltaTime;
 
-    Vector3 move = { 0.0f, 0.0f, 0.0f };
-
-    if (input_->PushKey(DIK_W)) move.z += kMoveSpeed;
-    if (input_->PushKey(DIK_S)) move.z -= kMoveSpeed;
-    if (input_->PushKey(DIK_A)) move.x -= kMoveSpeed;
-    if (input_->PushKey(DIK_D)) move.x += kMoveSpeed;
+    const Vector2 moveInput = InputBindings::GetMoveVector(input_);
+    Vector3 move = { moveInput.x * movePerFrame, 0.0f, moveInput.y * movePerFrame };
 
     float moveLen = std::sqrt(move.x * move.x + move.z * move.z);
     if (moveLen > 0.0f) {
         // 正規化して一定速にする
-        move.x = (move.x / moveLen) * kMoveSpeed;
-        move.z = (move.z / moveLen) * kMoveSpeed;
+        move.x = (move.x / moveLen) * movePerFrame;
+        move.z = (move.z / moveLen) * movePerFrame;
 
         // 移動
         worldTransform_.translation_.x += move.x;
         worldTransform_.translation_.z += move.z;
-
-        // ----- ここから回転をスムーズ化 -----
-        float targetAngle = std::atan2(move.x, move.z); // 目標角度
-        float currentAngle = worldTransform_.rotation_.y;
-
-        // 角度差を -pi..pi に正規化
-        constexpr float kPi = 3.14159265f;
-        float diff = targetAngle - currentAngle;
-        while (diff > kPi) diff -= 2.0f * kPi;
-        while (diff < -kPi) diff += 2.0f * kPi;
-
-        // 補間係数（0.0f: 回転しない, 1.0f: 即時回転）
-        // 値を大きくすると回転が速く、値を小さくするとゆっくり滑らかになります。
-        const float kRotateLerp = 0.50f;
-
-        currentAngle += diff * kRotateLerp;
-        // 必要なら currentAngle を -pi..pi に戻す（安定化）
-        while (currentAngle > kPi) currentAngle -= 2.0f * kPi;
-        while (currentAngle < -kPi) currentAngle += 2.0f * kPi;
-
-        worldTransform_.rotation_.y = currentAngle;
-        // ----- ここまで -----
     }
+}
+
+void Player::UpdateAim(float deltaTime) {
+    Vector2 padAim{};
+    if (InputBindings::GetAimVector(input_, padAim)) {
+        const float targetAngle = std::atan2(padAim.x, padAim.y);
+        float currentAngle = worldTransform_.rotation_.y;
+        float diff = NormalizeAngle(targetAngle - currentAngle);
+        const float kRotateLerp = std::clamp(deltaTime * 30.0f, 0.0f, 1.0f);
+        currentAngle = NormalizeAngle(currentAngle + diff * kRotateLerp);
+        worldTransform_.rotation_.y = currentAngle;
+        return;
+    }
+
+    const Vector2 mousePosition = input_->GetMousePosition();
+    const float ndcX = (mousePosition.x / kScreenWidth) * 2.0f - 1.0f;
+    const float ndcY = 1.0f - (mousePosition.y / kScreenHeight) * 2.0f;
+
+    const Matrix4x4 viewProjection = camera_.matView * camera_.matProjection;
+    const Matrix4x4 inverseViewProjection = Inverse(viewProjection);
+
+    const Vector3 nearPointNdc = {ndcX, ndcY, 0.0f};
+    const Vector3 farPointNdc = {ndcX, ndcY, 1.0f};
+    const Vector3 nearPointWorld = TransformCoord(nearPointNdc, inverseViewProjection);
+    const Vector3 farPointWorld = TransformCoord(farPointNdc, inverseViewProjection);
+
+    Vector3 rayDirection = farPointWorld - nearPointWorld;
+    const float rayLength = Length(rayDirection);
+    if (rayLength <= 0.0001f) {
+        return;
+    }
+    rayDirection /= rayLength;
+
+    const float planeY = worldTransform_.translation_.y;
+    if (std::abs(rayDirection.y) <= 0.0001f) {
+        return;
+    }
+
+    const float t = (planeY - nearPointWorld.y) / rayDirection.y;
+    if (t <= 0.0f) {
+        return;
+    }
+
+    const Vector3 targetPoint = nearPointWorld + rayDirection * t;
+    Vector3 aimDirection = targetPoint - worldTransform_.translation_;
+    aimDirection.y = 0.0f;
+
+    const float aimLength = Length(aimDirection);
+    if (aimLength <= 0.0001f) {
+        return;
+    }
+
+    const float targetAngle = std::atan2(aimDirection.x, aimDirection.z);
+    float currentAngle = worldTransform_.rotation_.y;
+    float diff = NormalizeAngle(targetAngle - currentAngle);
+    const float kRotateLerp = std::clamp(deltaTime * 30.0f, 0.0f, 1.0f);
+    currentAngle = NormalizeAngle(currentAngle + diff * kRotateLerp);
+    worldTransform_.rotation_.y = currentAngle;
 }
 
 void Player::UpdateCamera() {

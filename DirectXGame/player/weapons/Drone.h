@@ -13,7 +13,7 @@ public:
 
     void Update(const KamataEngine::Vector3& playerPos,
         const std::vector<std::unique_ptr<Enemy>>& enemies,
-        float& fireTimer, float fireInterval);
+        float& fireTimer, float fireInterval, float deltaTime);
 
     void Draw(KamataEngine::Camera* camera);
 
@@ -26,6 +26,7 @@ private:
     KamataEngine::Vector3 offset_; // プレイヤーからの相対位置
 
     float range_ = 25.0f;
+    float animationTime_ = 0.0f;
 
     std::vector<std::unique_ptr<NormalBullet>> bullets_;
 };
