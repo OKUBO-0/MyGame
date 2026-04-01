@@ -48,6 +48,12 @@ void Player::Draw() {
     }
 }
 
+void Player::SetLightGroup(const LightGroup* lightGroup) {
+    if (playerModel_) {
+        playerModel_->SetLightGroup(lightGroup);
+    }
+}
+
 void Player::UpdateMovement(float deltaTime) {
     const float movePerFrame = moveSpeedPerSecond_ * deltaTime;
 

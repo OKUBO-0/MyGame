@@ -156,6 +156,14 @@ public:
     /// </summary>
     void SetEnemyManager(EnemyManager* manager) { enemyManager_ = manager; }
 
+    /// <summary>
+    /// レベルアップ演出生成
+    /// 目的: レベルアップ開始時にプレイヤー周囲へ波紋エフェクトを発生させる。
+    /// 引数: なし
+    /// 戻り値: なし
+    /// </summary>
+    void PlayLevelUpEffect();
+
 private:
     Player* player_ = nullptr;
     EnemyManager* enemyManager_ = nullptr;
@@ -181,6 +189,8 @@ private:
     std::vector<std::unique_ptr<RippleEffect>> effects_;
     float effectTimer_ = 0.0f;
     static constexpr float kEffectInterval = 0.2f;
+    KamataEngine::Vector3 previousEffectPosition_{ 0.0f, 0.0f, 0.0f };
+    bool hasPreviousEffectPosition_ = false;
 
     // 通常弾
     std::vector<std::unique_ptr<NormalBullet>> normalBullets_;
@@ -198,6 +208,10 @@ private:
     // 周囲弾
     std::vector<std::unique_ptr<OrbitBullet>> orbitBullets_;
     bool hasOrbitBullets_ = false;
+    float orbitRadius_ = 10.0f;
+    float orbitRadiusUpgradeStep_ = 2.0f;
+    float orbitAngularSpeed_ = 0.03f;
+    float orbitAngularSpeedUpgradeStep_ = 0.01f;
 
     // ドローン
     std::unique_ptr<Drone> drone_;
@@ -211,6 +225,7 @@ private:
     void UpdateOrbitBullets(float deltaTime);
     void UpdateDrone(float deltaTime);
     void UpdateEffects(float deltaTime);
+    void SpawnRippleEffect(const KamataEngine::Vector3& position);
 };
 
 } // namespace DirectXGame

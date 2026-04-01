@@ -1,5 +1,6 @@
 #include "GameScene.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ModelCache.h"
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -10,6 +11,7 @@ void GameScene::Initialize() {
     audio_ = Audio::GetInstance();
 
     InitializeAudio();
+    InitializeLighting();
     InitializeSceneObjects();
     InitializeUI();
 
@@ -23,6 +25,21 @@ void GameScene::InitializeAudio() {
     startSEHandle_ = audio_->LoadWave("audio/se/se_exp.wav");
     deathSEHandle_ = audio_->LoadWave("audio/se/se_death.wav");
     levelUpSEHandle_ = audio_->LoadWave("audio/se/se_exp.wav");
+}
+
+void GameScene::InitializeLighting() {
+    lightGroup_.reset(LightGroup::Create());
+    if (!lightGroup_) {
+        return;
+    }
+
+    lightGroup_->SetAmbientColor({0.48f, 0.48f, 0.52f});
+    lightGroup_->SetDirLightActive(0, true);
+    lightGroup_->SetDirLightDir(0, {-0.35f, -1.0f, -0.4f});
+    lightGroup_->SetDirLightColor(0, {1.05f, 1.0f, 0.95f});
+    lightGroup_->SetDirLightActive(1, false);
+    lightGroup_->SetDirLightActive(2, false);
+    lightGroup_->Update();
 }
 
 void GameScene::InitializeSceneObjects() {
@@ -44,6 +61,8 @@ void GameScene::InitializeSceneObjects() {
 
     skyDome_ = std::make_unique<SkyDome>();
     skyDome_->Initialize();
+
+    ApplyLighting();
 }
 
 void GameScene::InitializeUI() {
@@ -72,7 +91,36 @@ void GameScene::InitializeUI() {
     levelUpController_.RegisterDefaultOptions();
 }
 
+void GameScene::ApplyLighting() {
+    if (!lightGroup_) {
+        return;
+    }
+
+    if (player_) {
+        player_->SetLightGroup(lightGroup_.get());
+    }
+    if (gridPlane_) {
+        gridPlane_->SetLightGroup(lightGroup_.get());
+    }
+    if (skyDome_) {
+        skyDome_->SetLightGroup(lightGroup_.get());
+    }
+
+    ModelCache::Get("octopus")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("bullet")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("cube")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("ripples")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("ExpOrb")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy1")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy2")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy3")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy4")->SetLightGroup(lightGroup_.get());
+}
+
 void GameScene::Update(float deltaTime) {
+    if (lightGroup_) {
+        lightGroup_->Update();
+    }
     curtain_.Update(deltaTime);
 
     if (FinalizeResultTransition()) {
@@ -100,7 +148,7 @@ void GameScene::Update(float deltaTime) {
         DrawDebugUI();
         return;
     }
-    if (UpdateLevelUpFlow()) {
+    if (UpdateLevelUpFlow(deltaTime)) {
         DrawDebugUI();
         return;
     }
@@ -153,12 +201,12 @@ bool GameScene::UpdatePauseState() {
     return FinalizeResultTransition() || true;
 }
 
-bool GameScene::UpdateLevelUpFlow() {
+bool GameScene::UpdateLevelUpFlow(float deltaTime) {
     if (levelUpController_.TryStart(playerManager_.get(), audio_, levelUpSEHandle_)) {
         return true;
     }
 
-    return levelUpController_.Update(playerManager_.get(), input_, audio_, pauseSEHandle_, startSEHandle_);
+    return levelUpController_.Update(playerManager_.get(), input_, audio_, pauseSEHandle_, startSEHandle_, deltaTime);
 }
 
 bool GameScene::UpdateGameTimer(float deltaTime) {

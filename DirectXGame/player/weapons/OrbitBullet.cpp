@@ -4,11 +4,12 @@ using namespace KamataEngine;
 
 namespace DirectXGame {
 
-void OrbitBullet::Initialize(const Vector3& center, float radius, float angle) {
+void OrbitBullet::Initialize(const Vector3& center, float radius, float angle, float angularSpeed) {
     Bullet::Initialize(center);
 
     orbitRadius_ = radius;
     angle_ = angle;
+    angularSpeed_ = angularSpeed;
 
     model_ = ModelCache::Get("bullet");
 

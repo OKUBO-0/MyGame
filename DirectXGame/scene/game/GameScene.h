@@ -78,13 +78,15 @@ public:
 
 private:
     void InitializeAudio();
+    void InitializeLighting();
     void InitializeSceneObjects();
     void InitializeUI();
+    void ApplyLighting();
 
     bool UpdateCurtainOpening();
     bool UpdateStartWaiting();
     bool UpdatePauseState();
-    bool UpdateLevelUpFlow();
+    bool UpdateLevelUpFlow(float deltaTime);
     bool UpdateGameTimer(float deltaTime);
     bool UpdateDeathFlow(float deltaTime);
     bool FinalizeResultTransition();
@@ -128,6 +130,7 @@ private:
 
     std::unique_ptr<GridPlane> gridPlane_;
     std::unique_ptr<SkyDome> skyDome_;
+    std::unique_ptr<KamataEngine::LightGroup> lightGroup_;
 
     uint32_t pauseSEHandle_ = 0;
     uint32_t startSEHandle_ = 0;
@@ -135,7 +138,7 @@ private:
     uint32_t levelUpSEHandle_ = 0;
 
     float gameTime_ = 0.0f;
-    float gameTimeLimit_ = 60.0f;
+    float gameTimeLimit_ = 300.0f;
     std::unique_ptr<Timer> timer_;
     static constexpr float kDeathFadeSpeedPerSecond_ = 1.25f;
 };

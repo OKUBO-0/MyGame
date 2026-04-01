@@ -13,6 +13,10 @@ void PlayerManager::Initialize(Player* player) {
 
     // 初期値は CSV から読み込むため、ここでは何も設定しない
     if (player_) player_->SetVisible(visible_);
+    if (player_) {
+        previousEffectPosition_ = player_->GetWorldPosition();
+        hasPreviousEffectPosition_ = true;
+    }
 }
 
 void PlayerManager::LoadStatusFromCSV(const std::string& filePath) {
@@ -182,11 +186,54 @@ void PlayerManager::UpdateDrone(float deltaTime) {
 }
 
 void PlayerManager::UpdateEffects(float deltaTime) {
+    if (player_) {
+        const Vector3 currentPosition = player_->GetWorldPosition();
+        if (!hasPreviousEffectPosition_) {
+            previousEffectPosition_ = currentPosition;
+            hasPreviousEffectPosition_ = true;
+        }
+
+        const float dx = currentPosition.x - previousEffectPosition_.x;
+        const float dz = currentPosition.z - previousEffectPosition_.z;
+        const float movedDistanceSq = dx * dx + dz * dz;
+        constexpr float kMinMoveDistanceSq = 0.01f;
+        if (movedDistanceSq > kMinMoveDistanceSq) {
+            effectTimer_ += deltaTime;
+            while (effectTimer_ >= kEffectInterval) {
+                SpawnRippleEffect(currentPosition);
+                effectTimer_ -= kEffectInterval;
+            }
+        } else {
+            effectTimer_ = 0.0f;
+        }
+
+        previousEffectPosition_ = currentPosition;
+    }
+
     for (auto it = effects_.begin(); it != effects_.end();) {
         (*it)->Update(deltaTime);
         if (!(*it)->IsActive()) it = effects_.erase(it);
         else ++it;
     }
+}
+
+void PlayerManager::SpawnRippleEffect(const Vector3& position) {
+    auto effect = std::make_unique<RippleEffect>();
+    effect->Initialize(position);
+    effects_.push_back(std::move(effect));
+}
+
+void PlayerManager::PlayLevelUpEffect() {
+    if (!player_) {
+        return;
+    }
+
+    const Vector3 center = player_->GetWorldPosition();
+    SpawnRippleEffect(center);
+    SpawnRippleEffect({ center.x + 2.5f, center.y, center.z });
+    SpawnRippleEffect({ center.x - 2.5f, center.y, center.z });
+    SpawnRippleEffect({ center.x, center.y, center.z + 2.5f });
+    SpawnRippleEffect({ center.x, center.y, center.z - 2.5f });
 }
 
 void PlayerManager::UpgradeNormalBullets() {
@@ -202,12 +249,14 @@ void PlayerManager::AddOrbitBullets() {
     for (int i = 0; i < count; ++i) {
         float angle = (2.0f * 3.14159265f * i) / count;
         auto orb = std::make_unique<OrbitBullet>();
-        orb->Initialize(player_->GetWorldPosition(), 10.0f, angle);
+        orb->Initialize(player_->GetWorldPosition(), orbitRadius_, angle, orbitAngularSpeed_);
         orbitBullets_.push_back(std::move(orb));
     }
 }
 
 void PlayerManager::UpgradeOrbitBullets() {
+    orbitRadius_ += orbitRadiusUpgradeStep_;
+    orbitAngularSpeed_ += orbitAngularSpeedUpgradeStep_;
     int newCount = static_cast<int>(orbitBullets_.size()) + 1;
 
     std::vector<std::unique_ptr<OrbitBullet>> newOrbs;
@@ -216,7 +265,7 @@ void PlayerManager::UpgradeOrbitBullets() {
     for (int i = 0; i < newCount; ++i) {
         float angle = (2.0f * 3.14159265f * i) / newCount;
         auto orb = std::make_unique<OrbitBullet>();
-        orb->Initialize(player_->GetWorldPosition(), 10.0f, angle);
+        orb->Initialize(player_->GetWorldPosition(), orbitRadius_, angle, orbitAngularSpeed_);
         newOrbs.push_back(std::move(orb));
     }
 

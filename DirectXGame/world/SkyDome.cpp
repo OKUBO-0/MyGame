@@ -27,4 +27,10 @@ void SkyDome::Draw() {
     }
 }
 
+void SkyDome::SetLightGroup(const LightGroup* lightGroup) {
+    if (skyModel_) {
+        skyModel_->SetLightGroup(lightGroup);
+    }
+}
+
 } // namespace DirectXGame

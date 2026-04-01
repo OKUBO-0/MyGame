@@ -19,6 +19,7 @@ public:
     KamataEngine::Camera& GetCamera() { return camera_; }
     float GetMoveSpeed() const { return moveSpeedPerSecond_; }
     void SetMoveSpeed(float moveSpeedPerSecond) { moveSpeedPerSecond_ = moveSpeedPerSecond; }
+    void SetLightGroup(const KamataEngine::LightGroup* lightGroup);
 
     // 可視制御（外部から点滅制御するためのセッター）
     void SetVisible(bool visible) { visible_ = visible; }

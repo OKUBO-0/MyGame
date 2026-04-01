@@ -78,16 +78,16 @@ public:
     int32_t GetTotalKillCount() const { return totalKillCount_; }
 
 private:
-    static constexpr size_t kMaxActiveEnemies = 96;
+    static constexpr size_t kMaxActiveEnemies = 84;
     static constexpr size_t kMaxDeathParticles = 256;
     static constexpr size_t kMaxHitParticles = 256;
     static constexpr float kSpawnUnlockInterval = 18.0f;
     static constexpr float kSpawnDistance = 50.0f;
     static constexpr float kRespawnDistance = 75.0f;
     static constexpr float kRespawnRadius = 60.0f;
-    static constexpr float kMinSpawnInterval = 0.7f;
-    static constexpr float kBaseSpawnInterval = 1.7f;
-    static constexpr float kSpawnAcceleration = 0.0085f;
+    static constexpr float kMinSpawnInterval = 0.85f;
+    static constexpr float kBaseSpawnInterval = 1.9f;
+    static constexpr float kSpawnAcceleration = 0.0075f;
     static constexpr float kEnemySeparationDistance = 3.2f;
     static constexpr float kEnemySeparationStrength = 1.1f;
     static constexpr float kNormalBulletHitDistanceSq = 4.0f;
