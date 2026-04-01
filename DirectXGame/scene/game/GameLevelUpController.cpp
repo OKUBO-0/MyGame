@@ -3,6 +3,7 @@
 #include "../../player/core/PlayerManager.h"
 #include "../../ui/common/UILayoutIO.h"
 #include <algorithm>
+#include <cmath>
 #include <random>
 
 using namespace KamataEngine;
@@ -12,6 +13,10 @@ namespace DirectXGame {
 namespace {
 
 const char* kLevelUpLayoutPath = "Resources/data/ui_layout_levelup.csv";
+constexpr float kLevelUpSlideSpeed = 4200.0f;
+constexpr float kConfettiGravity = 980.0f;
+constexpr float kScreenWidth = 1280.0f;
+constexpr float kScreenHeight = 720.0f;
 
 std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption>& baseOptions, PlayerManager* playerManager) {
     std::vector<LevelUpOption> candidates;
@@ -64,6 +69,31 @@ std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption
     return candidates;
 }
 
+int32_t GetHoveredChoiceIndex(Input* input,
+                              const Vector2* choicePositions,
+                              const Vector2& hitboxOffset,
+                              const Vector2& hitboxSize,
+                              float slideOffsetX,
+                              int32_t choiceCount) {
+    if (!input || choiceCount <= 0) {
+        return -1;
+    }
+
+    const Vector2 mousePosition = input->GetMousePosition();
+    for (int32_t i = 0; i < choiceCount; ++i) {
+        const Vector2 rectPosition{
+            choicePositions[i].x + hitboxOffset.x + slideOffsetX,
+            choicePositions[i].y + hitboxOffset.y,
+        };
+        if (mousePosition.x >= rectPosition.x && mousePosition.x <= rectPosition.x + hitboxSize.x &&
+            mousePosition.y >= rectPosition.y && mousePosition.y <= rectPosition.y + hitboxSize.y) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 } // namespace
 
 void GameLevelUpController::Initialize() {
@@ -89,6 +119,12 @@ void GameLevelUpController::Initialize() {
         }
         if (const auto it = layout.find("choiceSpacingY"); it != layout.end() && !it->second.empty()) {
             layoutSettings_.choiceSpacingY = it->second[0];
+        }
+        if (const auto it = layout.find("choiceHitboxOffset"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.choiceHitboxOffset = { it->second[0], it->second[1] };
+        }
+        if (const auto it = layout.find("choiceHitboxSize"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.choiceHitboxSize = { it->second[0], it->second[1] };
         }
     }
     ApplyLayout();
@@ -226,22 +262,87 @@ bool GameLevelUpController::TryStart(PlayerManager* playerManager, Audio* audio,
 
     active_ = true;
     selection_ = 0;
+    animationState_ = AnimationState::Entering;
+    slideOffsetX_ = 1280.0f;
+    pendingAction_ = nullptr;
+    navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
+    SpawnConfetti();
     ApplyLayout();
     playerManager->ClearLevelUpRequest();
     return true;
 }
 
 bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, Audio* audio,
-                                   uint32_t moveSEHandle, uint32_t decideSEHandle) {
+                                   uint32_t moveSEHandle, uint32_t decideSEHandle, float deltaTime) {
     if (!active_) {
         return false;
     }
 
+    if (currentChoices_.empty()) {
+        active_ = false;
+        selection_ = 0;
+        return false;
+    }
+
+    UpdateConfetti(deltaTime);
+    UpdateSlideAnimation(deltaTime);
+    if (animationState_ == AnimationState::Exiting) {
+        if (slideOffsetX_ <= -1280.0f) {
+            if (pendingAction_) {
+                pendingAction_(playerManager);
+                pendingAction_ = nullptr;
+            }
+            active_ = false;
+            animationState_ = AnimationState::Hidden;
+            selection_ = 0;
+            ApplyLayout();
+            return false;
+        }
+
+        return true;
+    }
+
+    if (animationState_ != AnimationState::Idle) {
+        return true;
+    }
+
+    const int32_t maxSelectionIndex = static_cast<int32_t>(currentChoices_.size()) - 1;
+    selection_ = (std::clamp)(selection_, 0, maxSelectionIndex);
+
+    const int32_t hoveredChoiceIndex = GetHoveredChoiceIndex(
+        input, layoutSettings_.choicePositions, layoutSettings_.choiceHitboxOffset, layoutSettings_.choiceHitboxSize, slideOffsetX_,
+        static_cast<int32_t>(currentChoices_.size()));
+
+    // 入力元の競合を防ぐため、マウスは選択肢上で操作したときだけ有効化する。
+    const bool mouseNavigationTriggered = hoveredChoiceIndex >= 0 && InputBindings::HasMouseNavigationInput(input);
+
+    if (InputBindings::IsGamepadMenuUpTriggered(input) || InputBindings::IsGamepadMenuDownTriggered(input) ||
+               InputBindings::IsGamepadConfirmTriggered(input) || InputBindings::IsGamepadCancelTriggered(input)) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
+    } else if (InputBindings::IsKeyboardMenuUpTriggered(input) || InputBindings::IsKeyboardMenuDownTriggered(input) ||
+               InputBindings::IsKeyboardConfirmTriggered(input) || InputBindings::IsKeyboardCancelTriggered(input)) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Keyboard;
+    } else if (mouseNavigationTriggered) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
+    }
+
     int32_t previousSelection = selection_;
-    if (InputBindings::IsMenuUpTriggered(input)) {
-        selection_ = std::max<int32_t>(0, selection_ - 1);
-    } else if (InputBindings::IsMenuDownTriggered(input)) {
-        selection_ = std::min<int32_t>(2, selection_ + 1);
+    if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Mouse) {
+        if (hoveredChoiceIndex >= 0) {
+            selection_ = hoveredChoiceIndex;
+        }
+    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Gamepad) {
+        if (InputBindings::IsGamepadMenuUpTriggered(input)) {
+            selection_ = std::max<int32_t>(0, selection_ - 1);
+        } else if (InputBindings::IsGamepadMenuDownTriggered(input)) {
+            selection_ = (std::min)(maxSelectionIndex, selection_ + 1);
+        }
+    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Keyboard) {
+        if (InputBindings::IsKeyboardMenuUpTriggered(input)) {
+            selection_ = std::max<int32_t>(0, selection_ - 1);
+        } else if (InputBindings::IsKeyboardMenuDownTriggered(input)) {
+            selection_ = (std::min)(maxSelectionIndex, selection_ + 1);
+        }
     }
 
     if (selection_ != previousSelection && moveSEHandle != 0) {
@@ -251,12 +352,27 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
     arrowSprite_->SetPosition({layoutSettings_.arrowBasePosition.x,
                                layoutSettings_.arrowBasePosition.y + static_cast<float>(selection_) * layoutSettings_.choiceSpacingY});
 
-    if (InputBindings::IsConfirmTriggered(input)) {
+    bool confirmTriggered = false;
+    switch (navigationInputDevice_) {
+    case InputBindings::NavigationInputDevice::Mouse:
+        confirmTriggered = input->IsTriggerMouse(0);
+        break;
+    case InputBindings::NavigationInputDevice::Gamepad:
+        confirmTriggered = InputBindings::IsGamepadConfirmTriggered(input);
+        break;
+    case InputBindings::NavigationInputDevice::Keyboard:
+        confirmTriggered = InputBindings::IsKeyboardConfirmTriggered(input);
+        break;
+    case InputBindings::NavigationInputDevice::None:
+        break;
+    }
+
+    if (confirmTriggered) {
         if (decideSEHandle != 0) {
             audio->PlayWave(decideSEHandle, false, 1.0f);
         }
-        currentChoices_[selection_].action(playerManager);
-        active_ = false;
+        pendingAction_ = currentChoices_[selection_].action;
+        animationState_ = AnimationState::Exiting;
     }
 
     return true;
@@ -268,6 +384,11 @@ void GameLevelUpController::Draw() const {
     }
 
     overlaySprite_->Draw();
+    for (const auto& particle : confettiParticles_) {
+        if (particle.sprite) {
+            particle.sprite->Draw();
+        }
+    }
     for (const auto& sprite : choiceSprites_) {
         if (sprite) {
             sprite->Draw();
@@ -316,6 +437,16 @@ void GameLevelUpController::DebugDrawImGui() {
                 ApplyLayout();
             }
 
+            float hitboxOffset[2]{ layoutSettings_.choiceHitboxOffset.x, layoutSettings_.choiceHitboxOffset.y };
+            if (ImGui::DragFloat2("Choice Hitbox Offset", hitboxOffset, 1.0f, 0.0f, 1280.0f)) {
+                layoutSettings_.choiceHitboxOffset = { hitboxOffset[0], hitboxOffset[1] };
+            }
+
+            float hitboxSize[2]{ layoutSettings_.choiceHitboxSize.x, layoutSettings_.choiceHitboxSize.y };
+            if (ImGui::DragFloat2("Choice Hitbox Size", hitboxSize, 1.0f, 16.0f, 1280.0f)) {
+                layoutSettings_.choiceHitboxSize = { hitboxSize[0], hitboxSize[1] };
+            }
+
             if (ImGui::Button("Save LevelUp Layout")) {
                 UILayoutIO::Save(kLevelUpLayoutPath, {
                     { "choicePosition0", { layoutSettings_.choicePositions[0].x, layoutSettings_.choicePositions[0].y } },
@@ -324,6 +455,8 @@ void GameLevelUpController::DebugDrawImGui() {
                     { "choiceSize", { layoutSettings_.choiceSize.x, layoutSettings_.choiceSize.y } },
                     { "arrowBasePosition", { layoutSettings_.arrowBasePosition.x, layoutSettings_.arrowBasePosition.y } },
                     { "choiceSpacingY", { layoutSettings_.choiceSpacingY } },
+                    { "choiceHitboxOffset", { layoutSettings_.choiceHitboxOffset.x, layoutSettings_.choiceHitboxOffset.y } },
+                    { "choiceHitboxSize", { layoutSettings_.choiceHitboxSize.x, layoutSettings_.choiceHitboxSize.y } },
                 });
             }
         }
@@ -336,7 +469,12 @@ void GameLevelUpController::DebugDrawImGui() {
 void GameLevelUpController::Reset() {
     active_ = false;
     selection_ = 0;
+    animationState_ = AnimationState::Hidden;
+    slideOffsetX_ = 1280.0f;
+    pendingAction_ = nullptr;
+    navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     currentChoices_.clear();
+    confettiParticles_.clear();
     for (auto& sprite : choiceSprites_) {
         sprite.reset();
     }
@@ -367,15 +505,21 @@ int32_t GameLevelUpController::PickWeightedOptionIndex(const std::vector<LevelUp
 }
 
 void GameLevelUpController::ApplyLayout() {
+    selection_ = (std::clamp)(selection_, 0, (std::max)(0, static_cast<int32_t>(currentChoices_.size()) - 1));
+
+    if (overlaySprite_) {
+        overlaySprite_->SetPosition({ slideOffsetX_, 0.0f });
+    }
+
     if (arrowSprite_) {
-        arrowSprite_->SetPosition({layoutSettings_.arrowBasePosition.x,
+        arrowSprite_->SetPosition({layoutSettings_.arrowBasePosition.x + slideOffsetX_,
                                    layoutSettings_.arrowBasePosition.y + static_cast<float>(selection_) * layoutSettings_.choiceSpacingY});
     }
 
     for (int i = 0; i < 3; ++i) {
         if (!choiceSprites_[i]) {
         } else {
-            choiceSprites_[i]->SetPosition(layoutSettings_.choicePositions[i]);
+            choiceSprites_[i]->SetPosition({ layoutSettings_.choicePositions[i].x + slideOffsetX_, layoutSettings_.choicePositions[i].y });
             choiceSprites_[i]->SetSize(layoutSettings_.choiceSize);
         }
 
@@ -383,8 +527,99 @@ void GameLevelUpController::ApplyLayout() {
             continue;
         }
 
-        iconSprites_[i]->SetPosition(layoutSettings_.choicePositions[i]);
+        iconSprites_[i]->SetPosition({ layoutSettings_.choicePositions[i].x + slideOffsetX_, layoutSettings_.choicePositions[i].y });
         iconSprites_[i]->SetSize(layoutSettings_.choiceSize);
+    }
+}
+
+void GameLevelUpController::UpdateSlideAnimation(float deltaTime) {
+    switch (animationState_) {
+    case AnimationState::Entering:
+        slideOffsetX_ = (std::max)(0.0f, slideOffsetX_ - kLevelUpSlideSpeed * deltaTime);
+        if (slideOffsetX_ <= 0.0f) {
+            slideOffsetX_ = 0.0f;
+            animationState_ = AnimationState::Idle;
+        }
+        ApplyLayout();
+        break;
+
+    case AnimationState::Exiting:
+        slideOffsetX_ -= kLevelUpSlideSpeed * deltaTime;
+        ApplyLayout();
+        break;
+
+    case AnimationState::Idle:
+    case AnimationState::Hidden:
+        break;
+    }
+}
+
+void GameLevelUpController::SpawnConfetti() {
+    confettiParticles_.clear();
+
+    static std::mt19937 mt(std::random_device{}());
+    std::uniform_real_distribution<float> spawnXDist(120.0f, kScreenWidth - 120.0f);
+    std::uniform_real_distribution<float> velocityXDist(-180.0f, 180.0f);
+    std::uniform_real_distribution<float> velocityYDist(-980.0f, -520.0f);
+    std::uniform_real_distribution<float> sizeXDist(8.0f, 18.0f);
+    std::uniform_real_distribution<float> sizeYDist(14.0f, 30.0f);
+    std::uniform_real_distribution<float> rotationDist(0.0f, 6.28318f);
+    std::uniform_real_distribution<float> angularVelocityDist(-7.0f, 7.0f);
+    std::uniform_real_distribution<float> lifetimeDist(0.8f, 1.5f);
+    std::uniform_int_distribution<int> colorIndexDist(0, 5);
+
+    constexpr KamataEngine::Vector4 kColors[] = {
+        {1.0f, 0.35f, 0.35f, 1.0f},
+        {1.0f, 0.82f, 0.22f, 1.0f},
+        {0.35f, 0.86f, 0.52f, 1.0f},
+        {0.30f, 0.72f, 1.0f, 1.0f},
+        {0.98f, 0.52f, 0.88f, 1.0f},
+        {1.0f, 1.0f, 1.0f, 1.0f},
+    };
+
+    const uint32_t whiteTexture = TextureManager::Load("white1x1.png");
+    constexpr int kParticleCount = 28;
+    confettiParticles_.reserve(kParticleCount);
+    for (int i = 0; i < kParticleCount; ++i) {
+        ConfettiParticle particle;
+        particle.position = { spawnXDist(mt), kScreenHeight + 24.0f };
+        particle.velocity = { velocityXDist(mt), velocityYDist(mt) };
+        particle.size = { sizeXDist(mt), sizeYDist(mt) };
+        particle.rotation = rotationDist(mt);
+        particle.angularVelocity = angularVelocityDist(mt);
+        particle.lifetime = lifetimeDist(mt);
+        particle.sprite.reset(Sprite::Create(whiteTexture, particle.position));
+        particle.sprite->SetSize(particle.size);
+        particle.sprite->SetAnchorPoint({ 0.5f, 0.5f });
+        particle.sprite->SetRotation(particle.rotation);
+        particle.sprite->SetColor(kColors[colorIndexDist(mt)]);
+        confettiParticles_.push_back(std::move(particle));
+    }
+}
+
+void GameLevelUpController::UpdateConfetti(float deltaTime) {
+    for (auto it = confettiParticles_.begin(); it != confettiParticles_.end();) {
+        it->age += deltaTime;
+        if (it->age >= it->lifetime) {
+            it = confettiParticles_.erase(it);
+            continue;
+        }
+
+        it->velocity.y += kConfettiGravity * deltaTime;
+        it->position.x += it->velocity.x * deltaTime;
+        it->position.y += it->velocity.y * deltaTime;
+        it->rotation += it->angularVelocity * deltaTime;
+
+        if (it->sprite) {
+            const float alpha = 1.0f - (it->age / it->lifetime);
+            KamataEngine::Vector4 color = it->sprite->GetColor();
+            color.w = alpha;
+            it->sprite->SetColor(color);
+            it->sprite->SetPosition(it->position);
+            it->sprite->SetRotation(it->rotation);
+        }
+
+        ++it;
     }
 }
 

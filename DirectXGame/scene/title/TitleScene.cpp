@@ -11,6 +11,33 @@ namespace {
 
 const char* kTitleLayoutPath = "Resources/data/ui_layout_title.csv";
 
+bool IsPointInRect(const Vector2& point, const Vector2& rectPosition, const Vector2& rectSize) {
+    return point.x >= rectPosition.x && point.x <= rectPosition.x + rectSize.x &&
+           point.y >= rectPosition.y && point.y <= rectPosition.y + rectSize.y;
+}
+
+int32_t GetHoveredTitleMenuIndex(Input* input,
+                                 const Vector2& hitboxPosition,
+                                 const Vector2& hitboxSize,
+                                 float hitboxStepY) {
+    if (!input) {
+        return -1;
+    }
+
+    const Vector2 mousePosition = input->GetMousePosition();
+    for (int32_t i = 0; i < 3; ++i) {
+        const Vector2 rectPosition{
+            hitboxPosition.x,
+            hitboxPosition.y + hitboxStepY * static_cast<float>(i),
+        };
+        if (IsPointInRect(mousePosition, rectPosition, hitboxSize)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 }
 
 void TitleScene::Initialize() {
@@ -18,6 +45,7 @@ void TitleScene::Initialize() {
     dxCommon_ = DirectXCommon::GetInstance();
     input_ = Input::GetInstance();
     audio_ = Audio::GetInstance();
+    InitializeLighting();
 
     // --- タイトル画面用BGMと効果音を読み込み ---
     titleBGMHandle_ = audio_->LoadWave("audio/bgm/title.wav");
@@ -41,10 +69,16 @@ void TitleScene::Initialize() {
 
     // モデル生成（天球モデルを読み込み、背景の空を表現）
     playerModel_.reset(Model::CreateFromOBJ("octopus"));
+    if (lightGroup_) {
+        playerModel_->SetLightGroup(lightGroup_.get());
+    }
 
     // 天球生成
 	skyDome_ = std::make_unique<SkyDome>();
 	skyDome_->Initialize();
+    if (lightGroup_) {
+        skyDome_->SetLightGroup(lightGroup_.get());
+    }
 
     // ワールド変換初期化
     worldTransform_.Initialize();
@@ -83,6 +117,15 @@ void TitleScene::Initialize() {
     if (const auto it = layout.find("cursorStepY"); it != layout.end() && !it->second.empty()) {
         layoutSettings_.cursorStepY = it->second[0];
     }
+        if (const auto it = layout.find("menuHitboxPosition"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.menuHitboxPosition = { it->second[0], it->second[1] };
+        }
+        if (const auto it = layout.find("menuHitboxSize"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.menuHitboxSize = { it->second[0], it->second[1] };
+        }
+        if (const auto it = layout.find("menuHitboxStepY"); it != layout.end() && !it->second.empty()) {
+            layoutSettings_.menuHitboxStepY = it->second[0];
+        }
         if (const auto it = layout.find("guidePosition"); it != layout.end() && it->second.size() >= 2) {
             layoutSettings_.guidePosition = { it->second[0], it->second[1] };
         }
@@ -100,7 +143,26 @@ void TitleScene::Initialize() {
     ApplyLayout();
 }
 
+void TitleScene::InitializeLighting() {
+    lightGroup_.reset(LightGroup::Create());
+    if (!lightGroup_) {
+        return;
+    }
+
+    lightGroup_->SetAmbientColor({0.48f, 0.48f, 0.52f});
+    lightGroup_->SetDirLightActive(0, true);
+    lightGroup_->SetDirLightDir(0, {-0.35f, -1.0f, -0.4f});
+    lightGroup_->SetDirLightColor(0, {1.05f, 1.0f, 0.95f});
+    lightGroup_->SetDirLightActive(1, false);
+    lightGroup_->SetDirLightActive(2, false);
+    lightGroup_->Update();
+}
+
 void TitleScene::Update(float deltaTime) {
+    if (lightGroup_) {
+        lightGroup_->Update();
+    }
+
     // --- 遷移演出更新（常に先頭で処理） ---
     curtain_.Update(deltaTime);
 
@@ -150,8 +212,39 @@ void TitleScene::Update(float deltaTime) {
         return;
     }
 
+    const int32_t hoveredMenuIndex = GetHoveredTitleMenuIndex(
+        input_, layoutSettings_.menuHitboxPosition, layoutSettings_.menuHitboxSize, layoutSettings_.menuHitboxStepY);
+
+    // 選択中デバイスは固定しつつ、明示入力があったときだけ別デバイスへ切り替える。
+    const bool mouseNavigationTriggered = hoveredMenuIndex >= 0 && InputBindings::HasMouseNavigationInput(input_);
+
+    if (InputBindings::IsGamepadMenuUpTriggered(input_) || InputBindings::IsGamepadMenuDownTriggered(input_) ||
+               InputBindings::IsGamepadConfirmTriggered(input_) || InputBindings::IsGamepadCancelTriggered(input_)) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
+    } else if (InputBindings::IsKeyboardMenuUpTriggered(input_) || InputBindings::IsKeyboardMenuDownTriggered(input_) ||
+               InputBindings::IsKeyboardConfirmTriggered(input_) || InputBindings::IsKeyboardCancelTriggered(input_)) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Keyboard;
+    } else if (mouseNavigationTriggered) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
+    }
+
     if (guideActive_) {
-        if (InputBindings::IsCancelTriggered(input_)) {
+        bool closeGuide = false;
+        switch (navigationInputDevice_) {
+        case InputBindings::NavigationInputDevice::Mouse:
+            closeGuide = input_->IsTriggerMouse(0);
+            break;
+        case InputBindings::NavigationInputDevice::Gamepad:
+            closeGuide = InputBindings::IsGamepadCancelTriggered(input_);
+            break;
+        case InputBindings::NavigationInputDevice::Keyboard:
+            closeGuide = InputBindings::IsKeyboardCancelTriggered(input_);
+            break;
+        case InputBindings::NavigationInputDevice::None:
+            break;
+        }
+
+        if (closeGuide) {
             if (decideSEHandle_ != 0) {
                 audio_->PlayWave(decideSEHandle_, false, 1.0f);
             }
@@ -163,11 +256,24 @@ void TitleScene::Update(float deltaTime) {
 
     // --- メニュー選択（W / S） ---
     int32_t previousMenuIndex = menuIndex_;
-    if (InputBindings::IsMenuUpTriggered(input_)) {
-        menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
-    }
-    if (InputBindings::IsMenuDownTriggered(input_)) {
-        menuIndex_ = std::min<int32_t>(2, menuIndex_ + 1);
+    if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Mouse) {
+        if (hoveredMenuIndex >= 0) {
+            menuIndex_ = hoveredMenuIndex;
+        }
+    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Gamepad) {
+        if (InputBindings::IsGamepadMenuUpTriggered(input_)) {
+            menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
+        }
+        if (InputBindings::IsGamepadMenuDownTriggered(input_)) {
+            menuIndex_ = std::min<int32_t>(2, menuIndex_ + 1);
+        }
+    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Keyboard) {
+        if (InputBindings::IsKeyboardMenuUpTriggered(input_)) {
+            menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
+        }
+        if (InputBindings::IsKeyboardMenuDownTriggered(input_)) {
+            menuIndex_ = std::min<int32_t>(2, menuIndex_ + 1);
+        }
     }
     if (menuIndex_ != previousMenuIndex) {
         if (selectSEHandle_ != 0) {
@@ -176,14 +282,26 @@ void TitleScene::Update(float deltaTime) {
     }
 
     // --- カーソル位置更新 ---
-    switch (menuIndex_) {
-    case 0: cursorSprite_->SetPosition(layoutSettings_.cursorBasePosition); break; // Play
-    case 1: cursorSprite_->SetPosition({ layoutSettings_.cursorBasePosition.x, layoutSettings_.cursorBasePosition.y + layoutSettings_.cursorStepY }); break; // Guide
-    case 2: cursorSprite_->SetPosition({ layoutSettings_.cursorBasePosition.x, layoutSettings_.cursorBasePosition.y + layoutSettings_.cursorStepY * 2.0f }); break; // Quit
-    }
+    cursorSprite_->SetPosition({ layoutSettings_.cursorBasePosition.x,
+                                 layoutSettings_.cursorBasePosition.y + layoutSettings_.cursorStepY * static_cast<float>(menuIndex_) });
 
     // --- 決定（SPACE / ENTER） ---
-    if (InputBindings::IsConfirmTriggered(input_)) {
+    bool confirmTriggered = false;
+    switch (navigationInputDevice_) {
+    case InputBindings::NavigationInputDevice::Mouse:
+        confirmTriggered = input_->IsTriggerMouse(0);
+        break;
+    case InputBindings::NavigationInputDevice::Gamepad:
+        confirmTriggered = InputBindings::IsGamepadConfirmTriggered(input_);
+        break;
+    case InputBindings::NavigationInputDevice::Keyboard:
+        confirmTriggered = InputBindings::IsKeyboardConfirmTriggered(input_);
+        break;
+    case InputBindings::NavigationInputDevice::None:
+        break;
+    }
+
+    if (confirmTriggered) {
         if (decideSEHandle_ != 0) {
             audio_->PlayWave(decideSEHandle_, false, 1.0f);
         }
@@ -319,6 +437,18 @@ void TitleScene::DrawDebugUI() {
                 ApplyLayout();
             }
 
+            float menuHitboxPosition[2]{ layoutSettings_.menuHitboxPosition.x, layoutSettings_.menuHitboxPosition.y };
+            if (ImGui::DragFloat2("Menu Hitbox Pos", menuHitboxPosition, 1.0f, -400.0f, 1280.0f)) {
+                layoutSettings_.menuHitboxPosition = { menuHitboxPosition[0], menuHitboxPosition[1] };
+            }
+
+            float menuHitboxSize[2]{ layoutSettings_.menuHitboxSize.x, layoutSettings_.menuHitboxSize.y };
+            if (ImGui::DragFloat2("Menu Hitbox Size", menuHitboxSize, 1.0f, 16.0f, 640.0f)) {
+                layoutSettings_.menuHitboxSize = { menuHitboxSize[0], menuHitboxSize[1] };
+            }
+
+            ImGui::DragFloat("Menu Hitbox Step", &layoutSettings_.menuHitboxStepY, 1.0f, 16.0f, 320.0f);
+
             float guidePosition[2]{ layoutSettings_.guidePosition.x, layoutSettings_.guidePosition.y };
             if (ImGui::DragFloat2("Guide Position", guidePosition, 1.0f, -400.0f, 1280.0f)) {
                 layoutSettings_.guidePosition = { guidePosition[0], guidePosition[1] };
@@ -358,6 +488,9 @@ void TitleScene::DrawDebugUI() {
                     { "cursorBasePosition", { layoutSettings_.cursorBasePosition.x, layoutSettings_.cursorBasePosition.y } },
                     { "cursorSize", { layoutSettings_.cursorSize.x, layoutSettings_.cursorSize.y } },
                     { "cursorStepY", { layoutSettings_.cursorStepY } },
+                    { "menuHitboxPosition", { layoutSettings_.menuHitboxPosition.x, layoutSettings_.menuHitboxPosition.y } },
+                    { "menuHitboxSize", { layoutSettings_.menuHitboxSize.x, layoutSettings_.menuHitboxSize.y } },
+                    { "menuHitboxStepY", { layoutSettings_.menuHitboxStepY } },
                     { "guidePosition", { layoutSettings_.guidePosition.x, layoutSettings_.guidePosition.y } },
                     { "guideSize", { layoutSettings_.guideSize.x, layoutSettings_.guideSize.y } },
                     { "modelBasePosition", {

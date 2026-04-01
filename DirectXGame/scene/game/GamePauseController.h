@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../core/InputBindings.h"
 #include "../../ui/common/UIPanel.h"
 #include "../../ui/common/UILabel.h"
 #include "../../ui/hud/MiniMap.h"
@@ -98,6 +99,11 @@ private:
         KamataEngine::Vector2 buildRowLocalPosition{ 22.0f, 82.0f };
         float buildStepX = 128.0f;
         KamataEngine::Vector2 buildIconSize{ 128.0f, 72.0f };
+        KamataEngine::Vector2 menuHitboxPositions[2]{
+            { 840.0f, 294.0f },
+            { 840.0f, 462.0f },
+        };
+        KamataEngine::Vector2 menuHitboxSize{ 280.0f, 92.0f };
     };
 
     bool active_ = false;
@@ -123,6 +129,7 @@ private:
     static constexpr float kGuideFadeSpeed_ = 4.5f;
     bool goResult_ = false;
     bool debugLayoutEnabled_ = false;
+    InputBindings::NavigationInputDevice navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     LayoutSettings layoutSettings_{};
 
     void ApplyLayout();

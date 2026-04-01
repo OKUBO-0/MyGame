@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/IScene.h"
+#include "../../core/InputBindings.h"
 #include "../../effects/CurtainTransition.h"
 #include "../../world/SkyDome.h"
 #include <KamataEngine.h>
@@ -33,6 +34,8 @@ public:
     bool IsFinished() const override { return finished_; }
 
 private:
+    void InitializeLighting();
+
     enum class GuideTransitionState {
         None,
         FadeIn,
@@ -45,6 +48,9 @@ private:
         KamataEngine::Vector2 cursorBasePosition{ 0.0f, 0.0f };
         KamataEngine::Vector2 cursorSize{ 1280.0f, 720.0f };
         float cursorStepY = 120.0f;
+        KamataEngine::Vector2 menuHitboxPosition{ 145.0f, 340.0f };
+        KamataEngine::Vector2 menuHitboxSize{ 300.0f, 88.0f };
+        float menuHitboxStepY = 128.0f;
         KamataEngine::Vector2 guidePosition{ 0.0f, 0.0f };
         KamataEngine::Vector2 guideSize{ 1280.0f, 720.0f };
         KamataEngine::Vector3 modelBasePosition{ 20.0f, -10.0f, 0.0f };
@@ -80,12 +86,14 @@ private:
     float guideAlpha_ = 0.0f;
     static constexpr float kGuideFadeSpeed_ = 4.5f;
     float animationTime_ = 0.0f;
+    InputBindings::NavigationInputDevice navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     LayoutSettings layoutSettings_{};
 
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Camera camera_;
     std::unique_ptr<KamataEngine::Model> playerModel_;
     std::unique_ptr<SkyDome> skyDome_;
+    std::unique_ptr<KamataEngine::LightGroup> lightGroup_;
 };
 
 } // namespace DirectXGame
