@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace DirectXGame {
@@ -74,6 +75,7 @@ public:
     /// </summary>
     void Draw() const;
     void DebugDrawImGui();
+    void LoadWeightSettings(const std::string& filePath);
 
     /// <summary>
     /// 状態リセット
@@ -137,6 +139,7 @@ private:
     std::unique_ptr<KamataEngine::Sprite> choiceSprites_[3];
     std::unique_ptr<KamataEngine::Sprite> iconSprites_[3];
     std::vector<ConfettiParticle> confettiParticles_;
+    std::unordered_map<std::string, float> weightSettings_;
     bool active_ = false;
     int32_t selection_ = 0;
     AnimationState animationState_ = AnimationState::Hidden;

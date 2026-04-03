@@ -8,6 +8,8 @@ struct ResultData {
     int32_t totalExp = 0;
     int32_t finalLevel = 1;
     int32_t totalKillCount = 0;
+    int32_t survivalSeconds = 0;
+    int32_t totalScore = 0;
 };
 
 struct GameSessionContext {

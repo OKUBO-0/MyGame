@@ -221,9 +221,6 @@ void TitleScene::Update(float deltaTime) {
     if (InputBindings::IsGamepadMenuUpTriggered(input_) || InputBindings::IsGamepadMenuDownTriggered(input_) ||
                InputBindings::IsGamepadConfirmTriggered(input_) || InputBindings::IsGamepadCancelTriggered(input_)) {
         navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
-    } else if (InputBindings::IsKeyboardMenuUpTriggered(input_) || InputBindings::IsKeyboardMenuDownTriggered(input_) ||
-               InputBindings::IsKeyboardConfirmTriggered(input_) || InputBindings::IsKeyboardCancelTriggered(input_)) {
-        navigationInputDevice_ = InputBindings::NavigationInputDevice::Keyboard;
     } else if (mouseNavigationTriggered) {
         navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     }
@@ -235,12 +232,10 @@ void TitleScene::Update(float deltaTime) {
             closeGuide = input_->IsTriggerMouse(0);
             break;
         case InputBindings::NavigationInputDevice::Gamepad:
-            closeGuide = InputBindings::IsGamepadCancelTriggered(input_);
-            break;
-        case InputBindings::NavigationInputDevice::Keyboard:
-            closeGuide = InputBindings::IsKeyboardCancelTriggered(input_);
+            closeGuide = InputBindings::IsUiCancelTriggered(input_);
             break;
         case InputBindings::NavigationInputDevice::None:
+        case InputBindings::NavigationInputDevice::Keyboard:
             break;
         }
 
@@ -267,13 +262,6 @@ void TitleScene::Update(float deltaTime) {
         if (InputBindings::IsGamepadMenuDownTriggered(input_)) {
             menuIndex_ = std::min<int32_t>(2, menuIndex_ + 1);
         }
-    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Keyboard) {
-        if (InputBindings::IsKeyboardMenuUpTriggered(input_)) {
-            menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
-        }
-        if (InputBindings::IsKeyboardMenuDownTriggered(input_)) {
-            menuIndex_ = std::min<int32_t>(2, menuIndex_ + 1);
-        }
     }
     if (menuIndex_ != previousMenuIndex) {
         if (selectSEHandle_ != 0) {
@@ -289,14 +277,12 @@ void TitleScene::Update(float deltaTime) {
     bool confirmTriggered = false;
     switch (navigationInputDevice_) {
     case InputBindings::NavigationInputDevice::Mouse:
-        confirmTriggered = input_->IsTriggerMouse(0);
+        confirmTriggered = hoveredMenuIndex >= 0 && InputBindings::IsMouseConfirmTriggered(input_);
         break;
     case InputBindings::NavigationInputDevice::Gamepad:
         confirmTriggered = InputBindings::IsGamepadConfirmTriggered(input_);
         break;
     case InputBindings::NavigationInputDevice::Keyboard:
-        confirmTriggered = InputBindings::IsKeyboardConfirmTriggered(input_);
-        break;
     case InputBindings::NavigationInputDevice::None:
         break;
     }

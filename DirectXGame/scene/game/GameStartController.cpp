@@ -1,5 +1,6 @@
 #include "GameStartController.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ScreenUtil.h"
 
 using namespace KamataEngine;
 
@@ -8,7 +9,7 @@ namespace DirectXGame {
 void GameStartController::Initialize() {
     uint32_t textureHandle = TextureManager::Load("ui/game/start.png");
     overlaySprite_ = std::unique_ptr<Sprite>(Sprite::Create(textureHandle, {0, 0}));
-    overlaySprite_->SetSize({1280, 720});
+    overlaySprite_->SetSize(ScreenUtil::GetClientSize());
     waiting_ = true;
 }
 
@@ -17,7 +18,7 @@ bool GameStartController::Update(Input* input, Audio* audio, uint32_t startSEHan
         return false;
     }
 
-    if (InputBindings::IsConfirmTriggered(input)) {
+    if (InputBindings::IsUiConfirmTriggered(input)) {
         waiting_ = false;
         if (startSEHandle != 0) {
             audio->PlayWave(startSEHandle, false, 1.0f);

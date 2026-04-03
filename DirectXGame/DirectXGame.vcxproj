@@ -123,6 +123,7 @@
     <ClCompile Include="ui\hud\MiniMap.cpp" />
     <ClCompile Include="player\weapons\Drone.cpp" />
     <ClCompile Include="effects\RippleEffect.cpp" />
+    <ClCompile Include="effects\LightningStrikeEffect.cpp" />
     <ClCompile Include="effects\HitParticle.cpp" />
     <ClCompile Include="player\weapons\NormalBullet.cpp" />
     <ClCompile Include="player\weapons\OrbitBullet.cpp" />
@@ -241,6 +242,7 @@
     <ClInclude Include="player\weapons\Bullet.h" />
     <ClInclude Include="core\GameSessionContext.h" />
     <ClInclude Include="effects\RippleEffect.h" />
+    <ClInclude Include="effects\LightningStrikeEffect.h" />
     <ClInclude Include="effects\HitParticle.h" />
     <ClInclude Include="player\weapons\OrbitBullet.h" />
     <ClInclude Include="player\core\PlayerManager.h" />

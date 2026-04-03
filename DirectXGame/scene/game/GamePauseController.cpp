@@ -1,5 +1,6 @@
 #include "GamePauseController.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ScreenUtil.h"
 #include "EnemyManager.h"
 #include "../../player/core/PlayerManager.h"
 #include "../../ui/common/UILayoutIO.h"
@@ -24,11 +25,11 @@ void GamePauseController::Initialize() {
 
     uint32_t pauseTexture = TextureManager::Load("ui/game/pause.png");
     pauseOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(pauseTexture, {0, 0}));
-    pauseOverlay_->SetSize({1280, 720});
+    pauseOverlay_->SetSize(ScreenUtil::GetClientSize());
 
     uint32_t guideTexture = TextureManager::Load("ui/title/guideUI.png");
     guideSprite_ = std::unique_ptr<Sprite>(Sprite::Create(guideTexture, {0, 0}));
-    guideSprite_->SetSize({1280, 720});
+    guideSprite_->SetSize(ScreenUtil::GetClientSize());
     guideSprite_->SetColor({1.0f, 1.0f, 1.0f, 0.0f});
 
     uint32_t cursorTexture = TextureManager::Load("ui/game/pause_arrow.png");
@@ -43,25 +44,31 @@ void GamePauseController::Initialize() {
     statsPanel_->SetColor({0.0f, 0.0f, 0.0f, 0.72f});
 
     buildNormalLabel_ = std::make_unique<UILabel>();
-    buildNormalLabel_->Initialize(TextureManager::Load("ui/game/lvup_normal_icon.png"), layoutSettings_.buildRowLocalPosition);
+    buildNormalLabel_->Initialize(TextureManager::Load("ui/game/normal/icon.png"), layoutSettings_.buildRowLocalPosition);
     buildNormalLabel_->SetParent(statsPanel_.get());
     buildNormalLabel_->SetSize(layoutSettings_.buildIconSize);
 
     buildOrbitLabel_ = std::make_unique<UILabel>();
-    buildOrbitLabel_->Initialize(TextureManager::Load("ui/game/lvup_orbit_icon.png"),
+    buildOrbitLabel_->Initialize(TextureManager::Load("ui/game/orbit/icon.png"),
                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX, layoutSettings_.buildRowLocalPosition.y});
     buildOrbitLabel_->SetParent(statsPanel_.get());
     buildOrbitLabel_->SetSize(layoutSettings_.buildIconSize);
 
     buildDroneLabel_ = std::make_unique<UILabel>();
-    buildDroneLabel_->Initialize(TextureManager::Load("ui/game/lvup_drone_icon.png"),
+    buildDroneLabel_->Initialize(TextureManager::Load("ui/game/drone/icon.png"),
                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 2.0f, layoutSettings_.buildRowLocalPosition.y});
     buildDroneLabel_->SetParent(statsPanel_.get());
     buildDroneLabel_->SetSize(layoutSettings_.buildIconSize);
 
+    buildLightningLabel_ = std::make_unique<UILabel>();
+    buildLightningLabel_->Initialize(TextureManager::Load("ui/game/lightning/icon.png"),
+                                     {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f, layoutSettings_.buildRowLocalPosition.y});
+    buildLightningLabel_->SetParent(statsPanel_.get());
+    buildLightningLabel_->SetSize(layoutSettings_.buildIconSize);
+
     buildAttackLabel_ = std::make_unique<UILabel>();
     buildAttackLabel_->Initialize(TextureManager::Load("ui/game/lvup_attack_icon.png"),
-                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f, layoutSettings_.buildRowLocalPosition.y});
+                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 4.0f, layoutSettings_.buildRowLocalPosition.y});
     buildAttackLabel_->SetParent(statsPanel_.get());
     buildAttackLabel_->SetSize(layoutSettings_.buildIconSize);
 
@@ -102,13 +109,11 @@ void GamePauseController::Initialize() {
 
 bool GamePauseController::Update(Player* player, const EnemyManager& enemyManager, const PlayerManager& playerManager,
                                  Input* input, Audio* audio, uint32_t toggleSEHandle) {
-    if (!guideActive_ && InputBindings::IsPauseTriggered(input)) {
+    if (!guideActive_ && (InputBindings::IsGamepadPauseTriggered(input) || InputBindings::IsKeyboardPauseTriggered(input))) {
         if (InputBindings::HasMouseNavigationInput(input)) {
             navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
         } else if (InputBindings::IsGamepadPauseTriggered(input)) {
             navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
-        } else if (InputBindings::IsKeyboardPauseTriggered(input)) {
-            navigationInputDevice_ = InputBindings::NavigationInputDevice::Keyboard;
         }
         active_ = !active_;
         guideActive_ = false;
@@ -146,10 +151,6 @@ bool GamePauseController::Update(Player* player, const EnemyManager& enemyManage
                InputBindings::IsGamepadConfirmTriggered(input) || InputBindings::IsGamepadCancelTriggered(input) ||
                InputBindings::IsGamepadPauseTriggered(input)) {
         navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
-    } else if (InputBindings::IsKeyboardMenuUpTriggered(input) || InputBindings::IsKeyboardMenuDownTriggered(input) ||
-               InputBindings::IsKeyboardConfirmTriggered(input) || InputBindings::IsKeyboardCancelTriggered(input) ||
-               InputBindings::IsKeyboardPauseTriggered(input)) {
-        navigationInputDevice_ = InputBindings::NavigationInputDevice::Keyboard;
     } else if (mouseNavigationTriggered) {
         navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     }
@@ -183,12 +184,10 @@ bool GamePauseController::Update(Player* player, const EnemyManager& enemyManage
             closeGuide = input->IsTriggerMouse(0);
             break;
         case InputBindings::NavigationInputDevice::Gamepad:
-            closeGuide = InputBindings::IsGamepadCancelTriggered(input);
-            break;
-        case InputBindings::NavigationInputDevice::Keyboard:
-            closeGuide = InputBindings::IsKeyboardCancelTriggered(input);
+            closeGuide = InputBindings::IsUiCancelTriggered(input);
             break;
         case InputBindings::NavigationInputDevice::None:
+        case InputBindings::NavigationInputDevice::Keyboard:
             break;
         }
 
@@ -218,13 +217,6 @@ bool GamePauseController::Update(Player* player, const EnemyManager& enemyManage
         if (InputBindings::IsGamepadMenuDownTriggered(input)) {
             menuIndex_ = std::min<int32_t>(1, menuIndex_ + 1);
         }
-    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Keyboard) {
-        if (InputBindings::IsKeyboardMenuUpTriggered(input)) {
-            menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
-        }
-        if (InputBindings::IsKeyboardMenuDownTriggered(input)) {
-            menuIndex_ = std::min<int32_t>(1, menuIndex_ + 1);
-        }
     }
     if (menuIndex_ != previousMenuIndex && selectSEHandle_ != 0) {
         audio_->PlayWave(selectSEHandle_, false, 1.0f);
@@ -235,14 +227,12 @@ bool GamePauseController::Update(Player* player, const EnemyManager& enemyManage
     bool confirmTriggered = false;
     switch (navigationInputDevice_) {
     case InputBindings::NavigationInputDevice::Mouse:
-        confirmTriggered = input->IsTriggerMouse(0);
+        confirmTriggered = hoveredMenuIndex >= 0 && InputBindings::IsMouseConfirmTriggered(input);
         break;
     case InputBindings::NavigationInputDevice::Gamepad:
         confirmTriggered = InputBindings::IsGamepadConfirmTriggered(input);
         break;
     case InputBindings::NavigationInputDevice::Keyboard:
-        confirmTriggered = InputBindings::IsKeyboardConfirmTriggered(input);
-        break;
     case InputBindings::NavigationInputDevice::None:
         break;
     }
@@ -276,6 +266,7 @@ void GamePauseController::Draw() const {
         buildNormalLabel_->Draw();
         buildOrbitLabel_->Draw();
         buildDroneLabel_->Draw();
+        buildLightningLabel_->Draw();
         buildAttackLabel_->Draw();
         cursorSprite_->Draw();
     }
@@ -358,7 +349,11 @@ void GamePauseController::ApplyLayout() {
                                     layoutSettings_.buildRowLocalPosition.y });
     buildDroneLabel_->SetSize(layoutSettings_.buildIconSize);
 
-    buildAttackLabel_->SetPosition({ layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f,
+    buildLightningLabel_->SetPosition({ layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f,
+                                        layoutSettings_.buildRowLocalPosition.y });
+    buildLightningLabel_->SetSize(layoutSettings_.buildIconSize);
+
+    buildAttackLabel_->SetPosition({ layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 4.0f,
                                      layoutSettings_.buildRowLocalPosition.y });
     buildAttackLabel_->SetSize(layoutSettings_.buildIconSize);
 }
@@ -369,6 +364,7 @@ void GamePauseController::UpdateStats(const EnemyManager& enemyManager, const Pl
     buildNormalLabel_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
     buildOrbitLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.HasOrbitBullets() ? 1.0f : 0.25f});
     buildDroneLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.HasDrone() ? 1.0f : 0.25f});
+    buildLightningLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.HasLightning() ? 1.0f : 0.25f});
     buildAttackLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.GetAttackPower() > 1 ? 1.0f : 0.4f});
 }
 
@@ -378,6 +374,7 @@ void GamePauseController::UpdateVisibility() {
     buildNormalLabel_->SetVisible(showBuilds);
     buildOrbitLabel_->SetVisible(showBuilds);
     buildDroneLabel_->SetVisible(showBuilds);
+    buildLightningLabel_->SetVisible(showBuilds);
     buildAttackLabel_->SetVisible(showBuilds);
 }
 

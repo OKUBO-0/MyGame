@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include <memory>
+#include <unordered_map>
 #include <KamataEngine.h>
 #include "Enemy.h"
 #include "DeathParticle.h"
@@ -56,6 +57,7 @@ public:
     /// 戻り値: なし
     /// </summary>
     void LoadEnemyTypes(const std::string& filePath);
+    void LoadSpawnSettings(const std::string& filePath);
 
     /// <summary>
     /// 当たり判定処理
@@ -76,20 +78,25 @@ public:
 
     const std::list<std::unique_ptr<ExpOrb>>& GetExpOrbs() const { return expOrbs_; }
     int32_t GetTotalKillCount() const { return totalKillCount_; }
+    std::vector<KamataEngine::Vector3> PickLightningTargets(int32_t count) const;
+    void ApplyLightningDamage(const KamataEngine::Vector3& center, float radius, int32_t damage);
 
 private:
-    static constexpr size_t kMaxActiveEnemies = 84;
+    using EnemyCellMap = std::unordered_map<int64_t, std::vector<Enemy*>>;
+
+    static constexpr size_t kDefaultMaxActiveEnemies = 84;
     static constexpr size_t kMaxDeathParticles = 256;
     static constexpr size_t kMaxHitParticles = 256;
-    static constexpr float kSpawnUnlockInterval = 18.0f;
-    static constexpr float kSpawnDistance = 50.0f;
-    static constexpr float kRespawnDistance = 75.0f;
-    static constexpr float kRespawnRadius = 60.0f;
-    static constexpr float kMinSpawnInterval = 0.85f;
-    static constexpr float kBaseSpawnInterval = 1.9f;
-    static constexpr float kSpawnAcceleration = 0.0075f;
+    static constexpr float kDefaultSpawnUnlockInterval = 18.0f;
+    static constexpr float kDefaultSpawnDistance = 50.0f;
+    static constexpr float kDefaultRespawnDistance = 75.0f;
+    static constexpr float kDefaultRespawnRadius = 60.0f;
+    static constexpr float kDefaultMinSpawnInterval = 0.85f;
+    static constexpr float kDefaultBaseSpawnInterval = 1.9f;
+    static constexpr float kDefaultSpawnAcceleration = 0.0075f;
     static constexpr float kEnemySeparationDistance = 3.2f;
     static constexpr float kEnemySeparationStrength = 1.1f;
+    static constexpr float kSpatialCellSize = 8.0f;
     static constexpr float kNormalBulletHitDistanceSq = 4.0f;
     static constexpr float kOrbitBulletHitDistanceSq = 25.0f;
     static constexpr float kPlayerContactDistance = 2.5f;
@@ -114,14 +121,19 @@ private:
     void RelocateFarEnemies();
     void UpdateEffects(float deltaTime);
     void ResolveEnemySeparation();
+    static int32_t ToCellCoord(float value);
+    static int64_t MakeCellKey(int32_t cellX, int32_t cellZ);
+    void BuildActiveEnemySpatialMap(EnemyCellMap& outMap, std::vector<Enemy*>& activeEnemies) const;
+    void CollectNearbyEnemies(const EnemyCellMap& spatialMap, const KamataEngine::Vector3& center, float radius,
+                              std::vector<Enemy*>& outEnemies) const;
     void SpawnDeathEffects(const Enemy& enemy);
     void SpawnHitParticles(const KamataEngine::Vector3& position);
     bool TryHandleBulletHit(Enemy& enemy, const KamataEngine::Vector3& impactPosition,
                             int32_t damage, float knockStrength);
-    void CheckNormalBulletCollisions(PlayerManager& playerManager);
-    void CheckOrbitBulletCollisions(PlayerManager& playerManager);
-    void CheckDroneBulletCollisions(PlayerManager& playerManager);
-    void CheckPlayerCollisions(Player& player, PlayerManager& playerManager);
+    void CheckNormalBulletCollisions(PlayerManager& playerManager, const EnemyCellMap& spatialMap);
+    void CheckOrbitBulletCollisions(PlayerManager& playerManager, const EnemyCellMap& spatialMap);
+    void CheckDroneBulletCollisions(PlayerManager& playerManager, const EnemyCellMap& spatialMap);
+    void CheckPlayerCollisions(Player& player, PlayerManager& playerManager, const EnemyCellMap& spatialMap);
 
 private:
     std::vector<std::unique_ptr<Enemy>> enemies_;
@@ -142,7 +154,15 @@ private:
     // 無限湧き用
     float elapsedTime_ = 0.0f;
     float spawnTimer_ = 0.0f;
-    float spawnInterval_ = kBaseSpawnInterval;
+    float spawnInterval_ = kDefaultBaseSpawnInterval;
+    size_t maxActiveEnemies_ = kDefaultMaxActiveEnemies;
+    float spawnUnlockInterval_ = kDefaultSpawnUnlockInterval;
+    float spawnDistance_ = kDefaultSpawnDistance;
+    float respawnDistance_ = kDefaultRespawnDistance;
+    float respawnRadius_ = kDefaultRespawnRadius;
+    float minSpawnInterval_ = kDefaultMinSpawnInterval;
+    float baseSpawnInterval_ = kDefaultBaseSpawnInterval;
+    float spawnAcceleration_ = kDefaultSpawnAcceleration;
     int32_t totalKillCount_ = 0;
 };
 

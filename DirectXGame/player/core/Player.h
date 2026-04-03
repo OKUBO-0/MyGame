@@ -28,7 +28,7 @@ private:
     KamataEngine::Input* input_ = nullptr;
     KamataEngine::WorldTransform worldTransform_;
     KamataEngine::Camera camera_;
-    std::unique_ptr<KamataEngine::Model> playerModel_;
+    std::shared_ptr<KamataEngine::Model> playerModel_;
 
     bool visible_ = true;
     float effectTimer_ = 0.0f;

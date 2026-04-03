@@ -117,6 +117,7 @@ private:
     std::unique_ptr<UILabel> buildNormalLabel_;
     std::unique_ptr<UILabel> buildOrbitLabel_;
     std::unique_ptr<UILabel> buildDroneLabel_;
+    std::unique_ptr<UILabel> buildLightningLabel_;
     std::unique_ptr<UILabel> buildAttackLabel_;
 
     uint32_t selectSEHandle_ = 0;

@@ -37,7 +37,7 @@ private:
     void RefreshLayout();
     void UpdateBounds();
 
-    static constexpr int32_t kDigitCount = 5; ///< 最大表示桁数
+    static constexpr int32_t kDigitCount = 6; ///< 最大表示桁数
     std::array<std::unique_ptr<KamataEngine::Sprite>, kDigitCount> sprite_{}; ///< 各桁ごとのスプライト
     uint32_t textureHandle_ = 0;                              ///< 数字テクスチャのハンドル
     KamataEngine::Vector2 digitSize_ = { 24.0f, 32.0f };        ///< 各数字スプライトのサイズ

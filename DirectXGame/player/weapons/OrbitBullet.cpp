@@ -4,14 +4,17 @@ using namespace KamataEngine;
 
 namespace DirectXGame {
 
-void OrbitBullet::Initialize(const Vector3& center, float radius, float angle, float angularSpeed) {
+void OrbitBullet::Initialize(const Vector3& center, float radius, float angle, float angularSpeed,
+                             float scale, float hitInterval) {
     Bullet::Initialize(center);
 
     orbitRadius_ = radius;
     angle_ = angle;
     angularSpeed_ = angularSpeed;
+    hitInterval_ = hitInterval;
 
     model_ = ModelCache::Get("bullet");
+    worldTransform_.scale_ = { scale, scale, scale };
 
     worldTransform_.translation_ = {
         center.x + std::cos(angle_) * orbitRadius_,
@@ -53,7 +56,7 @@ bool OrbitBullet::CanHitEnemy(void* enemyPtr) {
 }
 
 void OrbitBullet::RegisterHit(void* enemyPtr) {
-    hitCooldowns_[enemyPtr] = kHitInterval;
+    hitCooldowns_[enemyPtr] = hitInterval_;
 }
 
 } // namespace DirectXGame

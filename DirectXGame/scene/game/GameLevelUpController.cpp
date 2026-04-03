@@ -1,10 +1,14 @@
 #include "GameLevelUpController.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ScreenUtil.h"
 #include "../../player/core/PlayerManager.h"
 #include "../../ui/common/UILayoutIO.h"
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <random>
+#include <sstream>
 
 using namespace KamataEngine;
 
@@ -13,46 +17,125 @@ namespace DirectXGame {
 namespace {
 
 const char* kLevelUpLayoutPath = "Resources/data/ui_layout_levelup.csv";
+const char* kLevelUpWeightPath = "Resources/data/levelupWeights.csv";
 constexpr float kLevelUpSlideSpeed = 4200.0f;
 constexpr float kConfettiGravity = 980.0f;
-constexpr float kScreenWidth = 1280.0f;
-constexpr float kScreenHeight = 720.0f;
 
-std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption>& baseOptions, PlayerManager* playerManager) {
+float GetWeightSetting(const std::unordered_map<std::string, float>& settings, const std::string& key, float fallback) {
+    if (const auto it = settings.find(key); it != settings.end()) {
+        return it->second;
+    }
+    return fallback;
+}
+
+uint32_t LoadTextureWithFallback(const std::string& preferredPath, const char* fallbackPath) {
+    if (std::filesystem::exists(preferredPath)) {
+        return TextureManager::Load(preferredPath.c_str());
+    }
+    return TextureManager::Load(fallbackPath);
+}
+
+uint32_t GetNormalLevelUpTexture(PlayerManager* playerManager) {
+    const int32_t nextLevel =
+        (std::min)(playerManager->GetNormalBulletLevel() + 1, PlayerManager::kNormalBulletMaxLevel);
+    const std::string levelPath = "Resources/ui/game/normal/lv" + std::to_string(nextLevel) + ".png";
+    return LoadTextureWithFallback(levelPath, "ui/game/normal/choice.png");
+}
+
+uint32_t GetOrbitLevelUpTexture(PlayerManager* playerManager) {
+    if (!playerManager->HasOrbitBullets()) {
+        return TextureManager::Load("ui/game/orbit/add.png");
+    }
+
+    const int32_t nextLevel =
+        (std::min)(playerManager->GetOrbitBulletLevel() + 1, PlayerManager::kOrbitBulletMaxLevel);
+    const std::string levelPath = "Resources/ui/game/orbit/lv" + std::to_string(nextLevel) + ".png";
+    return LoadTextureWithFallback(levelPath, "ui/game/orbit/upgrade.png");
+}
+
+uint32_t GetDroneLevelUpTexture(PlayerManager* playerManager) {
+    if (!playerManager->HasDrone()) {
+        return TextureManager::Load("ui/game/drone/add.png");
+    }
+
+    const int32_t nextLevel = (std::min)(playerManager->GetDroneLevel() + 1, PlayerManager::kDroneMaxLevel);
+    const std::string levelPath = "Resources/ui/game/drone/lv" + std::to_string(nextLevel) + ".png";
+    return LoadTextureWithFallback(levelPath, "ui/game/drone/upgrade.png");
+}
+
+uint32_t GetLightningLevelUpTexture(PlayerManager* playerManager) {
+    if (!playerManager->HasLightning()) {
+        return TextureManager::Load("ui/game/lightning/add.png");
+    }
+
+    const int32_t nextLevel =
+        (std::min)(playerManager->GetLightningLevel() + 1, PlayerManager::kLightningMaxLevel);
+    const std::string levelPath = "Resources/ui/game/lightning/lv" + std::to_string(nextLevel) + ".png";
+    return LoadTextureWithFallback(levelPath, "ui/game/lightning/upgrade.png");
+}
+
+std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption>& baseOptions, PlayerManager* playerManager,
+                                                 const std::unordered_map<std::string, float>& weightSettings) {
     std::vector<LevelUpOption> candidates;
     candidates.reserve(baseOptions.size());
 
     for (const auto& option : baseOptions) {
         LevelUpOption adjusted = option;
 
-        if (option.name == "周囲弾強化" && !playerManager->HasOrbitBullets()) {
-            adjusted.weight = 2.2f;
-        } else if (option.name == "通常弾強化") {
-            const float interval = playerManager->GetNormalBulletInterval();
-            if (interval <= 0.24f) {
-                adjusted.weight = 0.35f;
-            } else if (interval <= 0.32f) {
-                adjusted.weight = 0.7f;
-            } else if (interval <= 0.45f) {
-                adjusted.weight = 1.1f;
+        if (option.name == "周囲弾強化") {
+            if (playerManager->IsOrbitBulletMaxLevel()) {
+                continue;
             }
-        } else if (option.name == "ドローン" && !playerManager->HasDrone()) {
-            adjusted.weight = 1.8f;
+            if (!playerManager->HasOrbitBullets()) {
+                adjusted.weight = GetWeightSetting(weightSettings, "orbit.unlockWeight", 2.2f);
+            }
+        } else if (option.name == "通常弾強化") {
+            if (playerManager->IsNormalBulletMaxLevel()) {
+                continue;
+            }
+            const float interval = playerManager->GetNormalBulletInterval();
+            if (playerManager->GetNormalBulletLevel() >= 7) {
+                adjusted.weight = GetWeightSetting(weightSettings, "normal.highLevelWeight", 0.35f);
+            } else if (interval <= 0.24f) {
+                adjusted.weight = GetWeightSetting(weightSettings, "normal.fastestIntervalWeight", 0.5f);
+            } else if (interval <= 0.32f) {
+                adjusted.weight = GetWeightSetting(weightSettings, "normal.fastIntervalWeight", 0.7f);
+            } else if (interval <= 0.45f) {
+                adjusted.weight = GetWeightSetting(weightSettings, "normal.midIntervalWeight", 1.1f);
+            }
+        } else if (option.name == "ドローン") {
+            if (playerManager->IsDroneMaxLevel()) {
+                continue;
+            }
+            if (!playerManager->HasDrone()) {
+                adjusted.weight = GetWeightSetting(weightSettings, "drone.unlockWeight", 1.8f);
+            }
+        } else if (option.name == "ライトニング") {
+            if (playerManager->IsLightningMaxLevel()) {
+                continue;
+            }
+            if (!playerManager->HasLightning()) {
+                adjusted.weight = GetWeightSetting(weightSettings, "lightning.unlockWeight", 1.4f);
+            }
         } else if (option.name == "攻撃力 +1") {
             const int attackPower = playerManager->GetAttackPower();
-            adjusted.weight = attackPower >= 6 ? 0.75f : (attackPower >= 4 ? 1.1f : 1.5f);
+            adjusted.weight = attackPower >= 6 ? GetWeightSetting(weightSettings, "attack.highWeight", 0.75f) :
+                              (attackPower >= 4 ? GetWeightSetting(weightSettings, "attack.midWeight", 1.1f) :
+                                                  GetWeightSetting(weightSettings, "attack.lowWeight", 1.5f));
         } else if (option.name == "最大HP増加") {
             if (playerManager->GetMaxHP() >= 6) {
                 continue;
             }
 
-            adjusted.weight = playerManager->GetMaxHP() <= 4 ? 1.5f : 0.85f;
+            adjusted.weight = playerManager->GetMaxHP() <= 4 ? GetWeightSetting(weightSettings, "maxHp.lowWeight", 1.5f) :
+                               GetWeightSetting(weightSettings, "maxHp.highWeight", 0.85f);
         } else if (option.name == "移動速度アップ") {
             if (playerManager->GetMoveSpeedLevel() >= 5) {
                 continue;
             }
 
-            adjusted.weight = playerManager->GetMoveSpeedLevel() == 0 ? 1.5f : 1.0f;
+            adjusted.weight = playerManager->GetMoveSpeedLevel() == 0 ? GetWeightSetting(weightSettings, "moveSpeed.firstWeight", 1.5f) :
+                               GetWeightSetting(weightSettings, "moveSpeed.repeatWeight", 1.0f);
         } else if (option.name == "HP回復") {
             if (playerManager->GetHP() >= playerManager->GetMaxHP()) {
                 continue;
@@ -60,7 +143,9 @@ std::vector<LevelUpOption> BuildCandidateOptions(const std::vector<LevelUpOption
 
             const float hpRatio =
                 static_cast<float>(playerManager->GetHP()) / static_cast<float>((std::max)(1, playerManager->GetMaxHP()));
-            adjusted.weight = hpRatio <= 0.34f ? 2.5f : (hpRatio <= 0.67f ? 1.4f : 0.7f);
+            adjusted.weight = hpRatio <= 0.34f ? GetWeightSetting(weightSettings, "heal.lowHpWeight", 2.5f) :
+                               (hpRatio <= 0.67f ? GetWeightSetting(weightSettings, "heal.midHpWeight", 1.4f) :
+                                                   GetWeightSetting(weightSettings, "heal.highHpWeight", 0.7f));
         }
 
         candidates.push_back(std::move(adjusted));
@@ -99,7 +184,7 @@ int32_t GetHoveredChoiceIndex(Input* input,
 void GameLevelUpController::Initialize() {
     uint32_t overlayTexture = TextureManager::Load("ui/game/levelup.png");
     overlaySprite_ = std::unique_ptr<Sprite>(Sprite::Create(overlayTexture, {0, 0}));
-    overlaySprite_->SetSize({1280.0f, 720.0f});
+    overlaySprite_->SetSize(ScreenUtil::GetClientSize());
 
     uint32_t arrowTexture = TextureManager::Load("ui/game/arrow.png");
     arrowSprite_ = std::unique_ptr<Sprite>(Sprite::Create(arrowTexture, {0, 0}));
@@ -127,7 +212,36 @@ void GameLevelUpController::Initialize() {
             layoutSettings_.choiceHitboxSize = { it->second[0], it->second[1] };
         }
     }
+    LoadWeightSettings(kLevelUpWeightPath);
     ApplyLayout();
+}
+
+void GameLevelUpController::LoadWeightSettings(const std::string& filePath) {
+    weightSettings_.clear();
+
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        OutputDebugStringA(("LevelUp weight settings 読み込み失敗: " + filePath + "\n").c_str());
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        std::stringstream ss(line);
+        std::string key;
+        std::string value;
+        std::getline(ss, key, ',');
+        std::getline(ss, value, ',');
+        if (key.empty() || value.empty()) {
+            continue;
+        }
+
+        weightSettings_[key] = std::stof(value);
+    }
 }
 
 void GameLevelUpController::RegisterDefaultOptions() {
@@ -136,8 +250,8 @@ void GameLevelUpController::RegisterDefaultOptions() {
     options_.push_back({
         "通常弾強化",
         [](PlayerManager* pm) { pm->UpgradeNormalBullets(); },
-        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_normal.png"); },
-        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_normal_icon.png"); },
+        [](PlayerManager* pm) { return GetNormalLevelUpTexture(pm); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/normal/icon.png"); },
         2.0f
     });
 
@@ -150,13 +264,8 @@ void GameLevelUpController::RegisterDefaultOptions() {
                 pm->UpgradeOrbitBullets();
             }
         },
-        [](PlayerManager* pm) {
-            if (!pm->HasOrbitBullets()) {
-                return TextureManager::Load("ui/game/lvup_orbit_add.png");
-            }
-            return TextureManager::Load("ui/game/lvup_orbit_upgrade.png");
-        },
-        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_orbit_icon.png"); },
+        [](PlayerManager* pm) { return GetOrbitLevelUpTexture(pm); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/orbit/icon.png"); },
         1.0f
     });
 
@@ -169,14 +278,23 @@ void GameLevelUpController::RegisterDefaultOptions() {
                 pm->UpgradeDrone();
             }
         },
-        [](PlayerManager* pm) {
-            if (!pm->HasDrone()) {
-                return TextureManager::Load("ui/game/lvup_drone_add.png");
-            }
-            return TextureManager::Load("ui/game/lvup_drone_upgrade.png");
-        },
-        [](PlayerManager*) { return TextureManager::Load("ui/game/lvup_drone_icon.png"); },
+        [](PlayerManager* pm) { return GetDroneLevelUpTexture(pm); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/drone/icon.png"); },
         0.5f
+    });
+
+    options_.push_back({
+        "ライトニング",
+        [](PlayerManager* pm) {
+            if (!pm->HasLightning()) {
+                pm->AddLightning();
+            } else {
+                pm->UpgradeLightning();
+            }
+        },
+        [](PlayerManager* pm) { return GetLightningLevelUpTexture(pm); },
+        [](PlayerManager*) { return TextureManager::Load("ui/game/lightning/icon.png"); },
+        0.7f
     });
 
     options_.push_back({
@@ -222,7 +340,7 @@ bool GameLevelUpController::TryStart(PlayerManager* playerManager, Audio* audio,
     }
 
     currentChoices_.clear();
-    const std::vector<LevelUpOption> candidateOptions = BuildCandidateOptions(options_, playerManager);
+    const std::vector<LevelUpOption> candidateOptions = BuildCandidateOptions(options_, playerManager, weightSettings_);
     if (candidateOptions.empty()) {
         return false;
     }
@@ -263,7 +381,7 @@ bool GameLevelUpController::TryStart(PlayerManager* playerManager, Audio* audio,
     active_ = true;
     selection_ = 0;
     animationState_ = AnimationState::Entering;
-    slideOffsetX_ = 1280.0f;
+    slideOffsetX_ = ScreenUtil::GetClientSize().x;
     pendingAction_ = nullptr;
     navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     SpawnConfetti();
@@ -287,7 +405,7 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
     UpdateConfetti(deltaTime);
     UpdateSlideAnimation(deltaTime);
     if (animationState_ == AnimationState::Exiting) {
-        if (slideOffsetX_ <= -1280.0f) {
+        if (slideOffsetX_ <= -ScreenUtil::GetClientSize().x) {
             if (pendingAction_) {
                 pendingAction_(playerManager);
                 pendingAction_ = nullptr;
@@ -319,9 +437,6 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
     if (InputBindings::IsGamepadMenuUpTriggered(input) || InputBindings::IsGamepadMenuDownTriggered(input) ||
                InputBindings::IsGamepadConfirmTriggered(input) || InputBindings::IsGamepadCancelTriggered(input)) {
         navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
-    } else if (InputBindings::IsKeyboardMenuUpTriggered(input) || InputBindings::IsKeyboardMenuDownTriggered(input) ||
-               InputBindings::IsKeyboardConfirmTriggered(input) || InputBindings::IsKeyboardCancelTriggered(input)) {
-        navigationInputDevice_ = InputBindings::NavigationInputDevice::Keyboard;
     } else if (mouseNavigationTriggered) {
         navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     }
@@ -337,12 +452,6 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
         } else if (InputBindings::IsGamepadMenuDownTriggered(input)) {
             selection_ = (std::min)(maxSelectionIndex, selection_ + 1);
         }
-    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Keyboard) {
-        if (InputBindings::IsKeyboardMenuUpTriggered(input)) {
-            selection_ = std::max<int32_t>(0, selection_ - 1);
-        } else if (InputBindings::IsKeyboardMenuDownTriggered(input)) {
-            selection_ = (std::min)(maxSelectionIndex, selection_ + 1);
-        }
     }
 
     if (selection_ != previousSelection && moveSEHandle != 0) {
@@ -355,14 +464,12 @@ bool GameLevelUpController::Update(PlayerManager* playerManager, Input* input, A
     bool confirmTriggered = false;
     switch (navigationInputDevice_) {
     case InputBindings::NavigationInputDevice::Mouse:
-        confirmTriggered = input->IsTriggerMouse(0);
+        confirmTriggered = hoveredChoiceIndex >= 0 && InputBindings::IsMouseConfirmTriggered(input);
         break;
     case InputBindings::NavigationInputDevice::Gamepad:
         confirmTriggered = InputBindings::IsGamepadConfirmTriggered(input);
         break;
     case InputBindings::NavigationInputDevice::Keyboard:
-        confirmTriggered = InputBindings::IsKeyboardConfirmTriggered(input);
-        break;
     case InputBindings::NavigationInputDevice::None:
         break;
     }
@@ -470,7 +577,7 @@ void GameLevelUpController::Reset() {
     active_ = false;
     selection_ = 0;
     animationState_ = AnimationState::Hidden;
-    slideOffsetX_ = 1280.0f;
+    slideOffsetX_ = ScreenUtil::GetClientSize().x;
     pendingAction_ = nullptr;
     navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     currentChoices_.clear();
@@ -558,7 +665,10 @@ void GameLevelUpController::SpawnConfetti() {
     confettiParticles_.clear();
 
     static std::mt19937 mt(std::random_device{}());
-    std::uniform_real_distribution<float> spawnXDist(120.0f, kScreenWidth - 120.0f);
+    const Vector2 clientSize = ScreenUtil::GetClientSize();
+    const float screenWidth = (std::max)(clientSize.x, 240.0f);
+    const float screenHeight = (std::max)(clientSize.y, 240.0f);
+    std::uniform_real_distribution<float> spawnXDist(120.0f, screenWidth - 120.0f);
     std::uniform_real_distribution<float> velocityXDist(-180.0f, 180.0f);
     std::uniform_real_distribution<float> velocityYDist(-980.0f, -520.0f);
     std::uniform_real_distribution<float> sizeXDist(8.0f, 18.0f);
@@ -582,7 +692,7 @@ void GameLevelUpController::SpawnConfetti() {
     confettiParticles_.reserve(kParticleCount);
     for (int i = 0; i < kParticleCount; ++i) {
         ConfettiParticle particle;
-        particle.position = { spawnXDist(mt), kScreenHeight + 24.0f };
+        particle.position = { spawnXDist(mt), screenHeight + 24.0f };
         particle.velocity = { velocityXDist(mt), velocityYDist(mt) };
         particle.size = { sizeXDist(mt), sizeYDist(mt) };
         particle.rotation = rotationDist(mt);
