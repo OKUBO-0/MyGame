@@ -6,20 +6,6 @@ using namespace KamataEngine;
 
 namespace DirectXGame {
 
-namespace {
-
-int32_t CalculateResultTotalScore(int32_t totalExp, int32_t finalLevel, int32_t totalKillCount, int32_t survivalSeconds) {
-    constexpr int32_t kLevelScoreWeight = 100;
-    constexpr int32_t kKillScoreWeight = 25;
-    constexpr int32_t kSurvivalScoreWeight = 5;
-    return totalExp +
-           finalLevel * kLevelScoreWeight +
-           totalKillCount * kKillScoreWeight +
-           survivalSeconds * kSurvivalScoreWeight;
-}
-
-}
-
 void GameScene::Initialize() {
     dxCommon_ = DirectXCommon::GetInstance();
     input_ = Input::GetInstance();
@@ -348,13 +334,9 @@ bool GameScene::FinalizeResultTransition() {
         const int32_t totalExp = playerManager_->GetTotalEXP();
         const int32_t finalLevel = playerManager_->GetLevel();
         const int32_t totalKillCount = enemyManager_.GetTotalKillCount();
-        const int32_t survivalSeconds = static_cast<int32_t>(gameTime_);
         sessionContext_->resultData.totalExp = totalExp;
         sessionContext_->resultData.finalLevel = finalLevel;
         sessionContext_->resultData.totalKillCount = totalKillCount;
-        sessionContext_->resultData.survivalSeconds = survivalSeconds;
-        sessionContext_->resultData.totalScore =
-            CalculateResultTotalScore(totalExp, finalLevel, totalKillCount, survivalSeconds);
     }
     finished_ = true;
     return true;
