@@ -1,5 +1,6 @@
 #include "KeyUI.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ScreenUtil.h"
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -14,12 +15,13 @@ void KeyUI::Initialize() {
 	keyESC_ = std::unique_ptr<Sprite>(Sprite::Create(TextureManager::Load("ui/controls/key_esc.png"), {0, 0}));
 
 	// 全て同じサイズで表示
-	keyW_->SetSize({1280, 720});
-	keyA_->SetSize({1280, 720});
-	keyS_->SetSize({1280, 720});
-	keyD_->SetSize({1280, 720});
+	const Vector2 clientSize = ScreenUtil::GetClientSize();
+	keyW_->SetSize(clientSize);
+	keyA_->SetSize(clientSize);
+	keyS_->SetSize(clientSize);
+	keyD_->SetSize(clientSize);
 
-	keyESC_->SetSize({1280, 720});
+	keyESC_->SetSize(clientSize);
 }
 
 void KeyUI::Update(Input* input) {

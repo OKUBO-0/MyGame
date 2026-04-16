@@ -6,6 +6,13 @@
 
 namespace DirectXGame::InputBindings {
 
+enum class NavigationInputDevice {
+    None,
+    Mouse,
+    Keyboard,
+    Gamepad,
+};
+
 namespace Detail {
 
 inline float ClampAxis(float value) {
@@ -100,7 +107,8 @@ inline KamataEngine::Vector2 GetMoveVector(KamataEngine::Input* input) {
 
     XINPUT_STATE xState{};
     XINPUT_STATE xPrev{};
-    if (Detail::GetFirstXInputState(input, xState, xPrev)) {
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
         constexpr float kStickDeadZone = 0.22f;
         float stickX = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbLX);
         float stickY = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbLY);
@@ -118,7 +126,7 @@ inline KamataEngine::Vector2 GetMoveVector(KamataEngine::Input* input) {
 
     DIJOYSTATE2 dState{};
     DIJOYSTATE2 dPrev{};
-    if (Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
         constexpr float kStickDeadZone = 0.22f;
         float stickX = Detail::NormalizeDirectInputAxis(dState.lX);
         float stickY = -Detail::NormalizeDirectInputAxis(dState.lY);
@@ -151,7 +159,8 @@ inline bool GetAimVector(KamataEngine::Input* input, KamataEngine::Vector2& outA
 
     XINPUT_STATE xState{};
     XINPUT_STATE xPrev{};
-    if (Detail::GetFirstXInputState(input, xState, xPrev)) {
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
         constexpr float kAimDeadZone = 0.25f;
         const float x = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbRX);
         const float y = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbRY);
@@ -163,7 +172,7 @@ inline bool GetAimVector(KamataEngine::Input* input, KamataEngine::Vector2& outA
 
     DIJOYSTATE2 dState{};
     DIJOYSTATE2 dPrev{};
-    if (Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
         constexpr float kAimDeadZone = 0.25f;
         const float x = Detail::NormalizeDirectInputAxis(dState.lRx);
         const float y = -Detail::NormalizeDirectInputAxis(dState.lRy);
@@ -187,7 +196,8 @@ inline bool IsMenuUpTriggered(KamataEngine::Input* input) {
 
     XINPUT_STATE xState{};
     XINPUT_STATE xPrev{};
-    if (Detail::GetFirstXInputState(input, xState, xPrev)) {
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
         const bool currentDpad = (xState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
         const bool previousDpad = (xPrev.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
         const bool currentStick = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbLY) >= 0.6f;
@@ -199,7 +209,7 @@ inline bool IsMenuUpTriggered(KamataEngine::Input* input) {
 
     DIJOYSTATE2 dState{};
     DIJOYSTATE2 dPrev{};
-    if (Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
         const bool currentPov = Detail::IsDirectInputPovPressed(dState, 0);
         const bool previousPov = Detail::IsDirectInputPovPressed(dPrev, 0);
         const bool currentStick = -Detail::NormalizeDirectInputAxis(dState.lY) >= 0.6f;
@@ -210,6 +220,10 @@ inline bool IsMenuUpTriggered(KamataEngine::Input* input) {
     }
 
     return false;
+}
+
+inline bool IsKeyboardMenuUpTriggered(KamataEngine::Input* input) {
+    return input && input->TriggerKey(DIK_W);
 }
 
 inline bool IsMenuDownTriggered(KamataEngine::Input* input) {
@@ -223,7 +237,8 @@ inline bool IsMenuDownTriggered(KamataEngine::Input* input) {
 
     XINPUT_STATE xState{};
     XINPUT_STATE xPrev{};
-    if (Detail::GetFirstXInputState(input, xState, xPrev)) {
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
         const bool currentDpad = (xState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
         const bool previousDpad = (xPrev.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
         const bool currentStick = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbLY) <= -0.6f;
@@ -235,7 +250,7 @@ inline bool IsMenuDownTriggered(KamataEngine::Input* input) {
 
     DIJOYSTATE2 dState{};
     DIJOYSTATE2 dPrev{};
-    if (Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
         const bool currentPov = Detail::IsDirectInputPovPressed(dState, 18000);
         const bool previousPov = Detail::IsDirectInputPovPressed(dPrev, 18000);
         const bool currentStick = -Detail::NormalizeDirectInputAxis(dState.lY) <= -0.6f;
@@ -248,9 +263,17 @@ inline bool IsMenuDownTriggered(KamataEngine::Input* input) {
     return false;
 }
 
+inline bool IsKeyboardMenuDownTriggered(KamataEngine::Input* input) {
+    return input && input->TriggerKey(DIK_S);
+}
+
 inline bool IsConfirmTriggered(KamataEngine::Input* input) {
     if (!input) {
         return false;
+    }
+
+    if (input->IsTriggerMouse(0)) {
+        return true;
     }
 
     if (input->TriggerKey(DIK_SPACE) || input->TriggerKey(DIK_RETURN)) {
@@ -259,7 +282,8 @@ inline bool IsConfirmTriggered(KamataEngine::Input* input) {
 
     XINPUT_STATE xState{};
     XINPUT_STATE xPrev{};
-    if (Detail::GetFirstXInputState(input, xState, xPrev)) {
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
         const WORD current = xState.Gamepad.wButtons;
         const WORD previous = xPrev.Gamepad.wButtons;
         const WORD mask = XINPUT_GAMEPAD_A;
@@ -270,7 +294,7 @@ inline bool IsConfirmTriggered(KamataEngine::Input* input) {
 
     DIJOYSTATE2 dState{};
     DIJOYSTATE2 dPrev{};
-    if (Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
         for (int buttonIndex : {0}) {
             if (Detail::IsDirectInputButtonPressed(dState, buttonIndex) &&
                 !Detail::IsDirectInputButtonPressed(dPrev, buttonIndex)) {
@@ -280,6 +304,10 @@ inline bool IsConfirmTriggered(KamataEngine::Input* input) {
     }
 
     return false;
+}
+
+inline bool IsKeyboardConfirmTriggered(KamataEngine::Input* input) {
+    return input && (input->TriggerKey(DIK_SPACE) || input->TriggerKey(DIK_RETURN));
 }
 
 inline bool IsCancelTriggered(KamataEngine::Input* input) {
@@ -293,7 +321,8 @@ inline bool IsCancelTriggered(KamataEngine::Input* input) {
 
     XINPUT_STATE xState{};
     XINPUT_STATE xPrev{};
-    if (Detail::GetFirstXInputState(input, xState, xPrev)) {
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
         const WORD current = xState.Gamepad.wButtons;
         const WORD previous = xPrev.Gamepad.wButtons;
         const WORD mask = XINPUT_GAMEPAD_B | XINPUT_GAMEPAD_BACK;
@@ -304,7 +333,7 @@ inline bool IsCancelTriggered(KamataEngine::Input* input) {
 
     DIJOYSTATE2 dState{};
     DIJOYSTATE2 dPrev{};
-    if (Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
         for (int buttonIndex : {1, 6}) {
             if (Detail::IsDirectInputButtonPressed(dState, buttonIndex) &&
                 !Detail::IsDirectInputButtonPressed(dPrev, buttonIndex)) {
@@ -316,6 +345,10 @@ inline bool IsCancelTriggered(KamataEngine::Input* input) {
     return false;
 }
 
+inline bool IsKeyboardCancelTriggered(KamataEngine::Input* input) {
+    return input && input->TriggerKey(DIK_ESCAPE);
+}
+
 inline bool IsPauseTriggered(KamataEngine::Input* input) {
     if (!input) {
         return false;
@@ -323,6 +356,161 @@ inline bool IsPauseTriggered(KamataEngine::Input* input) {
 
     if (input->TriggerKey(DIK_ESCAPE)) {
         return true;
+    }
+
+    XINPUT_STATE xState{};
+    XINPUT_STATE xPrev{};
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
+        const bool current = (xState.Gamepad.wButtons & XINPUT_GAMEPAD_START) != 0;
+        const bool previous = (xPrev.Gamepad.wButtons & XINPUT_GAMEPAD_START) != 0;
+        if (current && !previous) {
+            return true;
+        }
+    }
+
+    DIJOYSTATE2 dState{};
+    DIJOYSTATE2 dPrev{};
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+        if (Detail::IsDirectInputButtonPressed(dState, 7) &&
+            !Detail::IsDirectInputButtonPressed(dPrev, 7)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool IsKeyboardPauseTriggered(KamataEngine::Input* input) {
+    return input && input->TriggerKey(DIK_ESCAPE);
+}
+
+inline bool IsGamepadMenuUpTriggered(KamataEngine::Input* input) {
+    if (!input) {
+        return false;
+    }
+
+    XINPUT_STATE xState{};
+    XINPUT_STATE xPrev{};
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
+        const bool currentDpad = (xState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
+        const bool previousDpad = (xPrev.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
+        const bool currentStick = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbLY) >= 0.6f;
+        const bool previousStick = Detail::NormalizeXInputAxis(xPrev.Gamepad.sThumbLY) >= 0.6f;
+        if ((currentDpad && !previousDpad) || (currentStick && !previousStick)) {
+            return true;
+        }
+    }
+
+    DIJOYSTATE2 dState{};
+    DIJOYSTATE2 dPrev{};
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+        const bool currentPov = Detail::IsDirectInputPovPressed(dState, 0);
+        const bool previousPov = Detail::IsDirectInputPovPressed(dPrev, 0);
+        const bool currentStick = -Detail::NormalizeDirectInputAxis(dState.lY) >= 0.6f;
+        const bool previousStick = -Detail::NormalizeDirectInputAxis(dPrev.lY) >= 0.6f;
+        if ((currentPov && !previousPov) || (currentStick && !previousStick)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool IsGamepadMenuDownTriggered(KamataEngine::Input* input) {
+    if (!input) {
+        return false;
+    }
+
+    XINPUT_STATE xState{};
+    XINPUT_STATE xPrev{};
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
+        const bool currentDpad = (xState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
+        const bool previousDpad = (xPrev.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
+        const bool currentStick = Detail::NormalizeXInputAxis(xState.Gamepad.sThumbLY) <= -0.6f;
+        const bool previousStick = Detail::NormalizeXInputAxis(xPrev.Gamepad.sThumbLY) <= -0.6f;
+        if ((currentDpad && !previousDpad) || (currentStick && !previousStick)) {
+            return true;
+        }
+    }
+
+    DIJOYSTATE2 dState{};
+    DIJOYSTATE2 dPrev{};
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+        const bool currentPov = Detail::IsDirectInputPovPressed(dState, 18000);
+        const bool previousPov = Detail::IsDirectInputPovPressed(dPrev, 18000);
+        const bool currentStick = -Detail::NormalizeDirectInputAxis(dState.lY) <= -0.6f;
+        const bool previousStick = -Detail::NormalizeDirectInputAxis(dPrev.lY) <= -0.6f;
+        if ((currentPov && !previousPov) || (currentStick && !previousStick)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool IsGamepadConfirmTriggered(KamataEngine::Input* input) {
+    if (!input) {
+        return false;
+    }
+
+    XINPUT_STATE xState{};
+    XINPUT_STATE xPrev{};
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
+        const WORD current = xState.Gamepad.wButtons;
+        const WORD previous = xPrev.Gamepad.wButtons;
+        if ((current & XINPUT_GAMEPAD_A) != 0 && (previous & XINPUT_GAMEPAD_A) == 0) {
+            return true;
+        }
+    }
+
+    DIJOYSTATE2 dState{};
+    DIJOYSTATE2 dPrev{};
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+        return Detail::IsDirectInputButtonPressed(dState, 0) &&
+               !Detail::IsDirectInputButtonPressed(dPrev, 0);
+    }
+
+    return false;
+}
+
+inline bool IsGamepadCancelTriggered(KamataEngine::Input* input) {
+    if (!input) {
+        return false;
+    }
+
+    XINPUT_STATE xState{};
+    XINPUT_STATE xPrev{};
+    const bool hasXInput = Detail::GetFirstXInputState(input, xState, xPrev);
+    if (hasXInput) {
+        const WORD current = xState.Gamepad.wButtons;
+        const WORD previous = xPrev.Gamepad.wButtons;
+        const WORD mask = XINPUT_GAMEPAD_B | XINPUT_GAMEPAD_BACK;
+        if ((current & mask) != 0 && (previous & mask) == 0) {
+            return true;
+        }
+    }
+
+    DIJOYSTATE2 dState{};
+    DIJOYSTATE2 dPrev{};
+    if (!hasXInput && Detail::GetFirstDirectInputState(input, dState, dPrev)) {
+        for (int buttonIndex : {1, 6}) {
+            if (Detail::IsDirectInputButtonPressed(dState, buttonIndex) &&
+                !Detail::IsDirectInputButtonPressed(dPrev, buttonIndex)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+inline bool IsGamepadPauseTriggered(KamataEngine::Input* input) {
+    if (!input) {
+        return false;
     }
 
     XINPUT_STATE xState{};
@@ -338,13 +526,32 @@ inline bool IsPauseTriggered(KamataEngine::Input* input) {
     DIJOYSTATE2 dState{};
     DIJOYSTATE2 dPrev{};
     if (Detail::GetFirstDirectInputState(input, dState, dPrev)) {
-        if (Detail::IsDirectInputButtonPressed(dState, 7) &&
-            !Detail::IsDirectInputButtonPressed(dPrev, 7)) {
-            return true;
-        }
+        return Detail::IsDirectInputButtonPressed(dState, 7) &&
+               !Detail::IsDirectInputButtonPressed(dPrev, 7);
     }
 
     return false;
+}
+
+inline bool IsMouseConfirmTriggered(KamataEngine::Input* input) {
+    return input && input->IsTriggerMouse(0);
+}
+
+inline bool IsUiConfirmTriggered(KamataEngine::Input* input) {
+    return IsMouseConfirmTriggered(input) || IsGamepadConfirmTriggered(input);
+}
+
+inline bool IsUiCancelTriggered(KamataEngine::Input* input) {
+    return IsGamepadCancelTriggered(input);
+}
+
+inline bool HasMouseNavigationInput(KamataEngine::Input* input) {
+    if (!input) {
+        return false;
+    }
+
+    const auto mouseMove = input->GetMouseMove();
+    return mouseMove.lX != 0 || mouseMove.lY != 0 || input->IsTriggerMouse(0);
 }
 
 inline bool IsAnyMovePressed(KamataEngine::Input* input) {

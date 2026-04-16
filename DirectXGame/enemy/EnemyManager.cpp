@@ -9,6 +9,14 @@ using namespace KamataEngine;
 
 namespace DirectXGame {
 
+int32_t EnemyManager::ToCellCoord(float value) {
+    return static_cast<int32_t>(std::floor(value / kSpatialCellSize));
+}
+
+int64_t EnemyManager::MakeCellKey(int32_t cellX, int32_t cellZ) {
+    return (static_cast<int64_t>(cellX) << 32) ^ static_cast<uint32_t>(cellZ);
+}
+
 size_t EnemyManager::GetActiveEnemyCount() const {
     return static_cast<size_t>(std::count_if(enemies_.begin(), enemies_.end(),
         [](const std::unique_ptr<Enemy>& enemy) {
@@ -22,6 +30,7 @@ void EnemyManager::Initialize(const std::string& csvPath, Player* player, Player
 
     // 敵タイプ定義を読み込む
     LoadEnemyTypes(csvPath);
+    LoadSpawnSettings("Resources/data/enemySpawnSettings.csv");
 
     audio_ = Audio::GetInstance();
     hitSEHandle_ = audio_->LoadWave("audio/se/se_hit.wav");
@@ -63,18 +72,52 @@ void EnemyManager::LoadEnemyTypes(const std::string& filePath) {
     file.close();
 }
 
+void EnemyManager::LoadSpawnSettings(const std::string& filePath) {
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        OutputDebugStringA(("Enemy spawn settings 読み込み失敗: " + filePath + "\n").c_str());
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        std::stringstream ss(line);
+        std::string key;
+        std::string value;
+        std::getline(ss, key, ',');
+        std::getline(ss, value, ',');
+
+        if (key == "maxActiveEnemies") maxActiveEnemies_ = static_cast<size_t>((std::max)(1, std::stoi(value)));
+        else if (key == "spawnUnlockInterval") spawnUnlockInterval_ = std::stof(value);
+        else if (key == "spawnDistance") spawnDistance_ = std::stof(value);
+        else if (key == "respawnDistance") respawnDistance_ = std::stof(value);
+        else if (key == "respawnRadius") respawnRadius_ = std::stof(value);
+        else if (key == "minSpawnInterval") minSpawnInterval_ = std::stof(value);
+        else if (key == "baseSpawnInterval") {
+            baseSpawnInterval_ = std::stof(value);
+            spawnInterval_ = baseSpawnInterval_;
+        } else if (key == "spawnAcceleration") {
+            spawnAcceleration_ = std::stof(value);
+        }
+    }
+}
+
 void EnemyManager::SpawnEnemies() {
     if (enemyTypes_.empty() || !player_) return;
-    if (GetActiveEnemyCount() >= kMaxActiveEnemies) return;
+    if (GetActiveEnemyCount() >= maxActiveEnemies_) return;
 
     // 経過時間で解禁される敵タイプを増やす（20秒ごとに1タイプ解禁）
-    int maxIndex = static_cast<int>(elapsedTime_ / kSpawnUnlockInterval);
+    int maxIndex = static_cast<int>(elapsedTime_ / spawnUnlockInterval_);
     maxIndex = std::clamp(maxIndex, 0, (int)enemyTypes_.size() - 1);
 
     const EnemyTypeData& data = enemyTypes_[rand() % (maxIndex + 1)];
 
     for (int i = 0; i < data.spawnCount; i++) {
-        if (GetActiveEnemyCount() >= kMaxActiveEnemies) {
+        if (GetActiveEnemyCount() >= maxActiveEnemies_) {
             break;
         }
         SpawnOneEnemy(data);
@@ -87,9 +130,9 @@ void EnemyManager::SpawnOneEnemy(const EnemyTypeData& data) {
     float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
 
     Vector3 pos = {
-        pPos.x + std::cos(angle) * kSpawnDistance,
+        pPos.x + std::cos(angle) * spawnDistance_,
         0.0f,
-        pPos.z + std::sin(angle) * kSpawnDistance
+        pPos.z + std::sin(angle) * spawnDistance_
     };
 
     auto enemy = std::make_unique<Enemy>();
@@ -116,11 +159,11 @@ void EnemyManager::SpawnOneEnemy(const EnemyTypeData& data) {
 void EnemyManager::UpdateSpawnState(float deltaTime) {
     elapsedTime_ += deltaTime;
     spawnTimer_ += deltaTime;
-    spawnInterval_ = std::max<float>(kMinSpawnInterval, kBaseSpawnInterval - elapsedTime_ * kSpawnAcceleration);
+    spawnInterval_ = std::max<float>(minSpawnInterval_, baseSpawnInterval_ - elapsedTime_ * spawnAcceleration_);
 
-    if (spawnTimer_ >= spawnInterval_) {
+    while (spawnTimer_ >= spawnInterval_) {
         SpawnEnemies();
-        spawnTimer_ = 0.0f;
+        spawnTimer_ -= spawnInterval_;
     }
 }
 
@@ -175,15 +218,15 @@ void EnemyManager::RelocateFarEnemies() {
         float dz = enemyPosition.z - playerPosition.z;
         float distSq = dx * dx + dz * dz;
 
-        if (distSq <= kRespawnDistance * kRespawnDistance) {
+        if (distSq <= respawnDistance_ * respawnDistance_) {
             continue;
         }
 
         float angle = (float(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
         Vector3 newPos = {
-            playerPosition.x + std::cos(angle) * kRespawnRadius,
+            playerPosition.x + std::cos(angle) * respawnRadius_,
             0.0f,
-            playerPosition.z + std::sin(angle) * kRespawnRadius
+            playerPosition.z + std::sin(angle) * respawnRadius_
         };
         enemy->SetPosition(newPos);
     }
@@ -212,14 +255,54 @@ void EnemyManager::UpdateEffects(float deltaTime) {
     }
 }
 
-void EnemyManager::ResolveEnemySeparation() {
-    for (size_t i = 0; i < enemies_.size(); ++i) {
-        Enemy* a = enemies_[i].get();
-        if (!a->IsActive()) continue;
+void EnemyManager::BuildActiveEnemySpatialMap(EnemyCellMap& outMap, std::vector<Enemy*>& activeEnemies) const {
+    outMap.clear();
+    activeEnemies.clear();
+    activeEnemies.reserve(enemies_.size());
 
-        for (size_t j = i + 1; j < enemies_.size(); ++j) {
-            Enemy* b = enemies_[j].get();
-            if (!b->IsActive()) continue;
+    for (const auto& enemy : enemies_) {
+        if (!enemy || !enemy->IsActive()) {
+            continue;
+        }
+
+        Enemy* enemyPtr = enemy.get();
+        activeEnemies.push_back(enemyPtr);
+        const Vector3 position = enemyPtr->GetPosition();
+        outMap[MakeCellKey(ToCellCoord(position.x), ToCellCoord(position.z))].push_back(enemyPtr);
+    }
+}
+
+void EnemyManager::CollectNearbyEnemies(const EnemyCellMap& spatialMap, const Vector3& center, float radius,
+                                        std::vector<Enemy*>& outEnemies) const {
+    outEnemies.clear();
+
+    const int32_t centerCellX = ToCellCoord(center.x);
+    const int32_t centerCellZ = ToCellCoord(center.z);
+    const int32_t cellRange = (std::max)(1, static_cast<int32_t>(std::ceil(radius / kSpatialCellSize)));
+    for (int32_t z = centerCellZ - cellRange; z <= centerCellZ + cellRange; ++z) {
+        for (int32_t x = centerCellX - cellRange; x <= centerCellX + cellRange; ++x) {
+            const auto it = spatialMap.find(MakeCellKey(x, z));
+            if (it == spatialMap.end()) {
+                continue;
+            }
+
+            outEnemies.insert(outEnemies.end(), it->second.begin(), it->second.end());
+        }
+    }
+}
+
+void EnemyManager::ResolveEnemySeparation() {
+    EnemyCellMap spatialMap;
+    std::vector<Enemy*> activeEnemies;
+    std::vector<Enemy*> nearbyEnemies;
+    BuildActiveEnemySpatialMap(spatialMap, activeEnemies);
+
+    for (Enemy* a : activeEnemies) {
+        if (!a || !a->IsActive()) continue;
+
+        CollectNearbyEnemies(spatialMap, a->GetPosition(), kEnemySeparationDistance, nearbyEnemies);
+        for (Enemy* b : nearbyEnemies) {
+            if (!b || !b->IsActive() || a >= b) continue;
 
             Vector3 posA = a->GetPosition();
             Vector3 posB = b->GetPosition();
@@ -285,16 +368,18 @@ bool EnemyManager::TryHandleBulletHit(Enemy& enemy, const Vector3& impactPositio
     return true;
 }
 
-void EnemyManager::CheckNormalBulletCollisions(PlayerManager& playerManager) {
-    int32_t damage = playerManager.GetAttackPower();
+void EnemyManager::CheckNormalBulletCollisions(PlayerManager& playerManager, const EnemyCellMap& spatialMap) {
+    int32_t damage = playerManager.GetNormalBulletDamage();
+    std::vector<Enemy*> nearbyEnemies;
 
     for (auto& bullet : playerManager.GetNormalBullets()) {
         if (!bullet->IsActive()) continue;
 
-        for (auto& enemy : enemies_) {
-            if (!enemy->IsActive()) continue;
+        const Vector3 bPos = bullet->GetPosition();
+        CollectNearbyEnemies(spatialMap, bPos, std::sqrt(kNormalBulletHitDistanceSq), nearbyEnemies);
+        for (Enemy* enemy : nearbyEnemies) {
+            if (!enemy || !enemy->IsActive()) continue;
 
-            Vector3 bPos = bullet->GetPosition();
             Vector3 ePos = enemy->GetPosition();
 
             float dx = bPos.x - ePos.x;
@@ -302,27 +387,30 @@ void EnemyManager::CheckNormalBulletCollisions(PlayerManager& playerManager) {
             float distSq = dx * dx + dz * dz;
 
             if (distSq < kNormalBulletHitDistanceSq) {
-                if (!bullet->CanHitEnemy(enemy.get())) continue;
+                if (!bullet->CanHitEnemy(enemy)) continue;
 
-                bullet->RegisterHit(enemy.get());
+                bullet->RegisterHit(enemy);
                 TryHandleBulletHit(*enemy, bPos, damage, 0.8f + damage * 0.18f);
-                bullet->Deactivate();
-                break;
+                if (!bullet->ConsumeHit()) {
+                    break;
+                }
             }
         }
     }
 }
 
-void EnemyManager::CheckOrbitBulletCollisions(PlayerManager& playerManager) {
-    int32_t damage = playerManager.GetAttackPower();
+void EnemyManager::CheckOrbitBulletCollisions(PlayerManager& playerManager, const EnemyCellMap& spatialMap) {
+    int32_t damage = playerManager.GetOrbitBulletDamage();
+    std::vector<Enemy*> nearbyEnemies;
 
     for (auto& orb : playerManager.GetOrbitBullets()) {
         if (!orb->IsActive()) continue;
 
-        for (auto& enemy : enemies_) {
-            if (!enemy->IsActive()) continue;
+        const Vector3 oPos = orb->GetPosition();
+        CollectNearbyEnemies(spatialMap, oPos, std::sqrt(kOrbitBulletHitDistanceSq), nearbyEnemies);
+        for (Enemy* enemy : nearbyEnemies) {
+            if (!enemy || !enemy->IsActive()) continue;
 
-            Vector3 oPos = orb->GetPosition();
             Vector3 ePos = enemy->GetPosition();
 
             float dx = oPos.x - ePos.x;
@@ -330,29 +418,31 @@ void EnemyManager::CheckOrbitBulletCollisions(PlayerManager& playerManager) {
             float distSq = dx * dx + dz * dz;
 
             if (distSq < kOrbitBulletHitDistanceSq) {
-                if (!orb->CanHitEnemy(enemy.get())) continue;
+                if (!orb->CanHitEnemy(enemy)) continue;
 
-                orb->RegisterHit(enemy.get());
+                orb->RegisterHit(enemy);
                 TryHandleBulletHit(*enemy, oPos, damage, 0.7f + damage * 0.12f);
             }
         }
     }
 }
 
-void EnemyManager::CheckDroneBulletCollisions(PlayerManager& playerManager) {
+void EnemyManager::CheckDroneBulletCollisions(PlayerManager& playerManager, const EnemyCellMap& spatialMap) {
     if (!playerManager.HasDrone()) {
         return;
     }
 
     auto& drone = playerManager.GetDrone();
+    std::vector<Enemy*> nearbyEnemies;
 
     for (auto& bullet : drone->GetBullets()) {
         if (!bullet->IsActive()) continue;
 
-        for (auto& enemy : enemies_) {
-            if (!enemy->IsActive()) continue;
+        const Vector3 bPos = bullet->GetPosition();
+        CollectNearbyEnemies(spatialMap, bPos, std::sqrt(kNormalBulletHitDistanceSq), nearbyEnemies);
+        for (Enemy* enemy : nearbyEnemies) {
+            if (!enemy || !enemy->IsActive()) continue;
 
-            Vector3 bPos = bullet->GetPosition();
             Vector3 ePos = enemy->GetPosition();
 
             float dx = bPos.x - ePos.x;
@@ -360,20 +450,26 @@ void EnemyManager::CheckDroneBulletCollisions(PlayerManager& playerManager) {
             float distSq = dx * dx + dz * dz;
 
             if (distSq < kNormalBulletHitDistanceSq) {
-                int32_t droneDamage = playerManager.GetAttackPower() / 2;
+                if (!bullet->CanHitEnemy(enemy)) continue;
+
+                int32_t droneDamage = playerManager.GetDroneDamage();
+                bullet->RegisterHit(enemy);
                 TryHandleBulletHit(*enemy, bPos, droneDamage, 0.65f);
-                bullet->Deactivate();
-                break;
+                if (!bullet->ConsumeHit()) {
+                    break;
+                }
             }
         }
     }
 }
 
-void EnemyManager::CheckPlayerCollisions(Player& player, PlayerManager& playerManager) {
+void EnemyManager::CheckPlayerCollisions(Player& player, PlayerManager& playerManager, const EnemyCellMap& spatialMap) {
     Vector3 playerPosition = player.GetWorldPosition();
+    std::vector<Enemy*> nearbyEnemies;
+    CollectNearbyEnemies(spatialMap, playerPosition, kPlayerContactDistance, nearbyEnemies);
 
-    for (auto& enemy : enemies_) {
-        if (!enemy->IsActive()) continue;
+    for (Enemy* enemy : nearbyEnemies) {
+        if (!enemy || !enemy->IsActive()) continue;
 
         Vector3 ePos = enemy->GetPosition();
         float dx = ePos.x - playerPosition.x;
@@ -406,10 +502,63 @@ void EnemyManager::CheckCollisions(Player* player, PlayerManager* playerManager)
         return;
     }
 
-    CheckNormalBulletCollisions(*playerManager);
-    CheckOrbitBulletCollisions(*playerManager);
-    CheckDroneBulletCollisions(*playerManager);
-    CheckPlayerCollisions(*player, *playerManager);
+    EnemyCellMap spatialMap;
+    std::vector<Enemy*> activeEnemies;
+    BuildActiveEnemySpatialMap(spatialMap, activeEnemies);
+
+    CheckNormalBulletCollisions(*playerManager, spatialMap);
+    CheckOrbitBulletCollisions(*playerManager, spatialMap);
+    CheckDroneBulletCollisions(*playerManager, spatialMap);
+    CheckPlayerCollisions(*player, *playerManager, spatialMap);
+}
+
+std::vector<Vector3> EnemyManager::PickLightningTargets(int32_t count) const {
+    std::vector<Vector3> candidates;
+    candidates.reserve(enemies_.size());
+    for (const auto& enemy : enemies_) {
+        if (enemy && enemy->IsActive()) {
+            candidates.push_back(enemy->GetPosition());
+        }
+    }
+
+    std::vector<Vector3> targets;
+    if (candidates.empty() || count <= 0) {
+        return targets;
+    }
+
+    targets.reserve(count);
+    for (int32_t i = 0; i < count && !candidates.empty(); ++i) {
+        const size_t pickedIndex = static_cast<size_t>(rand() % static_cast<int>(candidates.size()));
+        targets.push_back(candidates[pickedIndex]);
+        candidates.erase(candidates.begin() + static_cast<std::ptrdiff_t>(pickedIndex));
+    }
+
+    return targets;
+}
+
+void EnemyManager::ApplyLightningDamage(const Vector3& center, float radius, int32_t damage) {
+    const float radiusSq = radius * radius;
+    EnemyCellMap spatialMap;
+    std::vector<Enemy*> activeEnemies;
+    std::vector<Enemy*> nearbyEnemies;
+    BuildActiveEnemySpatialMap(spatialMap, activeEnemies);
+    CollectNearbyEnemies(spatialMap, center, radius, nearbyEnemies);
+
+    for (Enemy* enemy : nearbyEnemies) {
+        if (!enemy || !enemy->IsActive()) {
+            continue;
+        }
+
+        const Vector3 enemyPosition = enemy->GetPosition();
+        const float dx = enemyPosition.x - center.x;
+        const float dz = enemyPosition.z - center.z;
+        const float distSq = dx * dx + dz * dz;
+        if (distSq > radiusSq) {
+            continue;
+        }
+
+        TryHandleBulletHit(*enemy, center, damage, 0.9f + damage * 0.1f);
+    }
 }
 
 void EnemyManager::Draw(Camera* camera) {

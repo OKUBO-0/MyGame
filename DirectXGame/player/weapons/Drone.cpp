@@ -13,7 +13,8 @@ void Drone::Initialize(const Vector3& offset) {
 
 void Drone::Update(const Vector3& playerPos,
     const std::vector<std::unique_ptr<Enemy>>& enemies,
-    float& fireTimer, float fireInterval, float deltaTime)
+    float& fireTimer, float fireInterval, int32_t shotCount, float bulletSpeed,
+    float bulletRange, int32_t bulletPierceCount, float deltaTime)
 {
     animationTime_ += deltaTime * 60.0f;
 
@@ -67,10 +68,18 @@ void Drone::Update(const Vector3& playerPos,
         float angleToTarget = std::atan2(dir.x, dir.z);
         worldTransform_.rotation_.y = angleToTarget;
 
-        // 弾発射
-        auto b = std::make_unique<NormalBullet>();
-        b->InitializeForward(worldTransform_.translation_, dir);
-        bullets_.push_back(std::move(b));
+        const float centerOffset = static_cast<float>(shotCount - 1) * 0.5f;
+        constexpr float kSpreadRadians = 0.14f;
+        for (int32_t i = 0; i < shotCount; ++i) {
+            const float spread = (static_cast<float>(i) - centerOffset) * kSpreadRadians;
+            const float baseAngle = std::atan2(dir.x, dir.z);
+            const float shotAngle = baseAngle + spread;
+            Vector3 shotDir = { std::sin(shotAngle), 0.0f, std::cos(shotAngle) };
+
+            auto b = std::make_unique<NormalBullet>();
+            b->InitializeForward(worldTransform_.translation_, shotDir, bulletSpeed, bulletRange, bulletPierceCount);
+            bullets_.push_back(std::move(b));
+        }
 
         fireTimer = 0.0f;
     }

@@ -1,10 +1,12 @@
 #pragma once
 
+#include "../../core/InputBindings.h"
 #include <KamataEngine.h>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace DirectXGame {
@@ -59,10 +61,11 @@ public:
     /// 引数: audio - 効果音再生に使う音声管理
     /// 引数: moveSEHandle - 選択移動SEハンドル
     /// 引数: decideSEHandle - 決定SEハンドル
+    /// 引数: deltaTime - フレーム経過時間
     /// 戻り値: true ならレベルアップ処理中
     /// </summary>
     bool Update(PlayerManager* playerManager, KamataEngine::Input* input, KamataEngine::Audio* audio,
-                uint32_t moveSEHandle, uint32_t decideSEHandle);
+                uint32_t moveSEHandle, uint32_t decideSEHandle, float deltaTime);
 
     /// <summary>
     /// 描画処理
@@ -72,6 +75,7 @@ public:
     /// </summary>
     void Draw() const;
     void DebugDrawImGui();
+    void LoadWeightSettings(const std::string& filePath);
 
     /// <summary>
     /// 状態リセット
@@ -90,6 +94,13 @@ public:
     bool IsActive() const { return active_; }
 
 private:
+    enum class AnimationState {
+        Hidden,
+        Entering,
+        Idle,
+        Exiting,
+    };
+
     struct LayoutSettings {
         KamataEngine::Vector2 choicePositions[3]{
             { 0.0f, 0.0f },
@@ -99,20 +110,42 @@ private:
         KamataEngine::Vector2 choiceSize{ 1280.0f, 720.0f };
         KamataEngine::Vector2 arrowBasePosition{ 0.0f, 0.0f };
         float choiceSpacingY = 140.0f;
+        KamataEngine::Vector2 choiceHitboxOffset{ 465.0f, 214.0f };
+        KamataEngine::Vector2 choiceHitboxSize{ 435.0f, 68.0f };
         bool debugEnabled = false;
     };
 
     int32_t PickWeightedOptionIndex(const std::vector<LevelUpOption>& candidateOptions) const;
     void ApplyLayout();
+    void UpdateSlideAnimation(float deltaTime);
+    void SpawnConfetti();
+    void UpdateConfetti(float deltaTime);
 
     std::vector<LevelUpOption> options_;
     std::vector<LevelUpOption> currentChoices_;
+    struct ConfettiParticle {
+        std::unique_ptr<KamataEngine::Sprite> sprite;
+        KamataEngine::Vector2 position{ 0.0f, 0.0f };
+        KamataEngine::Vector2 velocity{ 0.0f, 0.0f };
+        KamataEngine::Vector2 size{ 0.0f, 0.0f };
+        float rotation = 0.0f;
+        float angularVelocity = 0.0f;
+        float lifetime = 0.0f;
+        float age = 0.0f;
+    };
+
     std::unique_ptr<KamataEngine::Sprite> overlaySprite_;
     std::unique_ptr<KamataEngine::Sprite> arrowSprite_;
     std::unique_ptr<KamataEngine::Sprite> choiceSprites_[3];
     std::unique_ptr<KamataEngine::Sprite> iconSprites_[3];
+    std::vector<ConfettiParticle> confettiParticles_;
+    std::unordered_map<std::string, float> weightSettings_;
     bool active_ = false;
     int32_t selection_ = 0;
+    AnimationState animationState_ = AnimationState::Hidden;
+    float slideOffsetX_ = 1280.0f;
+    std::function<void(PlayerManager*)> pendingAction_;
+    InputBindings::NavigationInputDevice navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     LayoutSettings layoutSettings_{};
 };
 

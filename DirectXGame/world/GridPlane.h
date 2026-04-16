@@ -35,6 +35,7 @@ public:
     /// 戻り値: なし
     /// </summary>
     void Draw(KamataEngine::Camera* camera);
+    void SetLightGroup(const KamataEngine::LightGroup* lightGroup);
 
 private:
     std::array<KamataEngine::WorldTransform, 9> worldTransforms_; ///< 3x3 の床タイル

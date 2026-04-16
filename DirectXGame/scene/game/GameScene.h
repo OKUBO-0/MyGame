@@ -77,23 +77,50 @@ public:
     bool IsFinished() const override { return finished_; }
 
 private:
+    enum class GameFlowState {
+        Opening,
+        StartWaiting,
+        Pause,
+        LevelUp,
+        Death,
+        Playing,
+        ResultTransition,
+    };
+
+    enum class DeathState {
+        None,
+        FadingIn,
+        WaitingConfirm,
+    };
+
     void InitializeAudio();
+    void InitializeLighting();
     void InitializeSceneObjects();
+    void InitializeHudUI();
+    void InitializeOverlayUI();
     void InitializeUI();
+    void ApplyLighting();
+    GameFlowState ResolveFlowState() const;
+    bool ShouldDrawGameplayUI(GameFlowState flowState) const;
+    bool ShouldDrawHpGauge(GameFlowState flowState) const;
+    bool ShouldDrawEnemies(GameFlowState flowState) const;
 
     bool UpdateCurtainOpening();
     bool UpdateStartWaiting();
     bool UpdatePauseState();
-    bool UpdateLevelUpFlow();
+    bool UpdateLevelUpFlow(float deltaTime);
     bool UpdateGameTimer(float deltaTime);
     bool UpdateDeathFlow(float deltaTime);
     bool FinalizeResultTransition();
 
     void StartResultTransition();
     void UpdateStatusUI();
+    void UpdateHud();
     void UpdateGameplay(float deltaTime);
     void DrawDebugUI();
     void DrawWorld();
+    void DrawHud(GameFlowState flowState);
+    void DrawOverlayUI(GameFlowState flowState);
     void DrawUI();
 
     KamataEngine::DirectXCommon* dxCommon_ = nullptr;
@@ -115,9 +142,7 @@ private:
 
     std::unique_ptr<KamataEngine::Sprite> deathOverlay_;
     float deathAlpha_ = 0.0f;
-    bool deathFadeInStarted_ = false;
-    bool deathFadeInComplete_ = false;
-    bool gameStopped_ = false;
+    DeathState deathState_ = DeathState::None;
 
     GameLevelUpController levelUpController_;
 
@@ -128,6 +153,7 @@ private:
 
     std::unique_ptr<GridPlane> gridPlane_;
     std::unique_ptr<SkyDome> skyDome_;
+    std::unique_ptr<KamataEngine::LightGroup> lightGroup_;
 
     uint32_t pauseSEHandle_ = 0;
     uint32_t startSEHandle_ = 0;
@@ -135,7 +161,7 @@ private:
     uint32_t levelUpSEHandle_ = 0;
 
     float gameTime_ = 0.0f;
-    float gameTimeLimit_ = 60.0f;
+    float gameTimeLimit_ = 300.0f;
     std::unique_ptr<Timer> timer_;
     static constexpr float kDeathFadeSpeedPerSecond_ = 1.25f;
 };

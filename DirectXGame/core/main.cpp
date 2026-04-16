@@ -87,7 +87,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
         // 現在のシーンを描画
         sceneManager.Draw();
 
-        imguiManager->Draw();
+        imguiManager->Draw(); 
 
         // 描画処理終了
         directXCommon->PostDraw();

@@ -1,5 +1,7 @@
 #include "Player.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ModelCache.h"
+#include "../../core/ScreenUtil.h"
 #include <math/MathUtility.h>
 #include <algorithm>
 using namespace KamataEngine;
@@ -10,9 +12,6 @@ namespace DirectXGame {
 namespace {
 
 constexpr float kPi = 3.14159265f;
-constexpr float kScreenWidth = 1280.0f;
-constexpr float kScreenHeight = 720.0f;
-
 float NormalizeAngle(float angle) {
     while (angle > kPi) angle -= 2.0f * kPi;
     while (angle < -kPi) angle += 2.0f * kPi;
@@ -25,7 +24,7 @@ void Player::Initialize() {
     input_ = Input::GetInstance();
     camera_.Initialize();
 
-    playerModel_ = std::unique_ptr<Model>(Model::CreateFromOBJ("octopus"));
+    playerModel_ = ModelCache::Get("octopus");
 
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
@@ -48,19 +47,18 @@ void Player::Draw() {
     }
 }
 
+void Player::SetLightGroup(const LightGroup* lightGroup) {
+    if (playerModel_) {
+        playerModel_->SetLightGroup(lightGroup);
+    }
+}
+
 void Player::UpdateMovement(float deltaTime) {
     const float movePerFrame = moveSpeedPerSecond_ * deltaTime;
 
     const Vector2 moveInput = InputBindings::GetMoveVector(input_);
     Vector3 move = { moveInput.x * movePerFrame, 0.0f, moveInput.y * movePerFrame };
-
-    float moveLen = std::sqrt(move.x * move.x + move.z * move.z);
-    if (moveLen > 0.0f) {
-        // 正規化して一定速にする
-        move.x = (move.x / moveLen) * movePerFrame;
-        move.z = (move.z / moveLen) * movePerFrame;
-
-        // 移動
+    if (std::abs(move.x) > 0.0f || std::abs(move.z) > 0.0f) {
         worldTransform_.translation_.x += move.x;
         worldTransform_.translation_.z += move.z;
     }
@@ -78,9 +76,14 @@ void Player::UpdateAim(float deltaTime) {
         return;
     }
 
+    const Vector2 clientSize = ScreenUtil::GetClientSize();
+    if (clientSize.x <= 0.0f || clientSize.y <= 0.0f) {
+        return;
+    }
+
     const Vector2 mousePosition = input_->GetMousePosition();
-    const float ndcX = (mousePosition.x / kScreenWidth) * 2.0f - 1.0f;
-    const float ndcY = 1.0f - (mousePosition.y / kScreenHeight) * 2.0f;
+    const float ndcX = (mousePosition.x / clientSize.x) * 2.0f - 1.0f;
+    const float ndcY = 1.0f - (mousePosition.y / clientSize.y) * 2.0f;
 
     const Matrix4x4 viewProjection = camera_.matView * camera_.matProjection;
     const Matrix4x4 inverseViewProjection = Inverse(viewProjection);

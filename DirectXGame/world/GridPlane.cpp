@@ -74,6 +74,12 @@ void GridPlane::Draw(Camera* camera) {
     }
 }
 
+void GridPlane::SetLightGroup(const LightGroup* lightGroup) {
+    if (planeModel_) {
+        planeModel_->SetLightGroup(lightGroup);
+    }
+}
+
 float GridPlane::SnapToTile(float value) {
     return std::floor(value / kTileSpan) * kTileSpan;
 }

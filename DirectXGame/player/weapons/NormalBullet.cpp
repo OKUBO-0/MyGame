@@ -1,11 +1,15 @@
 #include "NormalBullet.h"
 #include "ModelCache.h"
+#include <algorithm>
 using namespace KamataEngine;
 
 namespace DirectXGame {
 
 void NormalBullet::InitializeForward(const Vector3& startPos,
-    const Vector3& forward)
+    const Vector3& forward,
+    float speed,
+    float range,
+    int32_t maxHits)
 {
     Bullet::Initialize(startPos);
     audio_ = Audio::GetInstance();
@@ -21,6 +25,9 @@ void NormalBullet::InitializeForward(const Vector3& startPos,
     model_ = ModelCache::Get("bullet");
 
     direction_ = forward;
+    speed_ = speed;
+    range_ = range;
+    remainingHits_ = (std::max)(1, maxHits);
 
     float len = std::sqrt(direction_.x * direction_.x +
         direction_.y * direction_.y +
@@ -72,6 +79,16 @@ bool NormalBullet::CanHitEnemy(void* enemyPtr) {
 
 void NormalBullet::RegisterHit(void* enemyPtr) {
     hitCooldowns_[enemyPtr] = kHitInterval;
+}
+
+bool NormalBullet::ConsumeHit() {
+    --remainingHits_;
+    if (remainingHits_ <= 0) {
+        active_ = false;
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace DirectXGame

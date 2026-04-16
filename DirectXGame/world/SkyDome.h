@@ -34,6 +34,7 @@ public:
     /// 戻り値: なし
     /// </summary>
     void Draw();
+    void SetLightGroup(const KamataEngine::LightGroup* lightGroup);
 
 private:
     KamataEngine::WorldTransform worldTransform_; ///< 天球の位置・回転・スケールを保持するワールドトランスフォーム

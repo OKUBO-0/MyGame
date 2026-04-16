@@ -1,5 +1,7 @@
 #include "GameScene.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ModelCache.h"
+#include "../../core/ScreenUtil.h"
 using namespace KamataEngine;
 
 namespace DirectXGame {
@@ -10,6 +12,7 @@ void GameScene::Initialize() {
     audio_ = Audio::GetInstance();
 
     InitializeAudio();
+    InitializeLighting();
     InitializeSceneObjects();
     InitializeUI();
 
@@ -23,6 +26,21 @@ void GameScene::InitializeAudio() {
     startSEHandle_ = audio_->LoadWave("audio/se/se_exp.wav");
     deathSEHandle_ = audio_->LoadWave("audio/se/se_death.wav");
     levelUpSEHandle_ = audio_->LoadWave("audio/se/se_exp.wav");
+}
+
+void GameScene::InitializeLighting() {
+    lightGroup_.reset(LightGroup::Create());
+    if (!lightGroup_) {
+        return;
+    }
+
+    lightGroup_->SetAmbientColor({0.48f, 0.48f, 0.52f});
+    lightGroup_->SetDirLightActive(0, true);
+    lightGroup_->SetDirLightDir(0, {-0.35f, -1.0f, -0.4f});
+    lightGroup_->SetDirLightColor(0, {1.05f, 1.0f, 0.95f});
+    lightGroup_->SetDirLightActive(1, false);
+    lightGroup_->SetDirLightActive(2, false);
+    lightGroup_->Update();
 }
 
 void GameScene::InitializeSceneObjects() {
@@ -44,16 +62,16 @@ void GameScene::InitializeSceneObjects() {
 
     skyDome_ = std::make_unique<SkyDome>();
     skyDome_->Initialize();
+
+    ApplyLighting();
 }
 
 void GameScene::InitializeUI() {
-    startController_.Initialize();
+    InitializeHudUI();
+    InitializeOverlayUI();
+}
 
-    uint32_t deathTex = TextureManager::Load("ui/game/death.png");
-    deathOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(deathTex, { 0, 0 }));
-    deathOverlay_->SetSize({ 1280, 720 });
-    deathOverlay_->SetColor({ 1, 1, 1, 0.0f });
-
+void GameScene::InitializeHudUI() {
     keyUI_ = std::make_unique<KeyUI>();
     keyUI_->Initialize();
 
@@ -63,16 +81,88 @@ void GameScene::InitializeUI() {
     hpGauge_ = std::make_unique<HpGauge>();
     hpGauge_->Initialize();
 
-    pauseController_.Initialize();
-
     timer_ = std::make_unique<Timer>();
     timer_->Initialize();
+}
+
+void GameScene::InitializeOverlayUI() {
+    startController_.Initialize();
+
+    uint32_t deathTex = TextureManager::Load("ui/game/death.png");
+    deathOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(deathTex, { 0, 0 }));
+    deathOverlay_->SetSize(ScreenUtil::GetClientSize());
+    deathOverlay_->SetColor({ 1, 1, 1, 0.0f });
+
+    pauseController_.Initialize();
 
     levelUpController_.Initialize();
     levelUpController_.RegisterDefaultOptions();
 }
 
+void GameScene::ApplyLighting() {
+    if (!lightGroup_) {
+        return;
+    }
+
+    if (player_) {
+        player_->SetLightGroup(lightGroup_.get());
+    }
+    if (gridPlane_) {
+        gridPlane_->SetLightGroup(lightGroup_.get());
+    }
+    if (skyDome_) {
+        skyDome_->SetLightGroup(lightGroup_.get());
+    }
+
+    ModelCache::Get("octopus")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("bullet")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("cube")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("ripples")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("ExpOrb")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy1")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy2")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy3")->SetLightGroup(lightGroup_.get());
+    ModelCache::Get("Enemy4")->SetLightGroup(lightGroup_.get());
+}
+
+GameScene::GameFlowState GameScene::ResolveFlowState() const {
+    if (curtainCloseStarted_) {
+        return GameFlowState::ResultTransition;
+    }
+    if (curtainOpening_) {
+        return GameFlowState::Opening;
+    }
+    if (startController_.IsWaiting()) {
+        return GameFlowState::StartWaiting;
+    }
+    if (pauseController_.IsActive()) {
+        return GameFlowState::Pause;
+    }
+    if (levelUpController_.IsActive() || (playerManager_ && playerManager_->IsLevelUpRequested())) {
+        return GameFlowState::LevelUp;
+    }
+    if (deathState_ != DeathState::None) {
+        return GameFlowState::Death;
+    }
+    return GameFlowState::Playing;
+}
+
+bool GameScene::ShouldDrawGameplayUI(GameFlowState flowState) const {
+    return flowState != GameFlowState::StartWaiting;
+}
+
+bool GameScene::ShouldDrawHpGauge(GameFlowState flowState) const {
+    return hpGauge_ && player_ && !playerManager_->IsDead() && flowState == GameFlowState::Playing;
+}
+
+bool GameScene::ShouldDrawEnemies(GameFlowState flowState) const {
+    return flowState != GameFlowState::StartWaiting;
+}
+
 void GameScene::Update(float deltaTime) {
+    if (lightGroup_) {
+        lightGroup_->Update();
+    }
     curtain_.Update(deltaTime);
 
     if (FinalizeResultTransition()) {
@@ -92,31 +182,43 @@ void GameScene::Update(float deltaTime) {
         skyDome_->Update();
     }
 
-    if (UpdateStartWaiting()) {
-        DrawDebugUI();
-        return;
-    }
-    if (UpdatePauseState()) {
-        DrawDebugUI();
-        return;
-    }
-    if (UpdateLevelUpFlow()) {
-        DrawDebugUI();
-        return;
-    }
-    if (UpdateGameTimer(deltaTime)) {
-        DrawDebugUI();
-        return;
-    }
+    switch (ResolveFlowState()) {
+    case GameFlowState::Opening:
+        UpdateCurtainOpening();
+        break;
 
-    UpdateStatusUI();
+    case GameFlowState::StartWaiting:
+        UpdateStartWaiting();
+        break;
 
-    if (UpdateDeathFlow(deltaTime)) {
-        DrawDebugUI();
-        return;
+    case GameFlowState::Pause:
+        UpdatePauseState();
+        break;
+
+    case GameFlowState::LevelUp:
+        UpdateLevelUpFlow(deltaTime);
+        break;
+
+    case GameFlowState::Death:
+        UpdateStatusUI();
+        UpdateDeathFlow(deltaTime);
+        break;
+
+    case GameFlowState::Playing:
+        if (UpdatePauseState()) {
+            break;
+        }
+        if (!UpdateGameTimer(deltaTime)) {
+            UpdateStatusUI();
+            if (!UpdateDeathFlow(deltaTime)) {
+                UpdateGameplay(deltaTime);
+            }
+        }
+        break;
+
+    case GameFlowState::ResultTransition:
+        break;
     }
-
-    UpdateGameplay(deltaTime);
     DrawDebugUI();
 }
 
@@ -150,19 +252,19 @@ bool GameScene::UpdatePauseState() {
         StartResultTransition();
     }
 
-    return FinalizeResultTransition() || true;
+    return true;
 }
 
-bool GameScene::UpdateLevelUpFlow() {
+bool GameScene::UpdateLevelUpFlow(float deltaTime) {
     if (levelUpController_.TryStart(playerManager_.get(), audio_, levelUpSEHandle_)) {
         return true;
     }
 
-    return levelUpController_.Update(playerManager_.get(), input_, audio_, pauseSEHandle_, startSEHandle_);
+    return levelUpController_.Update(playerManager_.get(), input_, audio_, pauseSEHandle_, startSEHandle_, deltaTime);
 }
 
 bool GameScene::UpdateGameTimer(float deltaTime) {
-    if (startController_.IsWaiting() || pauseController_.IsActive() || levelUpController_.IsActive() || gameStopped_) {
+    if (ResolveFlowState() != GameFlowState::Playing) {
         return false;
     }
 
@@ -174,10 +276,14 @@ bool GameScene::UpdateGameTimer(float deltaTime) {
     }
 
     StartResultTransition();
-    return FinalizeResultTransition() || true;
+    return true;
 }
 
 void GameScene::UpdateStatusUI() {
+    UpdateHud();
+}
+
+void GameScene::UpdateHud() {
     if (hpGauge_) {
         hpGauge_->SetHP(playerManager_->GetHP(), playerManager_->GetMaxHP());
         hpGauge_->Update();
@@ -191,33 +297,32 @@ void GameScene::UpdateStatusUI() {
 }
 
 bool GameScene::UpdateDeathFlow(float deltaTime) {
-    if (playerManager_->IsDead() && hpGauge_->IsDepleted() && !deathFadeInStarted_) {
-        deathFadeInStarted_ = true;
+    if (playerManager_->IsDead() && hpGauge_->IsDepleted() && deathState_ == DeathState::None) {
+        deathState_ = DeathState::FadingIn;
         deathAlpha_ = 0.0f;
-        gameStopped_ = true;
         Audio::GetInstance()->PlayWave(deathSEHandle_, false, 1.0f);
     }
 
-    if (!gameStopped_) {
+    if (deathState_ == DeathState::None) {
         return false;
     }
 
-    if (deathFadeInStarted_ && !deathFadeInComplete_) {
+    if (deathState_ == DeathState::FadingIn) {
         deathAlpha_ += deltaTime * kDeathFadeSpeedPerSecond_;
         if (deathAlpha_ >= 0.5f) {
             deathAlpha_ = 0.5f;
-            deathFadeInComplete_ = true;
+            deathState_ = DeathState::WaitingConfirm;
         }
         deathOverlay_->SetColor({ 1, 1, 1, deathAlpha_ });
     }
 
-    if (deathFadeInComplete_ &&
-        InputBindings::IsConfirmTriggered(input_) &&
+    if (deathState_ == DeathState::WaitingConfirm &&
+        InputBindings::IsUiConfirmTriggered(input_) &&
         curtain_.GetState() == CurtainTransition::State::kNone) {
         StartResultTransition();
     }
 
-    return FinalizeResultTransition() || true;
+    return true;
 }
 
 bool GameScene::FinalizeResultTransition() {
@@ -226,9 +331,12 @@ bool GameScene::FinalizeResultTransition() {
     }
 
     if (sessionContext_) {
-        sessionContext_->resultData.totalExp = playerManager_->GetTotalEXP();
-        sessionContext_->resultData.finalLevel = playerManager_->GetLevel();
-        sessionContext_->resultData.totalKillCount = enemyManager_.GetTotalKillCount();
+        const int32_t totalExp = playerManager_->GetTotalEXP();
+        const int32_t finalLevel = playerManager_->GetLevel();
+        const int32_t totalKillCount = enemyManager_.GetTotalKillCount();
+        sessionContext_->resultData.totalExp = totalExp;
+        sessionContext_->resultData.finalLevel = finalLevel;
+        sessionContext_->resultData.totalKillCount = totalKillCount;
     }
     finished_ = true;
     return true;
@@ -291,6 +399,8 @@ void GameScene::Draw() {
 }
 
 void GameScene::DrawWorld() {
+    const GameFlowState flowState = ResolveFlowState();
+
     if (gridPlane_) {
         gridPlane_->Draw(&player_->GetCamera());
     }
@@ -300,7 +410,7 @@ void GameScene::DrawWorld() {
     if (player_) {
         player_->Draw();
     }
-    if (!startController_.IsWaiting()) {
+    if (ShouldDrawEnemies(flowState)) {
         enemyManager_.Draw(&player_->GetCamera());
     }
 
@@ -308,43 +418,49 @@ void GameScene::DrawWorld() {
     playerManager_->Draw(&player_->GetCamera());
 }
 
-void GameScene::DrawUI() {
-    startController_.Draw();
-
-    if (!startController_.IsWaiting()) {
+void GameScene::DrawHud(GameFlowState flowState) {
+    if (ShouldDrawGameplayUI(flowState)) {
         keyUI_->Draw();
     }
-
-    if (deathFadeInStarted_ && deathOverlay_) {
-        deathOverlay_->Draw();
-    }
-
-    levelUpController_.Draw();
 
     if (expGauge_) {
         expGauge_->Draw();
     }
 
-    if (hpGauge_ && player_ && !playerManager_->IsDead() && !levelUpController_.IsActive() &&
-        !pauseController_.IsActive() && !startController_.IsWaiting()) {
+    if (ShouldDrawHpGauge(flowState)) {
         hpGauge_->Draw();
     }
 
     if (timer_) {
         timer_->Draw();
     }
+}
+
+void GameScene::DrawOverlayUI(GameFlowState) {
+    startController_.Draw();
+
+    if (deathState_ != DeathState::None && deathOverlay_) {
+        deathOverlay_->Draw();
+    }
+
+    levelUpController_.Draw();
 
     pauseController_.Draw();
 
     curtain_.Draw();
 }
 
+void GameScene::DrawUI() {
+    const GameFlowState flowState = ResolveFlowState();
+    DrawHud(flowState);
+    DrawOverlayUI(flowState);
+}
+
 void GameScene::Finalize() {
     finished_ = false;
     curtainCloseStarted_ = false;
-    deathFadeInStarted_ = false;
-    deathFadeInComplete_ = false;
-    gameStopped_ = false;
+    deathState_ = DeathState::None;
+    deathAlpha_ = 0.0f;
     startController_.Reset();
     pauseController_.Reset();
     levelUpController_.Reset();

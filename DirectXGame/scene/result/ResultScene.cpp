@@ -205,9 +205,9 @@ void ResultScene::Draw() {
     }
     if (levelUI_) {
         levelUI_->Draw();
-	}
+    }
     if (killUI_) {
-		killUI_->Draw();
+        killUI_->Draw();
     }
 
     // --- カーテン描画（シーン遷移演出） ---

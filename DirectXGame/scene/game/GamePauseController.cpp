@@ -1,10 +1,13 @@
 #include "GamePauseController.h"
 #include "../../core/InputBindings.h"
+#include "../../core/ScreenUtil.h"
 #include "EnemyManager.h"
 #include "../../player/core/PlayerManager.h"
 #include "../../ui/common/UILayoutIO.h"
 #include "Player.h"
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <KamataEngine.h>
 
 using namespace KamataEngine;
@@ -22,11 +25,11 @@ void GamePauseController::Initialize() {
 
     uint32_t pauseTexture = TextureManager::Load("ui/game/pause.png");
     pauseOverlay_ = std::unique_ptr<Sprite>(Sprite::Create(pauseTexture, {0, 0}));
-    pauseOverlay_->SetSize({1280, 720});
+    pauseOverlay_->SetSize(ScreenUtil::GetClientSize());
 
     uint32_t guideTexture = TextureManager::Load("ui/title/guideUI.png");
     guideSprite_ = std::unique_ptr<Sprite>(Sprite::Create(guideTexture, {0, 0}));
-    guideSprite_->SetSize({1280, 720});
+    guideSprite_->SetSize(ScreenUtil::GetClientSize());
     guideSprite_->SetColor({1.0f, 1.0f, 1.0f, 0.0f});
 
     uint32_t cursorTexture = TextureManager::Load("ui/game/pause_arrow.png");
@@ -41,25 +44,31 @@ void GamePauseController::Initialize() {
     statsPanel_->SetColor({0.0f, 0.0f, 0.0f, 0.72f});
 
     buildNormalLabel_ = std::make_unique<UILabel>();
-    buildNormalLabel_->Initialize(TextureManager::Load("ui/game/lvup_normal_icon.png"), layoutSettings_.buildRowLocalPosition);
+    buildNormalLabel_->Initialize(TextureManager::Load("ui/game/normal/icon.png"), layoutSettings_.buildRowLocalPosition);
     buildNormalLabel_->SetParent(statsPanel_.get());
     buildNormalLabel_->SetSize(layoutSettings_.buildIconSize);
 
     buildOrbitLabel_ = std::make_unique<UILabel>();
-    buildOrbitLabel_->Initialize(TextureManager::Load("ui/game/lvup_orbit_icon.png"),
+    buildOrbitLabel_->Initialize(TextureManager::Load("ui/game/orbit/icon.png"),
                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX, layoutSettings_.buildRowLocalPosition.y});
     buildOrbitLabel_->SetParent(statsPanel_.get());
     buildOrbitLabel_->SetSize(layoutSettings_.buildIconSize);
 
     buildDroneLabel_ = std::make_unique<UILabel>();
-    buildDroneLabel_->Initialize(TextureManager::Load("ui/game/lvup_drone_icon.png"),
+    buildDroneLabel_->Initialize(TextureManager::Load("ui/game/drone/icon.png"),
                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 2.0f, layoutSettings_.buildRowLocalPosition.y});
     buildDroneLabel_->SetParent(statsPanel_.get());
     buildDroneLabel_->SetSize(layoutSettings_.buildIconSize);
 
+    buildLightningLabel_ = std::make_unique<UILabel>();
+    buildLightningLabel_->Initialize(TextureManager::Load("ui/game/lightning/icon.png"),
+                                     {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f, layoutSettings_.buildRowLocalPosition.y});
+    buildLightningLabel_->SetParent(statsPanel_.get());
+    buildLightningLabel_->SetSize(layoutSettings_.buildIconSize);
+
     buildAttackLabel_ = std::make_unique<UILabel>();
     buildAttackLabel_->Initialize(TextureManager::Load("ui/game/lvup_attack_icon.png"),
-                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f, layoutSettings_.buildRowLocalPosition.y});
+                                  {layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 4.0f, layoutSettings_.buildRowLocalPosition.y});
     buildAttackLabel_->SetParent(statsPanel_.get());
     buildAttackLabel_->SetSize(layoutSettings_.buildIconSize);
 
@@ -72,6 +81,7 @@ void GamePauseController::Initialize() {
     guideAlpha_ = 0.0f;
     goResult_ = false;
     menuIndex_ = 0;
+    navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     {
         const auto layout = UILayoutIO::Load(kPauseLayoutPath);
         if (const auto it = layout.find("buildRowLocalPosition"); it != layout.end() && it->second.size() >= 2) {
@@ -83,6 +93,15 @@ void GamePauseController::Initialize() {
         if (const auto it = layout.find("buildIconSize"); it != layout.end() && it->second.size() >= 2) {
             layoutSettings_.buildIconSize = { it->second[0], it->second[1] };
         }
+        if (const auto it = layout.find("menuHitbox0"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.menuHitboxPositions[0] = { it->second[0], it->second[1] };
+        }
+        if (const auto it = layout.find("menuHitbox1"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.menuHitboxPositions[1] = { it->second[0], it->second[1] };
+        }
+        if (const auto it = layout.find("menuHitboxSize"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.menuHitboxSize = { it->second[0], it->second[1] };
+        }
     }
     ApplyLayout();
     UpdateVisibility();
@@ -90,7 +109,12 @@ void GamePauseController::Initialize() {
 
 bool GamePauseController::Update(Player* player, const EnemyManager& enemyManager, const PlayerManager& playerManager,
                                  Input* input, Audio* audio, uint32_t toggleSEHandle) {
-    if (!guideActive_ && InputBindings::IsPauseTriggered(input)) {
+    if (!guideActive_ && (InputBindings::IsGamepadPauseTriggered(input) || InputBindings::IsKeyboardPauseTriggered(input))) {
+        if (InputBindings::HasMouseNavigationInput(input)) {
+            navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
+        } else if (InputBindings::IsGamepadPauseTriggered(input)) {
+            navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
+        }
         active_ = !active_;
         guideActive_ = false;
         goResult_ = false;
@@ -105,6 +129,30 @@ bool GamePauseController::Update(Player* player, const EnemyManager& enemyManage
     if (!active_) {
         UpdateVisibility();
         return false;
+    }
+
+    int32_t hoveredMenuIndex = -1;
+    {
+        const Vector2 mousePosition = input->GetMousePosition();
+        for (int32_t i = 0; i < 2; ++i) {
+            const Vector2& rectPosition = layoutSettings_.menuHitboxPositions[i];
+            if (mousePosition.x >= rectPosition.x && mousePosition.x <= rectPosition.x + layoutSettings_.menuHitboxSize.x &&
+                mousePosition.y >= rectPosition.y && mousePosition.y <= rectPosition.y + layoutSettings_.menuHitboxSize.y) {
+                hoveredMenuIndex = i;
+                break;
+            }
+        }
+    }
+
+    // ホバー中でもキー/パッド入力を優先し、選択肢上での実マウス操作時だけマウスへ戻す。
+    const bool mouseNavigationTriggered = hoveredMenuIndex >= 0 && InputBindings::HasMouseNavigationInput(input);
+
+    if (InputBindings::IsGamepadMenuUpTriggered(input) || InputBindings::IsGamepadMenuDownTriggered(input) ||
+               InputBindings::IsGamepadConfirmTriggered(input) || InputBindings::IsGamepadCancelTriggered(input) ||
+               InputBindings::IsGamepadPauseTriggered(input)) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Gamepad;
+    } else if (mouseNavigationTriggered) {
+        navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     }
 
     if (guideTransitionState_ != GuideTransitionState::None) {
@@ -130,7 +178,20 @@ bool GamePauseController::Update(Player* player, const EnemyManager& enemyManage
     }
 
     if (guideActive_) {
-        if (InputBindings::IsCancelTriggered(input)) {
+        bool closeGuide = false;
+        switch (navigationInputDevice_) {
+        case InputBindings::NavigationInputDevice::Mouse:
+            closeGuide = input->IsTriggerMouse(0);
+            break;
+        case InputBindings::NavigationInputDevice::Gamepad:
+            closeGuide = InputBindings::IsUiCancelTriggered(input);
+            break;
+        case InputBindings::NavigationInputDevice::None:
+        case InputBindings::NavigationInputDevice::Keyboard:
+            break;
+        }
+
+        if (closeGuide) {
             if (decideSEHandle_ != 0) {
                 audio_->PlayWave(decideSEHandle_, false, 1.0f);
             }
@@ -145,26 +206,38 @@ bool GamePauseController::Update(Player* player, const EnemyManager& enemyManage
     UpdateVisibility();
 
     int32_t previousMenuIndex = menuIndex_;
-    if (InputBindings::IsMenuUpTriggered(input)) {
-        menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
-    }
-    if (InputBindings::IsMenuDownTriggered(input)) {
-        menuIndex_ = std::min<int32_t>(1, menuIndex_ + 1);
+    if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Mouse) {
+        if (hoveredMenuIndex >= 0) {
+            menuIndex_ = hoveredMenuIndex;
+        }
+    } else if (navigationInputDevice_ == InputBindings::NavigationInputDevice::Gamepad) {
+        if (InputBindings::IsGamepadMenuUpTriggered(input)) {
+            menuIndex_ = std::max<int32_t>(0, menuIndex_ - 1);
+        }
+        if (InputBindings::IsGamepadMenuDownTriggered(input)) {
+            menuIndex_ = std::min<int32_t>(1, menuIndex_ + 1);
+        }
     }
     if (menuIndex_ != previousMenuIndex && selectSEHandle_ != 0) {
         audio_->PlayWave(selectSEHandle_, false, 1.0f);
     }
 
-    switch (menuIndex_) {
-    case 0:
-        cursorSprite_->SetPosition({0, 0});
+    cursorSprite_->SetPosition({0, menuIndex_ == 0 ? 0.0f : 170.0f});
+
+    bool confirmTriggered = false;
+    switch (navigationInputDevice_) {
+    case InputBindings::NavigationInputDevice::Mouse:
+        confirmTriggered = hoveredMenuIndex >= 0 && InputBindings::IsMouseConfirmTriggered(input);
         break;
-    case 1:
-        cursorSprite_->SetPosition({0, 170});
+    case InputBindings::NavigationInputDevice::Gamepad:
+        confirmTriggered = InputBindings::IsGamepadConfirmTriggered(input);
+        break;
+    case InputBindings::NavigationInputDevice::Keyboard:
+    case InputBindings::NavigationInputDevice::None:
         break;
     }
 
-    if (InputBindings::IsConfirmTriggered(input)) {
+    if (confirmTriggered) {
         if (decideSEHandle_ != 0) {
             audio_->PlayWave(decideSEHandle_, false, 1.0f);
         }
@@ -193,6 +266,7 @@ void GamePauseController::Draw() const {
         buildNormalLabel_->Draw();
         buildOrbitLabel_->Draw();
         buildDroneLabel_->Draw();
+        buildLightningLabel_->Draw();
         buildAttackLabel_->Draw();
         cursorSprite_->Draw();
     }
@@ -205,6 +279,7 @@ void GamePauseController::Reset() {
     guideAlpha_ = 0.0f;
     goResult_ = false;
     menuIndex_ = 0;
+    navigationInputDevice_ = InputBindings::NavigationInputDevice::Mouse;
     guideSprite_->SetColor({1.0f, 1.0f, 1.0f, 0.0f});
     UpdateVisibility();
 }
@@ -251,6 +326,9 @@ void GamePauseController::DebugDrawImGui() {
                 { "buildRowLocalPosition", { layoutSettings_.buildRowLocalPosition.x, layoutSettings_.buildRowLocalPosition.y } },
                 { "buildStepX", { layoutSettings_.buildStepX } },
                 { "buildIconSize", { layoutSettings_.buildIconSize.x, layoutSettings_.buildIconSize.y } },
+                { "menuHitbox0", { layoutSettings_.menuHitboxPositions[0].x, layoutSettings_.menuHitboxPositions[0].y } },
+                { "menuHitbox1", { layoutSettings_.menuHitboxPositions[1].x, layoutSettings_.menuHitboxPositions[1].y } },
+                { "menuHitboxSize", { layoutSettings_.menuHitboxSize.x, layoutSettings_.menuHitboxSize.y } },
             });
         }
     }
@@ -271,7 +349,11 @@ void GamePauseController::ApplyLayout() {
                                     layoutSettings_.buildRowLocalPosition.y });
     buildDroneLabel_->SetSize(layoutSettings_.buildIconSize);
 
-    buildAttackLabel_->SetPosition({ layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f,
+    buildLightningLabel_->SetPosition({ layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 3.0f,
+                                        layoutSettings_.buildRowLocalPosition.y });
+    buildLightningLabel_->SetSize(layoutSettings_.buildIconSize);
+
+    buildAttackLabel_->SetPosition({ layoutSettings_.buildRowLocalPosition.x + layoutSettings_.buildStepX * 4.0f,
                                      layoutSettings_.buildRowLocalPosition.y });
     buildAttackLabel_->SetSize(layoutSettings_.buildIconSize);
 }
@@ -282,6 +364,7 @@ void GamePauseController::UpdateStats(const EnemyManager& enemyManager, const Pl
     buildNormalLabel_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
     buildOrbitLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.HasOrbitBullets() ? 1.0f : 0.25f});
     buildDroneLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.HasDrone() ? 1.0f : 0.25f});
+    buildLightningLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.HasLightning() ? 1.0f : 0.25f});
     buildAttackLabel_->SetColor({1.0f, 1.0f, 1.0f, playerManager.GetAttackPower() > 1 ? 1.0f : 0.4f});
 }
 
@@ -291,6 +374,7 @@ void GamePauseController::UpdateVisibility() {
     buildNormalLabel_->SetVisible(showBuilds);
     buildOrbitLabel_->SetVisible(showBuilds);
     buildDroneLabel_->SetVisible(showBuilds);
+    buildLightningLabel_->SetVisible(showBuilds);
     buildAttackLabel_->SetVisible(showBuilds);
 }
 

@@ -13,7 +13,8 @@ public:
 
     void Update(const KamataEngine::Vector3& playerPos,
         const std::vector<std::unique_ptr<Enemy>>& enemies,
-        float& fireTimer, float fireInterval, float deltaTime);
+        float& fireTimer, float fireInterval, int32_t shotCount, float bulletSpeed,
+        float bulletRange, int32_t bulletPierceCount, float deltaTime);
 
     void Draw(KamataEngine::Camera* camera);
 
