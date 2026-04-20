@@ -353,6 +353,10 @@ void GameScene::StartResultTransition() {
 }
 
 void GameScene::UpdateGameplay(float deltaTime) {
+    if (input_ && input_->TriggerKey(DIK_F9)) {
+        playerManager_->MaxAllWeapons();
+    }
+
     player_->Update(deltaTime);
     playerManager_->Update(deltaTime);
     enemyManager_.Update(deltaTime);

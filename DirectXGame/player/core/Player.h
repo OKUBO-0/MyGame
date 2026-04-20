@@ -27,8 +27,12 @@ public:
 private:
     KamataEngine::Input* input_ = nullptr;
     KamataEngine::WorldTransform worldTransform_;
+    KamataEngine::WorldTransform aimIndicatorTransform_;
     KamataEngine::Camera camera_;
     std::shared_ptr<KamataEngine::Model> playerModel_;
+    std::shared_ptr<KamataEngine::Model> aimIndicatorModel_;
+    std::unique_ptr<KamataEngine::ObjectColor> aimIndicatorColor_;
+    uint32_t aimIndicatorTextureHandle_ = 0;
 
     bool visible_ = true;
     float effectTimer_ = 0.0f;
@@ -37,6 +41,7 @@ private:
 
     void UpdateMovement(float deltaTime);
     void UpdateAim(float deltaTime);
+    void UpdateAimIndicator();
     void UpdateCamera();
 };
 
