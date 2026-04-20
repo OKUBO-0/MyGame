@@ -502,6 +502,26 @@ void PlayerManager::UpgradeLightning() {
     }
 }
 
+void PlayerManager::MaxAllWeapons() {
+    while (!IsNormalBulletMaxLevel()) {
+        UpgradeNormalBullets();
+    }
+
+    while (!IsOrbitBulletMaxLevel()) {
+        UpgradeOrbitBullets();
+    }
+
+    while (!IsDroneMaxLevel()) {
+        UpgradeDrone();
+    }
+
+    while (!IsLightningMaxLevel()) {
+        UpgradeLightning();
+    }
+
+    ClearLevelUpRequest();
+}
+
 void PlayerManager::UpdateLightning(float deltaTime) {
     if (!hasLightning_ || !enemyManager_) {
         return;

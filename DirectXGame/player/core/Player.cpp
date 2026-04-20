@@ -25,9 +25,15 @@ void Player::Initialize() {
     camera_.Initialize();
 
     playerModel_ = ModelCache::Get("octopus");
+    aimIndicatorModel_ = ModelCache::Get("cube");
+    aimIndicatorTextureHandle_ = TextureManager::Load("textures/color/white.png");
 
     worldTransform_.Initialize();
     worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
+    aimIndicatorTransform_.Initialize();
+    aimIndicatorColor_ = std::make_unique<ObjectColor>();
+    aimIndicatorColor_->Initialize();
+    aimIndicatorColor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f });
 
     camera_.translation_ = { 0.0f, 80.0f, -45.0f };
     camera_.rotation_.x = 1.0f;
@@ -39,9 +45,14 @@ void Player::Update(float deltaTime) {
     UpdateCamera();
     UpdateAim(deltaTime);
     worldTransform_.UpdateMatrix();
+    UpdateAimIndicator();
 }
 
 void Player::Draw() {
+    if (aimIndicatorModel_ && aimIndicatorColor_) {
+        aimIndicatorModel_->Draw(aimIndicatorTransform_, camera_, aimIndicatorTextureHandle_, aimIndicatorColor_.get());
+    }
+
     if (visible_ && playerModel_) {
         playerModel_->Draw(worldTransform_, camera_);
     }
@@ -50,6 +61,9 @@ void Player::Draw() {
 void Player::SetLightGroup(const LightGroup* lightGroup) {
     if (playerModel_) {
         playerModel_->SetLightGroup(lightGroup);
+    }
+    if (aimIndicatorModel_) {
+        aimIndicatorModel_->SetLightGroup(lightGroup);
     }
 }
 
@@ -125,6 +139,24 @@ void Player::UpdateAim(float deltaTime) {
     const float kRotateLerp = std::clamp(deltaTime * 30.0f, 0.0f, 1.0f);
     currentAngle = NormalizeAngle(currentAngle + diff * kRotateLerp);
     worldTransform_.rotation_.y = currentAngle;
+}
+
+void Player::UpdateAimIndicator() {
+    const float angle = worldTransform_.rotation_.y;
+    const Vector3 forward = { std::sin(angle), 0.0f, std::cos(angle) };
+
+    constexpr float kIndicatorLength = 2.0f;
+    constexpr float kIndicatorStartOffset = 5.75f;
+    constexpr float kIndicatorHalfLength = kIndicatorLength * 0.5f;
+
+    aimIndicatorTransform_.rotation_ = { 0.0f, angle, 0.0f };
+    aimIndicatorTransform_.scale_ = { 0.28f, 0.08f, kIndicatorLength };
+    aimIndicatorTransform_.translation_ = {
+        worldTransform_.translation_.x + forward.x * (kIndicatorStartOffset + kIndicatorHalfLength),
+        -1.0f,
+        worldTransform_.translation_.z + forward.z * (kIndicatorStartOffset + kIndicatorHalfLength),
+    };
+    aimIndicatorTransform_.UpdateMatrix();
 }
 
 void Player::UpdateCamera() {

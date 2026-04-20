@@ -172,6 +172,14 @@ public:
     bool IsLightningMaxLevel() const { return hasLightning_ && lightningLevel_ >= kLightningMaxLevel; }
 
     /// <summary>
+    /// デバッグ用全武器最大化
+    /// 目的: 全武器を解禁し、最大レベルまで一括強化する。
+    /// 引数: なし
+    /// 戻り値: なし
+    /// </summary>
+    void MaxAllWeapons();
+
+    /// <summary>
     /// 敵マネージャ設定
     /// 目的: ドローンの索敵などに使う敵管理参照を保持する。
     /// 引数: manager - 関連付ける敵マネージャ

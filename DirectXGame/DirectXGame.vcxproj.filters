@@ -237,6 +237,9 @@
     <ClCompile Include="ui\hud\KeyUI.cpp">
       <Filter>ソース ファイル\ui\hud</Filter>
     </ClCompile>
+    <ClCompile Include="effects\LightningStrikeEffect.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\SpritePS.hlsl">
@@ -404,6 +407,9 @@
     </ClInclude>
     <ClInclude Include="ui\hud\KeyUI.h">
       <Filter>ヘッダー ファイル\ui\hud</Filter>
+    </ClInclude>
+    <ClInclude Include="effects\LightningStrikeEffect.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

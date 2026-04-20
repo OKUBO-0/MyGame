@@ -29,7 +29,8 @@ float GetWeightSetting(const std::unordered_map<std::string, float>& settings, c
 }
 
 uint32_t LoadTextureWithFallback(const std::string& preferredPath, const char* fallbackPath) {
-    if (std::filesystem::exists(preferredPath)) {
+    const std::filesystem::path diskPath = std::filesystem::path("Resources") / preferredPath;
+    if (std::filesystem::exists(diskPath)) {
         return TextureManager::Load(preferredPath.c_str());
     }
     return TextureManager::Load(fallbackPath);
@@ -38,7 +39,7 @@ uint32_t LoadTextureWithFallback(const std::string& preferredPath, const char* f
 uint32_t GetNormalLevelUpTexture(PlayerManager* playerManager) {
     const int32_t nextLevel =
         (std::min)(playerManager->GetNormalBulletLevel() + 1, PlayerManager::kNormalBulletMaxLevel);
-    const std::string levelPath = "Resources/ui/game/normal/lv" + std::to_string(nextLevel) + ".png";
+    const std::string levelPath = "ui/game/normal/lv" + std::to_string(nextLevel) + ".png";
     return LoadTextureWithFallback(levelPath, "ui/game/normal/choice.png");
 }
 
@@ -49,7 +50,7 @@ uint32_t GetOrbitLevelUpTexture(PlayerManager* playerManager) {
 
     const int32_t nextLevel =
         (std::min)(playerManager->GetOrbitBulletLevel() + 1, PlayerManager::kOrbitBulletMaxLevel);
-    const std::string levelPath = "Resources/ui/game/orbit/lv" + std::to_string(nextLevel) + ".png";
+    const std::string levelPath = "ui/game/orbit/lv" + std::to_string(nextLevel) + ".png";
     return LoadTextureWithFallback(levelPath, "ui/game/orbit/upgrade.png");
 }
 
@@ -59,7 +60,7 @@ uint32_t GetDroneLevelUpTexture(PlayerManager* playerManager) {
     }
 
     const int32_t nextLevel = (std::min)(playerManager->GetDroneLevel() + 1, PlayerManager::kDroneMaxLevel);
-    const std::string levelPath = "Resources/ui/game/drone/lv" + std::to_string(nextLevel) + ".png";
+    const std::string levelPath = "ui/game/drone/lv" + std::to_string(nextLevel) + ".png";
     return LoadTextureWithFallback(levelPath, "ui/game/drone/upgrade.png");
 }
 
@@ -70,7 +71,7 @@ uint32_t GetLightningLevelUpTexture(PlayerManager* playerManager) {
 
     const int32_t nextLevel =
         (std::min)(playerManager->GetLightningLevel() + 1, PlayerManager::kLightningMaxLevel);
-    const std::string levelPath = "Resources/ui/game/lightning/lv" + std::to_string(nextLevel) + ".png";
+    const std::string levelPath = "ui/game/lightning/lv" + std::to_string(nextLevel) + ".png";
     return LoadTextureWithFallback(levelPath, "ui/game/lightning/upgrade.png");
 }
 
@@ -252,7 +253,7 @@ void GameLevelUpController::RegisterDefaultOptions() {
         [](PlayerManager* pm) { pm->UpgradeNormalBullets(); },
         [](PlayerManager* pm) { return GetNormalLevelUpTexture(pm); },
         [](PlayerManager*) { return TextureManager::Load("ui/game/normal/icon.png"); },
-        2.0f
+        5.0f
     });
 
     options_.push_back({
