@@ -43,7 +43,9 @@ private:
         KamataEngine::Vector2 expPosition{ 500.0f, 200.0f };
         KamataEngine::Vector2 levelPosition{ 500.0f, 300.0f };
         KamataEngine::Vector2 killPosition{ 500.0f, 400.0f };
+        KamataEngine::Vector2 totalScorePosition{ 520.0f, 560.0f };
         float scoreScale = 2.0f;
+        float totalScoreScale = 2.5f;
         bool debugEnabled = false;
     };
 
@@ -66,6 +68,7 @@ private:
     std::unique_ptr<Score> expUI_;   ///< 経験値表示UI
     std::unique_ptr<Score> levelUI_; ///< レベル表示UI
     std::unique_ptr<Score> killUI_;  ///< 撃破数表示UI
+    std::unique_ptr<Score> totalScoreUI_; ///< 総スコア表示UI
 
     int32_t currentExp_ = 0;       ///< 現在のスコア
     int32_t targetExp_ = 0;      ///< 目標スコア
@@ -75,6 +78,9 @@ private:
 
     int32_t currentKill_ = 0;     ///< 表示中撃破数
     int32_t targetKill_ = 0;      ///< 最終撃破数
+
+    int32_t currentTotalScore_ = 0; ///< 表示中総スコア
+    int32_t targetTotalScore_ = 0;  ///< 最終総スコア
 
     uint32_t selectSEHandle_ = 0; ///< 選択SEハンドル
     uint32_t countupSEHandle_ = 0;

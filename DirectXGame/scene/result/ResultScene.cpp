@@ -9,6 +9,13 @@ namespace DirectXGame {
 namespace {
 
 const char* kResultLayoutPath = "Resources/data/ui_layout_result.csv";
+constexpr int32_t kScorePerExp = 1;
+constexpr int32_t kScorePerKill = 100;
+constexpr int32_t kScorePerLevel = 1000;
+
+int32_t CalculateTotalScore(int32_t exp, int32_t level, int32_t kill) {
+    return exp * kScorePerExp + kill * kScorePerKill + level * kScorePerLevel;
+}
 
 }
 
@@ -48,6 +55,12 @@ void ResultScene::Initialize() {
     killUI_->Initialize();
     killUI_->SetNumber(sessionContext_ ? sessionContext_->resultData.totalKillCount : 0);
 
+    // 総スコア
+    totalScoreUI_ = std::make_unique<Score>();
+    totalScoreUI_->SetDigitCount(6);
+    totalScoreUI_->Initialize();
+    totalScoreUI_->SetNumber(0);
+
     // --- スコア演出用変数 ---
     currentExp_ = 0;
     targetExp_ = sessionContext_ ? sessionContext_->resultData.totalExp : 0;
@@ -58,9 +71,13 @@ void ResultScene::Initialize() {
     currentKill_ = 0;
     targetKill_ = sessionContext_ ? sessionContext_->resultData.totalKillCount : 0;
 
+    currentTotalScore_ = 0;
+    targetTotalScore_ = CalculateTotalScore(targetExp_, targetLevel_, targetKill_);
+
     expUI_->SetNumber(0);
     levelUI_->SetNumber(0);
     killUI_->SetNumber(0);
+    totalScoreUI_->SetNumber(0);
 
     // --- カーテン初期化 ---
     curtain_.Initialize();
@@ -95,8 +112,14 @@ void ResultScene::Initialize() {
         if (const auto it = layout.find("killPosition"); it != layout.end() && it->second.size() >= 2) {
             layoutSettings_.killPosition = { it->second[0], it->second[1] };
         }
+        if (const auto it = layout.find("totalScorePosition"); it != layout.end() && it->second.size() >= 2) {
+            layoutSettings_.totalScorePosition = { it->second[0], it->second[1] };
+        }
         if (const auto it = layout.find("scoreScale"); it != layout.end() && !it->second.empty()) {
             layoutSettings_.scoreScale = it->second[0];
+        }
+        if (const auto it = layout.find("totalScoreScale"); it != layout.end() && !it->second.empty()) {
+            layoutSettings_.totalScoreScale = it->second[0];
         }
     }
     ApplyLayout();
@@ -158,24 +181,31 @@ void ResultScene::Update(float deltaTime) {
         }
     }
 
+    currentTotalScore_ = CalculateTotalScore(currentExp_, currentLevel_, currentKill_);
+    totalScoreUI_->SetNumber(currentTotalScore_);
+
     expUI_->Update();
     levelUI_->Update();
     killUI_->Update();
+    totalScoreUI_->Update();
 
     // --- SPACE / ENTER で演出スキップ・タイトル復帰 ---
-    const bool canSkipCountUp = currentExp_ < targetExp_ || currentLevel_ < targetLevel_ || currentKill_ < targetKill_;
+    const bool canSkipCountUp = currentExp_ < targetExp_ || currentLevel_ < targetLevel_ ||
+                                currentKill_ < targetKill_ || currentTotalScore_ < targetTotalScore_;
     if (InputBindings::IsConfirmTriggered(input_) && canSkipCountUp) {
         currentExp_ = targetExp_;
         currentLevel_ = targetLevel_;
         currentKill_ = targetKill_;
+        currentTotalScore_ = targetTotalScore_;
         expUI_->SetNumber(currentExp_);
         levelUI_->SetNumber(currentLevel_);
         killUI_->SetNumber(currentKill_);
+        totalScoreUI_->SetNumber(currentTotalScore_);
         DrawDebugUI();
         return;
     }
 
-    if (InputBindings::IsConfirmTriggered(input_) &&
+    /*if (InputBindings::IsConfirmTriggered(input_) &&
         curtain_.GetState() == CurtainTransition::State::kNone) {
         if (selectSEHandle_ != 0) {
             audio_->PlayWave(selectSEHandle_, false, 1.0f);
@@ -183,7 +213,7 @@ void ResultScene::Update(float deltaTime) {
         curtain_.StartClose();
         curtainOutStarted_ = true;
         SetSceneNo(Scene::Title);
-    }
+    }*/
 
     DrawDebugUI();
 }
@@ -208,6 +238,9 @@ void ResultScene::Draw() {
     }
     if (killUI_) {
         killUI_->Draw();
+    }
+    if (totalScoreUI_) {
+        totalScoreUI_->Draw();
     }
 
     // --- カーテン描画（シーン遷移演出） ---
@@ -235,6 +268,8 @@ void ResultScene::ApplyLayout() {
     levelUI_->SetScale(layoutSettings_.scoreScale);
     killUI_->SetPosition(layoutSettings_.killPosition);
     killUI_->SetScale(layoutSettings_.scoreScale);
+    totalScoreUI_->SetPosition(layoutSettings_.totalScorePosition);
+    totalScoreUI_->SetScale(layoutSettings_.totalScoreScale);
 }
 
 void ResultScene::DrawDebugUI() {
@@ -277,7 +312,17 @@ void ResultScene::DrawDebugUI() {
                 ApplyLayout();
             }
 
+            float totalScorePosition[2]{ layoutSettings_.totalScorePosition.x, layoutSettings_.totalScorePosition.y };
+            if (ImGui::DragFloat2("Total Score Position", totalScorePosition, 1.0f, -400.0f, 1280.0f)) {
+                layoutSettings_.totalScorePosition = { totalScorePosition[0], totalScorePosition[1] };
+                ApplyLayout();
+            }
+
             if (ImGui::DragFloat("Score Scale", &layoutSettings_.scoreScale, 0.05f, 0.5f, 6.0f)) {
+                ApplyLayout();
+            }
+
+            if (ImGui::DragFloat("Total Score Scale", &layoutSettings_.totalScoreScale, 0.05f, 0.5f, 6.0f)) {
                 ApplyLayout();
             }
 
@@ -292,7 +337,9 @@ void ResultScene::DrawDebugUI() {
                     { "expPosition", { layoutSettings_.expPosition.x, layoutSettings_.expPosition.y } },
                     { "levelPosition", { layoutSettings_.levelPosition.x, layoutSettings_.levelPosition.y } },
                     { "killPosition", { layoutSettings_.killPosition.x, layoutSettings_.killPosition.y } },
+                    { "totalScorePosition", { layoutSettings_.totalScorePosition.x, layoutSettings_.totalScorePosition.y } },
                     { "scoreScale", { layoutSettings_.scoreScale } },
+                    { "totalScoreScale", { layoutSettings_.totalScoreScale } },
                 });
             }
         }
