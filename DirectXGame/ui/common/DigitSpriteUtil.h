@@ -1,9 +1,9 @@
 #pragma once
 
 #include <KamataEngine.h>
-#include <array>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace DirectXGame::DigitSpriteUtil {
 
@@ -26,15 +26,15 @@ void SetDigitSprite(
     const KamataEngine::Vector2& size,
     int32_t number);
 
-template <size_t N>
+template <typename SpriteContainer>
 void SetNumberSprites(
-    const std::array<std::unique_ptr<KamataEngine::Sprite>, N>& sprites,
+    const SpriteContainer& sprites,
     float digitWidth,
     const KamataEngine::Vector2& size,
     int32_t number,
     int32_t initialDigit) {
     int32_t digit = initialDigit;
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < sprites.size(); ++i) {
         if (!sprites[i]) {
             digit /= 10;
             continue;
