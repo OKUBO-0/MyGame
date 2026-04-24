@@ -205,7 +205,7 @@ void ResultScene::Update(float deltaTime) {
         return;
     }
 
-    /*if (InputBindings::IsConfirmTriggered(input_) &&
+    if (InputBindings::IsConfirmTriggered(input_) &&
         curtain_.GetState() == CurtainTransition::State::kNone) {
         if (selectSEHandle_ != 0) {
             audio_->PlayWave(selectSEHandle_, false, 1.0f);
@@ -213,7 +213,7 @@ void ResultScene::Update(float deltaTime) {
         curtain_.StartClose();
         curtainOutStarted_ = true;
         SetSceneNo(Scene::Title);
-    }*/
+    }
 
     DrawDebugUI();
 }
